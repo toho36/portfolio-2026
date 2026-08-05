@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "id": "vitek-machine-moodframe-candidates",
+      "kind": "concept-reference-set",
+      "status": "owner-selected",
+      "selectedDirection": "A whole-machine silhouette + B modular construction + C slot interaction; D only for reward timing",
+      "purpose": "Pre-approval references for machine silhouette, modular construction, slot interaction, and reward timing.",
+      "generationRecord": "candidates/generation.json",
+      "loadPriority": "documentation-only",
+      "responsiveUse": "Local contact sheet; not loaded by the portfolio application.",
+      "fallback": "None required; these are non-production references.",
+      "maxBytesPerFile": 3000000,
+      "criticalCopy": "HTML/SVG only; decorative image marks are never product copy.",
+      "geometry": "Procedural primitives until interaction and composition justify deliberate modelling.",
+      "files": [
+        {
+          "id": "A",
+          "file": "candidates/a-frontal-bench.png",
+          "mime": "image/png",
+          "width": 1536,
+          "height": 1024,
+          "allowedColorModes": ["RGB", "RGBA"],
+          "sha256": "f12e79249eae37e1acf586a026160f52d09a57a9e7b2237a58019ca0e2701c2e"
+        },
+        {
+          "id": "B",
+          "file": "candidates/b-exploded-assembly.png",
+          "mime": "image/png",
+          "width": 1536,
+          "height": 1024,
+          "allowedColorModes": ["RGB", "RGBA"],
+          "sha256": "24834bf7a5cec7b1f6cc5c5e3230b501a9bd1192435d828829000413a943bcb3"
+        },
+        {
+          "id": "C",
+          "file": "candidates/c-seat-closeup.png",
+          "mime": "image/png",
+          "width": 1536,
+          "height": 1024,
+          "allowedColorModes": ["RGB", "RGBA"],
+          "sha256": "e730cfed214247cee926910fc064d70f842b5e3c261a3af149452d41db9332e6"
+        },
+        {
+          "id": "D",
+          "file": "candidates/d-reward-stage.png",
+          "mime": "image/png",
+          "width": 1672,
+          "height": 941,
+          "allowedColorModes": ["RGB", "RGBA"],
+          "sha256": "42d1e2ee71afc4ae713381b1bc7c92fc2ed1e3977d8a3743f1f2057a36e7cf47"
+        }
+      ]
+    }
+  ]
+}

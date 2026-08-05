@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Vitek Machine — selected local asset package</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root { color-scheme: dark; font-family: ui-sans-serif, system-ui, sans-serif; background: #0A0B0F; color: #D8D1C4; }
+    body { margin: 0; overflow-x: hidden; background: #0A0B0F; }
+    main { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 48px 0 72px; overflow-wrap: anywhere; }
+    h1, h2, p { margin-top: 0; }
+    h1 { max-width: 18ch; color: white; font-size: clamp(2rem, 6vw, 4.5rem); line-height: .95; }
+    h2 { margin-top: 48px; color: #42E8FF; font-size: 1rem; letter-spacing: .12em; text-transform: uppercase; }
+    .lede { max-width: 72ch; font-size: clamp(1rem, 2vw, 1.2rem); line-height: 1.6; }
+    .direction { padding-left: 16px; border-left: 4px solid #FF5A1F; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 18px; }
+    figure, .sample { min-width: 0; margin: 0; padding: 14px; border: 1px solid #343943; border-radius: 12px; background: #15171d; }
+    img { display: block; width: 100%; max-width: 100%; height: auto; border-radius: 7px; }
+    figcaption { padding-top: 12px; line-height: 1.45; }
+    strong { color: white; }
+    .poster { aspect-ratio: 3 / 2; object-fit: cover; }
+    .og { aspect-ratio: 1200 / 630; object-fit: cover; }
+    .favicon-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .favicon-grid .sample { display: grid; min-height: 156px; place-items: center; color: #0A0B0F; }
+    .favicon-grid img { width: 64px; height: 64px; }
+    .dark { background: #0A0B0F; color: #D8D1C4 !important; }
+    .light { background: #f4f1e9; }
+    .checker { background-color: #D8D1C4; background-image: linear-gradient(45deg, #8d8a84 25%, transparent 25%), linear-gradient(-45deg, #8d8a84 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #8d8a84 75%), linear-gradient(-45deg, transparent 75%, #8d8a84 75%); background-position: 0 0, 0 8px, 8px -8px, -8px 0; background-size: 16px 16px; }
+    ul { padding-left: 1.25rem; line-height: 1.6; }
+    @media (max-width: 600px) {
+      main { width: min(390px, calc(100% - 24px)); padding-top: 28px; }
+      .grid, .favicon-grid { grid-template-columns: 1fr; }
+      .favicon-grid .sample { min-height: 120px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>The Vitek Machine selected asset package</h1>
+    <p class="lede direction"><strong>Locked direction:</strong> A supplies the whole-machine silhouette, B the modular construction, C the slot interaction, and D only the reward timing. Assembly drag → snap → seat/eject remains the product grammar; image-to-video remains rejected.</p>
+    <p class="lede">These source images guide procedural geometry; they are reference material, not final meshes. Critical project copy remains real HTML or SVG.</p>
+
+    <h2>Selected references</h2>
+    <section class="grid" aria-label="Selected procedural geometry references">
+      <figure>
+        <img src="selected/machine-hero-reference.png" alt="Approved whole-machine reference with one seated and three loose cartridges">
+        <figcaption><strong>Machine hero.</strong> Full silhouette, exactly four cartridges, quiet default state.</figcaption>
+      </figure>
+      <figure>
+        <img src="selected/cartridge-reference-board.png" alt="Four modular cartridge construction references in a two by two grid">
+        <figcaption><strong>Cartridge board.</strong> Four shared-envelope modules with distinct procedural construction cues.</figcaption>
+      </figure>
+      <figure>
+        <img src="selected/material-lighting-board.png" alt="Obsidian, aluminium, resin, rubber and mechanical hardware material references">
+        <figcaption><strong>Material and lighting board.</strong> Palette, side light, fasteners, rail, latch, slot and spring references.</figcaption>
+      </figure>
+    </section>
+
+    <h2>Production derivatives</h2>
+    <section class="grid" aria-label="Real production image derivatives">
+      <figure>
+        <img class="poster" src="../../public/assets/machine/machine-fallback.webp" alt="Static full-composition fallback poster of The Vitek Machine">
+        <figcaption><strong>Responsive fallback poster.</strong> Static, no-WebGL and reduced-motion presentation at 1536×1024.</figcaption>
+      </figure>
+      <figure>
+        <img class="og" src="../../public/og-image.webp" alt="Wide social crop of The Vitek Machine without baked copy">
+        <figcaption><strong>OG crop.</strong> Exact 1200×630 imagery-only share card; title and description stay metadata text.</figcaption>
+      </figure>
+    </section>
+
+    <h2>Favicon surfaces</h2>
+    <section class="favicon-grid" aria-label="Favicon on dark, light and checkerboard surfaces">
+      <div class="sample dark"><img src="../../public/favicon.svg" alt="Machine-slot favicon on dark"></div>
+      <div class="sample light"><img src="../../public/favicon.svg" alt="Machine-slot favicon on light"></div>
+      <div class="sample checker"><img src="../../public/favicon.svg" alt="Machine-slot favicon on checkerboard"></div>
+    </section>
+
+    <h2>390px review and deferrals</h2>
+    <p class="lede">The single-column 390px layout keeps every source, crop, caption and icon inside the viewport. Desktop uses bounded fluid grids with no horizontal overflow or external request.</p>
+    <p class="lede">Deferred because the next scene has not proven a need:</p>
+    <ul>
+      <li>wordmark, decals and sprites;</li>
+      <li>portrait and extra cartridge rasters;</li>
+      <li>glTF and app integration.</li>
+    </ul>
+  </main>
+</body>
+</html>

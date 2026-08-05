@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "ticket": "t_9775f392",
+  "generatedAt": "2026-08-05",
+  "provider": "openai-codex",
+  "model": "gpt-image-2-high",
+  "paidFallbackUsed": false,
+  "usage": "Concept moodframes only; not final geometry or production assets.",
+  "candidates": [
+    {
+      "id": "A",
+      "file": "a-frontal-bench.png",
+      "sha256": "f12e79249eae37e1acf586a026160f52d09a57a9e7b2237a58019ca0e2701c2e",
+      "width": 1536,
+      "height": 1024,
+      "prompt": "Near-frontal central modular machine on a physical assembly bench, four distinct removable cartridges around one illuminated slot; brushed warm aluminum, obsidian steel, smoked glass, translucent resin, rubber controls; locked orange/cyan palette with tiny acid-yellow reward; cinematic product photography, quiet negative space; no people, logos, readable text, UI, cyberpunk, neon overload, glassmorphism, chrome blobs, or fake code."
+    },
+    {
+      "id": "B",
+      "file": "b-exploded-assembly.png",
+      "sha256": "24834bf7a5cec7b1f6cc5c5e3230b501a9bd1192435d828829000413a943bcb3",
+      "width": 1536,
+      "height": 1024,
+      "prompt": "Three-quarter exploded assembly view: central chassis with rails, ratchets, springs, one slot, and four distinct modules implying snap/seat/eject; disciplined industrial-design reference with dark negative space; same locked material/palette and forbidden-content contract as A."
+    },
+    {
+      "id": "C",
+      "file": "c-seat-closeup.png",
+      "sha256": "e730cfed214247cee926910fc064d70f842b5e3c261a3af149452d41db9332e6",
+      "width": 1536,
+      "height": 1024,
+      "prompt": "Macro hero close-up of one translucent cartridge halfway seated into a precision slot, visible latch/ratchet details, strong drag-to-snap-to-seat payoff; same locked material/palette and forbidden-content contract as A."
+    },
+    {
+      "id": "D",
+      "file": "d-reward-stage.png",
+      "sha256": "42d1e2ee71afc4ae713381b1bc7c92fc2ed1e3977d8a3743f1f2057a36e7cf47",
+      "width": 1672,
+      "height": 941,
+      "prompt": "Sparse theatrical workshop stage: central machine, one cartridge arriving on a rail, three stored silhouettes, quiet frame transitioning into an explosive mechanical reward; same locked material/palette and forbidden-content contract as A."
+    }
+  ]
+}

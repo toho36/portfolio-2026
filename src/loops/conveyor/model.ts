@@ -1,11 +1,7 @@
 import { clamp } from '../../motion'
+import { CARTRIDGES } from '../../content/cartridges'
 
-export const CARTRIDGES = [
-  'GameOnVB',
-  'Suburbs',
-  'Screen Switch',
-  'VoleyEvents',
-] as const
+export { CARTRIDGES }
 
 export interface ConveyorState {
   progress: number

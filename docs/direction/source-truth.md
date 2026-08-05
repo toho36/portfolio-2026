@@ -30,9 +30,7 @@ Only a public-safe preview and sourced description may be published for each car
 - **Type:** typography family, scale, weights, and licensing are **TBD**. Type must support immediate comprehension and controls; no typeface is implied.
 - **Motion:** kinetic, mechanical, reversible, and input-coupled. Seating and ejection end in a crisp payoff; motion must preserve causality between user action and machine response.
 
-## Candidate technical stack
-
-Locked candidate stack for prototype evaluation:
+## Locked technical stack
 
 - Vite + React + TypeScript
 - React Three Fiber / Three.js
@@ -41,7 +39,7 @@ Locked candidate stack for prototype evaluation:
 - local typed content
 - static hosting
 
-React Three Fiber is conditional, not mandatory: if the winning prototype is credibly DOM/SVG + GSAP, do not force R3F. Physics is excluded unless the next prototype ticket proves it materially necessary. A static/no-WebGL path is a content-access fallback, not a decision that the primary renderer must be optional.
+React Three Fiber / Three.js is the primary renderer for the real-time machine. GSAP + ScrollTrigger is the sole authored motion and scroll engine; CSS owns layout and simple DOM states. Physics remains excluded unless measured interaction evidence proves simple deterministic snap/collision logic insufficient. The static/no-WebGL path is a content-access fallback, not a second renderer.
 
 ## Explicit non-goals
 

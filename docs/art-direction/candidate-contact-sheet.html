@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Vitek Machine — moodframe candidates</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #0a0b0f; color: #d8d1c4; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: clamp(1rem, 3vw, 3rem); }
+    main { max-width: 90rem; margin: auto; }
+    p { max-width: 70ch; line-height: 1.5; }
+    .notice { color: #42e8ff; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
+    figure { min-width: 0; margin: 0; border: 1px solid #37383c; background: #111216; }
+    img { display: block; width: 100%; max-width: 100%; height: auto; }
+    figcaption { padding: 1rem; overflow-wrap: anywhere; }
+    strong { color: #ff5a1f; }
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: minmax(0, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>The Vitek Machine moodframe candidates</h1>
+    <p class="notice">Approved direction: synthesize A + B + C; use D only for reward timing. These remain concept references, not finished 3D geometry.</p>
+    <div class="grid">
+      <figure><img src="candidates/a-frontal-bench.png" alt="Candidate A: frontal machine and four cartridges"><figcaption><strong>A</strong> — whole-machine silhouette and cartridge family</figcaption></figure>
+      <figure><img src="candidates/b-exploded-assembly.png" alt="Candidate B: exploded modular machine assembly"><figcaption><strong>B</strong> — modular construction and procedural parts</figcaption></figure>
+      <figure><img src="candidates/c-seat-closeup.png" alt="Candidate C: cartridge entering a mechanical slot"><figcaption><strong>C</strong> — drag, snap, seat and eject interaction</figcaption></figure>
+      <figure><img src="candidates/d-reward-stage.png" alt="Candidate D: rail-fed machine reward moment"><figcaption><strong>D</strong> — quiet-to-payoff timing reference</figcaption></figure>
+    </div>
+  </main>
+</body>
+</html>

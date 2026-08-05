@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "ticket": "t_9775f392",
+  "generatedAt": "2026-08-05",
+  "provider": "openai-codex",
+  "model": "gpt-image-2-high",
+  "paidFallbackUsed": false,
+  "selectedDirection": "A whole-machine silhouette + B modular construction + C slot interaction; D only for reward timing",
+  "references": [
+    "../candidates/a-frontal-bench.png",
+    "../candidates/b-exploded-assembly.png",
+    "../candidates/c-seat-closeup.png"
+  ],
+  "assets": [
+    {
+      "id": "machine-hero-reference",
+      "file": "machine-hero-reference.png",
+      "sha256": "49ffdcaa1d9f664af855a7cc8ca7190ee31b9047733a3c1a9f0655062329a0b3",
+      "width": 1536,
+      "height": 1024,
+      "qa": "Exactly four cartridges total: one seated plus three loose; obvious slot; no readable text, logos, UI or glyphs.",
+      "prompt": "Synthesize A whole-machine silhouette, B modular construction and C precision slot interaction; quiet default state, exactly four cartridges, locked palette/materials, no text/UI/code/people. A first generation with five cartridges was rejected and replaced by this corrected image."
+    },
+    {
+      "id": "cartridge-reference-board",
+      "file": "cartridge-reference-board.png",
+      "sha256": "61e3191e33000d8c7fb29379a3fa36724aef41d24ca08bf8e1eb7b08d901826b",
+      "width": 1254,
+      "height": 1254,
+      "qa": "Exactly four 2x2 modules with shared envelope and distinct GameOnVB, Suburbs, Screen Switch and VoleyEvents geometry; no text/logos/UI.",
+      "prompt": "One 2x2 board of four shared-envelope cartridges: event capsule, architectural tile, display/switch shutters, and tournament ball/track; locked palette/light/camera; no text/UI/logos."
+    },
+    {
+      "id": "material-lighting-board",
+      "file": "material-lighting-board.png",
+      "sha256": "6c122f17fca55c00e285e5a65c0075b8a7effbf6bcdbd514f4e3b11faeca8352",
+      "width": 1536,
+      "height": 1024,
+      "qa": "Text-free material, light and procedural hardware samples; consistent palette and side lighting.",
+      "prompt": "Text-free material and lighting board for obsidian steel, warm aluminum, smoked glass, cyan resin, orange rubber, paper substrate, one acid-yellow indicator, latch, rail, spring, slot and fasteners."
+    }
+  ]
+}

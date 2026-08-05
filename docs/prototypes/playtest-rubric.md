@@ -2,7 +2,7 @@
 
 Status: **OBSERVED — user ranking captured on 2026-08-03.**
 
-Winner: **Assembly bench (provisional).** A new scroll-scrubbed AI-motion visual-layer spike must run before the interaction contract is final.
+Winner: **Assembly bench (final).** The later scroll-scrubbed media challenger proved seeking and fallback plumbing, but its visual was only a subtle zoom over a still image and was rejected as product direction.
 
 Observed ranking: **1. Assembly bench · 2. Machine timeline · 3. Conveyor / rewind.**
 
@@ -70,4 +70,4 @@ Score each loop from 1 (fails) to 5 (clear/strong). Leave every cell PENDING unt
 
 Results: **Assembly bench won the first comparison. Conveyor / rewind is rejected in its current slow form; Machine timeline remains secondary but also needs direct, faster scroll response.**
 
-Winner: **Assembly bench (provisional pending the AI-motion scroll-scrub spike).**
+Winner: **Assembly bench.** Build the production mechanic as a real-time R3F/Three.js machine; use GSAP + ScrollTrigger for reversible choreography. Do not carry the rejected video-proxy UI, assets, or validator into production.

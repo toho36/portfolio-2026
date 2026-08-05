@@ -1,5 +1,5 @@
 {
-  "name": "vitek-machine-interaction-lab",
+  "name": "vitek-machine-portfolio",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,13 +10,19 @@
     "build": "tsc --noEmit && vite build"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "6.0.5",
+    "@react-three/fiber": "9.7.0",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
+    "@vitejs/plugin-react": "6.0.5",
+    "gsap": "3.15.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "three": "0.185.1",
     "typescript": "7.0.2",
     "vite": "8.2.0",
-    "vitest": "4.1.10",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "vitest": "4.1.10"
+  },
+  "devDependencies": {
+    "@types/three": "0.185.3"
   }
 }
