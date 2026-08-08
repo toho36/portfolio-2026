@@ -44,6 +44,7 @@ import {
   type ResumeActivityGate,
 } from './adaptiveDpr'
 import type { ManipulationTerminalCallback } from './manipulation'
+import { deriveMachineGroupChoreography } from './machineChoreography'
 import type { PresentationBridge } from './scrollIntegration'
 
 const CARTRIDGE_SIGNALS = ['#ff5a1f', '#42e8ff', '#d8d1c4', '#ff7a45'] as const
@@ -53,6 +54,7 @@ interface RendererHandshakeProps {
   readonly assembly: AssemblyState
   readonly onManipulationOutcome: ManipulationTerminalCallback
   readonly paused: boolean
+  readonly reducedMotion: boolean
   readonly presentationBridge: PresentationBridge
   readonly resumeGate: ResumeActivityGate
 }
@@ -62,6 +64,7 @@ function RendererHandshake({
   assembly,
   onManipulationOutcome,
   paused,
+  reducedMotion,
   presentationBridge,
   resumeGate,
 }: RendererHandshakeProps) {
@@ -88,15 +91,19 @@ function RendererHandshake({
         apply(values) {
           const group = presentationRef.current
           if (!group || pausedRef.current) return
-          group.position.x = (values.conveyorProgress - 0.5) * 0.36
-          group.position.y = (values.timelineProgress - 0.5) * 0.18
-          group.rotation.x = (values.timelineProgress - 0.5) * 0.08
-          group.rotation.y = (values.conveyorProgress - 0.5) * 0.5
-          group.scale.setScalar(0.96 + values.timelineProgress * 0.04)
+          const choreography = deriveMachineGroupChoreography({
+            ...values,
+            reducedMotion,
+          })
+          group.position.x = choreography.positionX
+          group.position.y = choreography.positionY
+          group.rotation.x = choreography.rotationX
+          group.rotation.y = choreography.rotationY
+          group.scale.setScalar(choreography.scale)
           if (!resumeGate.isBlocked()) invalidate()
         },
       }),
-    [invalidate, presentationBridge, resumeGate],
+    [invalidate, presentationBridge, reducedMotion, resumeGate],
   )
 
   useLayoutEffect(() => {
@@ -552,6 +559,7 @@ export default function MachineCanvas({
         assembly={assembly}
         onManipulationOutcome={onManipulationOutcome}
         paused={paused}
+        reducedMotion={reducedMotion}
         presentationBridge={presentationBridge}
         resumeGate={resumeGate}
       />
