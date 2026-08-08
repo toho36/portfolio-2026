@@ -490,7 +490,14 @@ export default function App() {
       />
 
       <footer>
-        <span>Vitek Machine / service console</span>
+        <span>Hoang Viet To / frontend &amp; full-stack developer</span>
+        <nav aria-label="Contact and CV">
+          <a href="mailto:tohoangviet1998@gmail.com">Email</a>
+          <a href="https://github.com/toho36">GitHub</a>
+          <a href="https://www.linkedin.com/in/hoangvietto/">LinkedIn</a>
+          <a href="/hoang-viet-to-cv-en.docx" download>CV EN</a>
+          <a href="/hoang-viet-to-cv-cz.docx" download>CV CZ</a>
+        </nav>
         <a href="#machine-console">Return to machine</a>
       </footer>
     </>

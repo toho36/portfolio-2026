@@ -942,6 +942,13 @@ footer {
   font-size: 0.78rem;
 }
 
+footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem 1rem;
+}
+
 footer a {
   display: inline-flex;
   min-height: 44px;
@@ -1165,6 +1172,13 @@ footer a {
 
   footer {
     min-height: 5rem;
+    align-items: flex-start;
+    flex-direction: column;
+    padding-block: 1rem;
+  }
+
+  footer nav {
+    justify-content: flex-start;
   }
 }
 
