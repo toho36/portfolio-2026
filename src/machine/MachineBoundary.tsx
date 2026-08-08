@@ -1,29 +1,58 @@
-import { Component, lazy, Suspense, useEffect, useState, type ErrorInfo, type ReactNode } from 'react'
+import {
+  Component,
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useState,
+  type ErrorInfo,
+  type ReactNode,
+} from 'react'
+import { deriveRendererPresentation, type RendererPhase } from './consoleAdapter'
+import type { CartridgeIndex } from '../content/cartridges'
 
-const MachineCanvas = lazy(() => import('./MachineCanvas'))
+class MachineModuleLoadError extends Error {
+  constructor(cause: unknown) {
+    super('The machine preview module could not be loaded', { cause })
+    this.name = 'MachineModuleLoadError'
+  }
+}
+
+const MachineCanvas = lazy(async () => {
+  try {
+    return await import('./MachineCanvas')
+  } catch (error) {
+    throw new MachineModuleLoadError(error)
+  }
+})
 
 interface ErrorBoundaryProps {
-  children: ReactNode
+  readonly children: ReactNode
+  readonly onFailure: (phase: 'lazy-error' | 'render-error') => void
 }
 
 interface ErrorBoundaryState {
-  failed: boolean
+  readonly failed: boolean
 }
 
-class MachineErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  state = { failed: false }
+class MachineErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
+  state: ErrorBoundaryState = { failed: false }
 
   static getDerivedStateFromError(): ErrorBoundaryState {
     return { failed: true }
   }
 
-  componentDidCatch(_error: Error, _info: ErrorInfo) {}
+  componentDidCatch(error: Error, _info: ErrorInfo) {
+    this.props.onFailure(
+      error instanceof MachineModuleLoadError ? 'lazy-error' : 'render-error',
+    )
+  }
 
   render() {
-    if (this.state.failed) {
-      return <p role="status">3D preview unavailable. Portfolio content remains available below.</p>
-    }
-    return this.props.children
+    return this.state.failed ? null : this.props.children
   }
 }
 
@@ -36,39 +65,96 @@ function supportsWebGL(): boolean {
   }
 }
 
-export function MachineBoundary() {
-  const [supported, setSupported] = useState<boolean | null>(null)
-  const [mounted, setMounted] = useState(true)
+export interface MachineBoundaryProps {
+  readonly selectedCartridge: CartridgeIndex
+  readonly selectedName: string
+  readonly seated: boolean
+  readonly effectivelyPaused: boolean
+  readonly reducedMotion: boolean
+}
 
-  useEffect(() => setSupported(supportsWebGL()), [])
+export function MachineBoundary({
+  selectedCartridge,
+  selectedName,
+  seated,
+  effectivelyPaused,
+  reducedMotion,
+}: MachineBoundaryProps) {
+  const [phase, setPhase] = useState<RendererPhase>('checking')
+
+  useEffect(() => {
+    setPhase(supportsWebGL() ? 'loading' : 'no-webgl')
+  }, [])
+
+  const handleRendererReady = useCallback(() => {
+    setPhase((currentPhase) =>
+      currentPhase === 'loading' ? 'ready' : currentPhase,
+    )
+  }, [])
+  const handleRendererFailure = useCallback(() => {
+    setPhase('render-error')
+  }, [])
+
+  const presentation = deriveRendererPresentation(
+    phase,
+    effectivelyPaused,
+    reducedMotion,
+  )
+  const showCanvas =
+    phase !== 'checking' &&
+    phase !== 'no-webgl' &&
+    phase !== 'lazy-error' &&
+    phase !== 'render-error'
 
   return (
-    <section className="machine-foundation" aria-labelledby="machine-foundation-title">
-      <div className="section-heading">
-        <div>
-          <p className="eyebrow">Renderer foundation</p>
-          <h2 id="machine-foundation-title">Machine bay</h2>
-        </div>
-        {supported && (
-          <button type="button" onClick={() => setMounted((value) => !value)}>
-            {mounted ? 'Hide 3D preview' : 'Show 3D preview'}
-          </button>
-        )}
+    <div className="machine-viewport" data-renderer-phase={phase}>
+      <div className="viewport-fasteners" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+        <span />
       </div>
 
-      <div className={`machine-canvas-shell${supported === false || (supported && !mounted) ? ' is-compact' : ''}`}>
-        {supported === null && <p role="status">Checking 3D support…</p>}
-        {supported === false && <p role="status">3D preview unavailable. Portfolio content remains available below.</p>}
-        {supported && !mounted && <p role="status">3D preview paused.</p>}
-        {supported && mounted && (
-          <MachineErrorBoundary>
-            <Suspense fallback={<p role="status">Loading 3D preview…</p>}>
-              <MachineCanvas />
-            </Suspense>
-          </MachineErrorBoundary>
+      <div className="viewport-screen">
+        <img
+          className="machine-poster"
+          src="/assets/machine/machine-fallback.webp"
+          alt="Vitek Machine workshop preview"
+        />
+        {showCanvas && (
+          <div className="machine-canvas-layer" aria-hidden="true">
+            <MachineErrorBoundary onFailure={setPhase}>
+              <Suspense fallback={null}>
+                <MachineCanvas
+                  selectedCartridge={selectedCartridge}
+                  seated={seated}
+                  paused={effectivelyPaused}
+                  reducedMotion={reducedMotion}
+                  onReady={handleRendererReady}
+                  onFailure={handleRendererFailure}
+                />
+              </Suspense>
+            </MachineErrorBoundary>
+          </div>
         )}
+
+        <div className="viewport-identity" aria-hidden="true">
+          <span>{String(selectedCartridge + 1).padStart(2, '0')}</span>
+          <strong>{selectedName}</strong>
+        </div>
       </div>
-      <p className="foundation-note">Procedural renderer handshake only. Final machine geometry comes next.</p>
-    </section>
+
+      <div
+        className={`renderer-readout is-${presentation.tone}`}
+        role="status"
+        aria-live="polite"
+      >
+        <span className="status-lamp" aria-hidden="true" />
+        <span>
+          <strong>{presentation.label}</strong>
+          <small>{presentation.detail}</small>
+        </span>
+      </div>
+    </div>
   )
 }
