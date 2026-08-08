@@ -28,6 +28,11 @@ import {
   type CartridgeGesture,
 } from './cartridgeGesture'
 import {
+  areCartridgeSettlePointsEqual,
+  cartridgeSettlePolicy,
+  type CartridgeSettleKind,
+} from './cartridgeSettle'
+import {
   RAIL_BOUNDS,
   assemblyPointToRailLocal,
   assemblyPointToWorld,
@@ -74,16 +79,23 @@ function RendererHandshake({
   const gestureRef = useRef<CartridgeGesture | null>(null)
   const visiblePointRef = useRef<Point>({ x: assembly.x, y: assembly.y })
   const committedPointRef = useRef<Point>({ x: assembly.x, y: assembly.y })
+  const settleTweenRef = useRef<{
+    readonly tween: ReturnType<typeof gsap.to>
+    readonly target: Point
+  } | null>(null)
   const seatedRef = useRef(assembly.seated)
   const outcomeRef = useRef(onManipulationOutcome)
   const pausedRef = useRef(paused)
+  const reducedMotionRef = useRef(reducedMotion)
   const committedPausedRef = useRef(paused)
+  const committedReducedMotionRef = useRef(reducedMotion)
   const raycasterRef = useRef(new Raycaster())
   const planeRef = useRef(new Plane())
   const hitRef = useRef(new Vector3())
   const { camera, gl, invalidate } = useThree()
 
   pausedRef.current = paused
+  reducedMotionRef.current = reducedMotion
 
   useLayoutEffect(
     () =>
@@ -109,13 +121,13 @@ function RendererHandshake({
   useLayoutEffect(() => {
     const wasPaused = committedPausedRef.current
     committedPausedRef.current = paused
-    if (wasPaused && !paused) presentationBridge.replay()
+    const settleTween = settleTweenRef.current?.tween
+    if (paused) settleTween?.pause()
+    if (wasPaused && !paused) {
+      settleTween?.resume()
+      presentationBridge.replay()
+    }
   }, [paused, presentationBridge])
-
-  useLayoutEffect(() => {
-    const context = gsap.context(() => {})
-    return () => context.revert()
-  }, [])
 
   const applyVisiblePoint = useCallback(
     (point: Point) => {
@@ -129,6 +141,61 @@ function RendererHandshake({
     [invalidate, resumeGate],
   )
 
+  const killSettleTween = useCallback(() => {
+    const active = settleTweenRef.current
+    if (!active) return
+    if (settleTweenRef.current === active) settleTweenRef.current = null
+    active.tween.kill()
+  }, [])
+
+  const settleVisiblePoint = useCallback(
+    (target: Point, kind: CartridgeSettleKind) => {
+      const active = settleTweenRef.current
+      if (
+        active &&
+        active.target.x === target.x &&
+        active.target.y === target.y
+      ) {
+        return
+      }
+
+      killSettleTween()
+
+      const exactTarget = { ...target }
+      const from = visiblePointRef.current
+      const policy = cartridgeSettlePolicy(kind, reducedMotionRef.current)
+      if (
+        policy.duration === 0 ||
+        areCartridgeSettlePointsEqual(from, exactTarget)
+      ) {
+        applyVisiblePoint(exactTarget)
+        return
+      }
+
+      const driver = { x: from.x, y: from.y }
+      let tween: ReturnType<typeof gsap.to>
+      tween = gsap.to(driver, {
+        x: exactTarget.x,
+        y: exactTarget.y,
+        duration: policy.duration,
+        ease: policy.ease,
+        paused: true,
+        onUpdate: () => {
+          if (settleTweenRef.current?.tween !== tween) return
+          applyVisiblePoint(driver)
+        },
+        onComplete: () => {
+          if (settleTweenRef.current?.tween !== tween) return
+          settleTweenRef.current = null
+          applyVisiblePoint(exactTarget)
+        },
+      })
+      settleTweenRef.current = { tween, target: exactTarget }
+      if (!pausedRef.current) tween.play()
+    },
+    [applyVisiblePoint, killSettleTween],
+  )
+
   useLayoutEffect(() => {
     const point = { x: assembly.x, y: assembly.y }
     committedPointRef.current = point
@@ -137,8 +204,20 @@ function RendererHandshake({
       gestureRef.current,
       point,
     )
-    if (idlePoint) applyVisiblePoint(idlePoint)
-  }, [applyVisiblePoint, assembly.seated, assembly.x, assembly.y, paused])
+    if (idlePoint) {
+      settleVisiblePoint(idlePoint, assembly.seated ? 'seat' : 'return')
+    }
+  }, [assembly.seated, assembly.x, assembly.y, paused, settleVisiblePoint])
+
+  useLayoutEffect(() => {
+    const previousReducedMotion = committedReducedMotionRef.current
+    committedReducedMotionRef.current = reducedMotion
+    if (previousReducedMotion === reducedMotion) return
+    killSettleTween()
+    applyVisiblePoint(committedPointRef.current)
+  }, [applyVisiblePoint, killSettleTween, reducedMotion])
+
+  useLayoutEffect(() => () => killSettleTween(), [killSettleTween])
 
   useLayoutEffect(() => {
     outcomeRef.current = onManipulationOutcome
@@ -189,6 +268,7 @@ function RendererHandshake({
         return
       }
 
+      killSettleTween()
       const pointerType =
         event.pointerType === 'touch' || event.pointerType === 'pen'
           ? event.pointerType
@@ -263,7 +343,7 @@ function RendererHandshake({
         committedPointRef.current,
         seatedRef.current,
       )
-      if (terminalPoint) applyVisiblePoint(terminalPoint)
+      if (terminalPoint) settleVisiblePoint(terminalPoint, 'return')
       if (canvas.hasPointerCapture(event.pointerId)) {
         try {
           canvas.releasePointerCapture(event.pointerId)
@@ -294,7 +374,7 @@ function RendererHandshake({
       window.removeEventListener('pointercancel', handlePointerCancel)
       canvas.removeEventListener('lostpointercapture', handleLostPointerCapture)
     }
-  }, [applyVisiblePoint, camera, gl])
+  }, [applyVisiblePoint, camera, gl, killSettleTween, settleVisiblePoint])
 
   const slotCenter = assemblyPointToRailLocal(SLOT.center)
   const slotWidth =
