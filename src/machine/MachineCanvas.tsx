@@ -9,6 +9,7 @@ import {
 } from 'react'
 import {
   Group,
+  type MeshBasicMaterial,
   PerspectiveCamera,
   Plane,
   Raycaster,
@@ -50,6 +51,10 @@ import {
 } from './adaptiveDpr'
 import type { ManipulationTerminalCallback } from './manipulation'
 import { deriveMachineGroupChoreography } from './machineChoreography'
+import {
+  cylinderSegmentsForDpr,
+  deriveCartridgeSettleFeedback,
+} from './rendererFeedback'
 import type { PresentationBridge } from './scrollIntegration'
 
 const CARTRIDGE_SIGNALS = ['#ff5a1f', '#42e8ff', '#d8d1c4', '#ff7a45'] as const
@@ -62,6 +67,7 @@ interface RendererHandshakeProps {
   readonly reducedMotion: boolean
   readonly presentationBridge: PresentationBridge
   readonly resumeGate: ResumeActivityGate
+  readonly cylinderSegments: number
 }
 
 function RendererHandshake({
@@ -72,10 +78,12 @@ function RendererHandshake({
   reducedMotion,
   presentationBridge,
   resumeGate,
+  cylinderSegments,
 }: RendererHandshakeProps) {
   const presentationRef = useRef<Group>(null)
   const railRef = useRef<Group>(null)
   const cartridgeRef = useRef<Group>(null)
+  const slotMaterialRef = useRef<MeshBasicMaterial>(null)
   const gestureRef = useRef<CartridgeGesture | null>(null)
   const visiblePointRef = useRef<Point>({ x: assembly.x, y: assembly.y })
   const committedPointRef = useRef<Point>({ x: assembly.x, y: assembly.y })
@@ -141,12 +149,38 @@ function RendererHandshake({
     [invalidate, resumeGate],
   )
 
+  const resetSettleFeedback = useCallback(() => {
+    cartridgeRef.current?.scale.set(1, 1, 1)
+    if (slotMaterialRef.current) slotMaterialRef.current.opacity = 0.3
+  }, [])
+
+  const applySettleFeedback = useCallback(
+    (kind: CartridgeSettleKind, progress: number) => {
+      const feedback = deriveCartridgeSettleFeedback(
+        kind,
+        progress,
+        reducedMotionRef.current,
+      )
+      cartridgeRef.current?.scale.set(
+        feedback.scaleX,
+        feedback.scaleY,
+        feedback.scaleZ,
+      )
+      if (slotMaterialRef.current) {
+        slotMaterialRef.current.opacity = feedback.slotOpacity
+      }
+    },
+    [],
+  )
+
   const killSettleTween = useCallback(() => {
     const active = settleTweenRef.current
-    if (!active) return
-    if (settleTweenRef.current === active) settleTweenRef.current = null
-    active.tween.kill()
-  }, [])
+    if (active) {
+      if (settleTweenRef.current === active) settleTweenRef.current = null
+      active.tween.kill()
+    }
+    resetSettleFeedback()
+  }, [resetSettleFeedback])
 
   const settleVisiblePoint = useCallback(
     (target: Point, kind: CartridgeSettleKind) => {
@@ -182,18 +216,25 @@ function RendererHandshake({
         paused: true,
         onUpdate: () => {
           if (settleTweenRef.current?.tween !== tween) return
+          applySettleFeedback(kind, tween.progress())
           applyVisiblePoint(driver)
         },
         onComplete: () => {
           if (settleTweenRef.current?.tween !== tween) return
           settleTweenRef.current = null
+          resetSettleFeedback()
           applyVisiblePoint(exactTarget)
         },
       })
       settleTweenRef.current = { tween, target: exactTarget }
       if (!pausedRef.current) tween.play()
     },
-    [applyVisiblePoint, killSettleTween],
+    [
+      applySettleFeedback,
+      applyVisiblePoint,
+      killSettleTween,
+      resetSettleFeedback,
+    ],
   )
 
   useLayoutEffect(() => {
@@ -269,6 +310,7 @@ function RendererHandshake({
       }
 
       killSettleTween()
+      applyVisiblePoint(visiblePointRef.current)
       const pointerType =
         event.pointerType === 'touch' || event.pointerType === 'pen'
           ? event.pointerType
@@ -395,7 +437,13 @@ function RendererHandshake({
         </mesh>
         <mesh position={[slotCenter.x, slotCenter.y, RAIL_BOUNDS.z - 0.1]}>
           <boxGeometry args={[slotWidth, slotHeight, 0.025]} />
-          <meshBasicMaterial color="#42e8ff" opacity={0.3} transparent wireframe />
+          <meshBasicMaterial
+            ref={slotMaterialRef}
+            color="#42e8ff"
+            opacity={0.3}
+            transparent
+            wireframe
+          />
         </mesh>
         <group ref={cartridgeRef}>
           <mesh position={[0, 0, -0.11]}>
@@ -412,7 +460,7 @@ function RendererHandshake({
           </mesh>
         </group>
         <mesh position={[2.05, -0.35, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.55, 0.55, 0.35, 24]} />
+          <cylinderGeometry args={[0.55, 0.55, 0.35, cylinderSegments]} />
           <meshStandardMaterial color="#42e8ff" metalness={0.55} roughness={0.25} />
         </mesh>
       </group>
@@ -642,6 +690,7 @@ export default function MachineCanvas({
         reducedMotion={reducedMotion}
         presentationBridge={presentationBridge}
         resumeGate={resumeGate}
+        cylinderSegments={cylinderSegmentsForDpr(dpr)}
       />
     </Canvas>
   )
