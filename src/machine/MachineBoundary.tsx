@@ -4,6 +4,7 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useRef,
   useState,
   type ErrorInfo,
   type ReactNode,
@@ -12,6 +13,7 @@ import { deriveRendererPresentation, type RendererPhase } from './consoleAdapter
 import type { CartridgeIndex } from '../content/cartridges'
 import type { AssemblyState } from '../loops/assembly/model'
 import type { ManipulationTerminalCallback } from './manipulation'
+import type { PresentationBridge } from './scrollIntegration'
 
 class MachineModuleLoadError extends Error {
   constructor(cause: unknown) {
@@ -74,6 +76,7 @@ export interface MachineBoundaryProps {
   readonly onManipulationOutcome: ManipulationTerminalCallback
   readonly effectivelyPaused: boolean
   readonly reducedMotion: boolean
+  readonly presentationBridge: PresentationBridge
 }
 
 export function MachineBoundary({
@@ -83,8 +86,18 @@ export function MachineBoundary({
   onManipulationOutcome,
   effectivelyPaused,
   reducedMotion,
+  presentationBridge,
 }: MachineBoundaryProps) {
   const [phase, setPhase] = useState<RendererPhase>('checking')
+  const rendererInputRef = useRef({
+    selectedCartridge,
+    assembly,
+    reducedMotion,
+  })
+
+  if (!effectivelyPaused) {
+    rendererInputRef.current = { selectedCartridge, assembly, reducedMotion }
+  }
 
   useEffect(() => {
     setPhase(supportsWebGL() ? 'loading' : 'no-webgl')
@@ -130,11 +143,12 @@ export function MachineBoundary({
             <MachineErrorBoundary onFailure={setPhase}>
               <Suspense fallback={null}>
                 <MachineCanvas
-                  selectedCartridge={selectedCartridge}
-                  assembly={assembly}
+                  selectedCartridge={rendererInputRef.current.selectedCartridge}
+                  assembly={rendererInputRef.current.assembly}
                   onManipulationOutcome={onManipulationOutcome}
                   paused={effectivelyPaused}
-                  reducedMotion={reducedMotion}
+                  reducedMotion={rendererInputRef.current.reducedMotion}
+                  presentationBridge={presentationBridge}
                   onReady={handleRendererReady}
                   onFailure={handleRendererFailure}
                 />

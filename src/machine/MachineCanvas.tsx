@@ -29,6 +29,7 @@ import {
   intersectClientWithRailPlane,
 } from './cartridgeProjection'
 import type { ManipulationTerminalCallback } from './manipulation'
+import type { PresentationBridge } from './scrollIntegration'
 
 const CARTRIDGE_SIGNALS = ['#ff5a1f', '#42e8ff', '#d8d1c4', '#ff7a45'] as const
 
@@ -36,13 +37,18 @@ interface RendererHandshakeProps {
   readonly selectedCartridge: CartridgeIndex
   readonly assembly: AssemblyState
   readonly onManipulationOutcome: ManipulationTerminalCallback
+  readonly paused: boolean
+  readonly presentationBridge: PresentationBridge
 }
 
 function RendererHandshake({
   selectedCartridge,
   assembly,
   onManipulationOutcome,
+  paused,
+  presentationBridge,
 }: RendererHandshakeProps) {
+  const presentationRef = useRef<Group>(null)
   const railRef = useRef<Group>(null)
   const cartridgeRef = useRef<Group>(null)
   const gestureRef = useRef<CartridgeGesture | null>(null)
@@ -50,10 +56,37 @@ function RendererHandshake({
   const committedPointRef = useRef<Point>({ x: assembly.x, y: assembly.y })
   const seatedRef = useRef(assembly.seated)
   const outcomeRef = useRef(onManipulationOutcome)
+  const pausedRef = useRef(paused)
+  const committedPausedRef = useRef(paused)
   const raycasterRef = useRef(new Raycaster())
   const planeRef = useRef(new Plane())
   const hitRef = useRef(new Vector3())
   const { camera, gl, invalidate } = useThree()
+
+  pausedRef.current = paused
+
+  useLayoutEffect(
+    () =>
+      presentationBridge.attach({
+        apply(values) {
+          const group = presentationRef.current
+          if (!group || pausedRef.current) return
+          group.position.x = (values.conveyorProgress - 0.5) * 0.36
+          group.position.y = (values.timelineProgress - 0.5) * 0.18
+          group.rotation.x = (values.timelineProgress - 0.5) * 0.08
+          group.rotation.y = (values.conveyorProgress - 0.5) * 0.5
+          group.scale.setScalar(0.96 + values.timelineProgress * 0.04)
+          invalidate()
+        },
+      }),
+    [invalidate, presentationBridge],
+  )
+
+  useLayoutEffect(() => {
+    const wasPaused = committedPausedRef.current
+    committedPausedRef.current = paused
+    if (wasPaused && !paused) presentationBridge.replay()
+  }, [paused, presentationBridge])
 
   useLayoutEffect(() => {
     const context = gsap.context(() => {})
@@ -62,6 +95,7 @@ function RendererHandshake({
 
   const applyVisiblePoint = useCallback(
     (point: Point) => {
+      if (pausedRef.current) return
       visiblePointRef.current = { ...point }
       if (cartridgeRef.current) {
         cartridgeRef.current.position.copy(assemblyPointToRailLocal(point))
@@ -80,7 +114,7 @@ function RendererHandshake({
       point,
     )
     if (idlePoint) applyVisiblePoint(idlePoint)
-  }, [applyVisiblePoint, assembly.seated, assembly.x, assembly.y])
+  }, [applyVisiblePoint, assembly.seated, assembly.x, assembly.y, paused])
 
   useLayoutEffect(() => {
     outcomeRef.current = onManipulationOutcome
@@ -112,6 +146,7 @@ function RendererHandshake({
 
     const handlePointerDown = (event: PointerEvent) => {
       if (
+        pausedRef.current ||
         gestureRef.current ||
         !event.isPrimary ||
         (event.pointerType === 'mouse' && event.button !== 0) ||
@@ -244,37 +279,39 @@ function RendererHandshake({
     (SLOT.bottom - SLOT.top) * (RAIL_BOUNDS.top - RAIL_BOUNDS.bottom)
 
   return (
-    <group ref={railRef} rotation={[0.18, -0.35, 0]}>
-      <mesh position={[0, -0.85, 0]}>
-        <boxGeometry args={[4.8, 0.45, 2.4]} />
-        <meshStandardMaterial color="#242730" metalness={0.8} roughness={0.35} />
-      </mesh>
-      <mesh position={[0, 0, 0]}>
-        <boxGeometry args={[3.8, 1.4, 1.8]} />
-        <meshStandardMaterial color="#d8d1c4" metalness={0.75} roughness={0.3} />
-      </mesh>
-      <mesh position={[slotCenter.x, slotCenter.y, RAIL_BOUNDS.z - 0.1]}>
-        <boxGeometry args={[slotWidth, slotHeight, 0.025]} />
-        <meshBasicMaterial color="#42e8ff" opacity={0.3} transparent wireframe />
-      </mesh>
-      <group ref={cartridgeRef}>
-        <mesh position={[0, 0, -0.11]}>
-          <boxGeometry args={[1.25, 0.8, 0.15]} />
-          <meshStandardMaterial color="#0a0b0f" />
+    <group ref={presentationRef}>
+      <group ref={railRef} rotation={[0.18, -0.35, 0]}>
+        <mesh position={[0, -0.85, 0]}>
+          <boxGeometry args={[4.8, 0.45, 2.4]} />
+          <meshStandardMaterial color="#242730" metalness={0.8} roughness={0.35} />
         </mesh>
-        <mesh>
-          <boxGeometry args={[0.72, 0.46, 0.08]} />
-          <meshStandardMaterial
-            color={CARTRIDGE_SIGNALS[selectedCartridge]}
-            emissive={CARTRIDGE_SIGNALS[selectedCartridge]}
-            emissiveIntensity={assembly.seated ? 0.5 : 0.18}
-          />
+        <mesh position={[0, 0, 0]}>
+          <boxGeometry args={[3.8, 1.4, 1.8]} />
+          <meshStandardMaterial color="#d8d1c4" metalness={0.75} roughness={0.3} />
+        </mesh>
+        <mesh position={[slotCenter.x, slotCenter.y, RAIL_BOUNDS.z - 0.1]}>
+          <boxGeometry args={[slotWidth, slotHeight, 0.025]} />
+          <meshBasicMaterial color="#42e8ff" opacity={0.3} transparent wireframe />
+        </mesh>
+        <group ref={cartridgeRef}>
+          <mesh position={[0, 0, -0.11]}>
+            <boxGeometry args={[1.25, 0.8, 0.15]} />
+            <meshStandardMaterial color="#0a0b0f" />
+          </mesh>
+          <mesh>
+            <boxGeometry args={[0.72, 0.46, 0.08]} />
+            <meshStandardMaterial
+              color={CARTRIDGE_SIGNALS[selectedCartridge]}
+              emissive={CARTRIDGE_SIGNALS[selectedCartridge]}
+              emissiveIntensity={assembly.seated ? 0.5 : 0.18}
+            />
+          </mesh>
+        </group>
+        <mesh position={[2.05, -0.35, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.55, 0.55, 0.35, 24]} />
+          <meshStandardMaterial color="#42e8ff" metalness={0.55} roughness={0.25} />
         </mesh>
       </group>
-      <mesh position={[2.05, -0.35, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.55, 0.55, 0.35, 24]} />
-        <meshStandardMaterial color="#42e8ff" metalness={0.55} roughness={0.25} />
-      </mesh>
     </group>
   )
 }
@@ -285,6 +322,7 @@ export interface MachineCanvasProps {
   readonly onManipulationOutcome: ManipulationTerminalCallback
   readonly paused: boolean
   readonly reducedMotion: boolean
+  readonly presentationBridge: PresentationBridge
   readonly onReady: () => void
   readonly onFailure: () => void
 }
@@ -299,6 +337,7 @@ export default function MachineCanvas({
   onManipulationOutcome,
   paused,
   reducedMotion,
+  presentationBridge,
   onReady,
   onFailure,
 }: MachineCanvasProps) {
@@ -390,6 +429,8 @@ export default function MachineCanvas({
         selectedCartridge={selectedCartridge}
         assembly={assembly}
         onManipulationOutcome={onManipulationOutcome}
+        paused={paused}
+        presentationBridge={presentationBridge}
       />
     </Canvas>
   )

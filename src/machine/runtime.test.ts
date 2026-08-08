@@ -32,9 +32,9 @@ describe('machine runtime identity and reconciliation', () => {
       const state = createMachineState({ hash })
       expect(state.selectedCartridge).toBe(index)
       expect(state.committedCartridge).toBe(0)
-      expect(state.pendingSeek.conveyor).toBe(index === 0 ? null : index)
+      expect(state.pendingSeek).toBe(index)
       expect(state.selectionAuthority).toBe('direct-link')
-      expect(state.focusRequest).toEqual({ kind: 'project', cartridge: index })
+      expect(state.focusRequest).toBeNull()
     })
 
     const transitioned = transitionMachine(createMachineState(), {
@@ -42,7 +42,7 @@ describe('machine runtime identity and reconciliation', () => {
       index: 3,
     })
     expect(transitioned.selectedCartridge).toBe(3)
-    expect(transitioned.pendingSeek.conveyor).toBe(3)
+    expect(transitioned.pendingSeek).toBe(3)
   })
 
   it('keeps direct-link authority through zero and intermediate scroll until acknowledgement', () => {
@@ -55,25 +55,25 @@ describe('machine runtime identity and reconciliation', () => {
     expect(intermediate.selectedCartridge).toBe(2)
     expect(intermediate.committedCartridge).toBe(0)
     expect(intermediate.selectionAuthority).toBe('direct-link')
-    expect(intermediate.pendingSeek.conveyor).toBe(2)
+    expect(intermediate.pendingSeek).toBe(2)
 
     const acknowledged = reconcileStops(intermediate, {
-      conveyorProgress: conveyorStop(2),
+      timelineProgress: timelineStop(2),
     })
     expect(acknowledged.selectedCartridge).toBe(2)
     expect(acknowledged.committedCartridge).toBe(2)
     expect(acknowledged.selectionAuthority).toBe('scroll')
-    expect(acknowledged.pendingSeek.conveyor).toBeNull()
+    expect(acknowledged.pendingSeek).toBeNull()
   })
 
   it('honors explicit selection and stage seeks in both directions', () => {
     let state = createMachineState()
     state = transitionMachine(state, { type: 'select-cartridge', index: 3 })
-    state = reconcileStops(state, { conveyorProgress: conveyorStop(3) })
+    state = reconcileStops(state, { timelineProgress: timelineStop(3) })
     expect([state.selectedCartridge, state.committedCartridge]).toEqual([3, 3])
 
     state = transitionMachine(state, { type: 'select-cartridge', index: 1 })
-    state = reconcileStops(state, { conveyorProgress: conveyorStop(1) })
+    state = reconcileStops(state, { timelineProgress: timelineStop(1) })
     expect([state.selectedCartridge, state.committedCartridge]).toEqual([1, 1])
 
     state = transitionMachine(state, { type: 'set-stage-intent', index: 3 })
@@ -85,7 +85,32 @@ describe('machine runtime identity and reconciliation', () => {
     expect([state.stageIntent, state.committedStage]).toEqual([1, 1])
   })
 
-  it('commits intent immediately when retargeting an observed intermediate stop', () => {
+  it('routes previous and next through the same bounded stage guard', () => {
+    let state = transitionMachine(createMachineState(), {
+      type: 'move-stage-intent',
+      direction: -1,
+    })
+    expect(state.stageIntent).toBe(0)
+    expect(state.selectedCartridge).toBe(0)
+    expect(state.pendingSeek).toBe(0)
+
+    state = transitionMachine(state, {
+      type: 'move-stage-intent',
+      direction: 1,
+    })
+    expect(state.stageIntent).toBe(1)
+    expect(state.selectedCartridge).toBe(1)
+    expect(state.pendingSeek).toBe(1)
+
+    state = transitionMachine(
+      { ...state, stageIntent: 3 },
+      { type: 'move-stage-intent', direction: 1 },
+    )
+    expect(state.stageIntent).toBe(3)
+    expect(state.pendingSeek).toBe(3)
+  })
+
+  it('re-arms observed and target-zero intents until the timeline observes exactly', () => {
     const intermediateConveyor = reconcileStops(
       transitionMachine(createMachineState(), {
         type: 'select-cartridge',
@@ -99,26 +124,23 @@ describe('machine runtime identity and reconciliation', () => {
       index: 1,
     })
     expect(explicitlySelected.selectedCartridge).toBe(1)
-    expect(explicitlySelected.committedCartridge).toBe(1)
-    expect(explicitlySelected.conveyor.progress).toBe(conveyorStop(1))
-    expect(explicitlySelected.pendingSeek.conveyor).toBeNull()
+    expect(explicitlySelected.committedCartridge).toBe(0)
+    expect(explicitlySelected.pendingSeek).toBe(1)
     expect(explicitlySelected.selectionAuthority).toBe('explicit')
     expect(
-      reconcileStops(explicitlySelected, {
-        conveyorProgress: conveyorStop(1),
-      }),
-    ).toBe(explicitlySelected)
+      reconcileStops(explicitlySelected, { timelineProgress: timelineStop(1) })
+        .pendingSeek,
+    ).toBeNull()
 
     const direct = transitionMachine(intermediateConveyor, {
       type: 'direct-project',
       index: 1,
     })
     expect(direct.selectedCartridge).toBe(1)
-    expect(direct.committedCartridge).toBe(1)
-    expect(direct.conveyor.progress).toBe(conveyorStop(1))
-    expect(direct.pendingSeek.conveyor).toBeNull()
+    expect(direct.committedCartridge).toBe(0)
+    expect(direct.pendingSeek).toBe(1)
     expect(direct.selectionAuthority).toBe('direct-link')
-    expect(direct.focusRequest).toEqual({ kind: 'project', cartridge: 1 })
+    expect(direct.focusRequest).toBeNull()
 
     const intermediateTimeline = reconcileStops(
       transitionMachine(createMachineState(), {
@@ -132,12 +154,17 @@ describe('machine runtime identity and reconciliation', () => {
       index: 1,
     })
     expect(stage.stageIntent).toBe(1)
-    expect(stage.committedStage).toBe(1)
-    expect(stage.timeline.progress).toBe(timelineStop(1))
-    expect(stage.pendingSeek.timeline).toBeNull()
-    expect(
-      reconcileStops(stage, { timelineProgress: timelineStop(1) }),
-    ).toBe(stage)
+    expect(stage.committedStage).toBe(0)
+    expect(stage.pendingSeek).toBe(1)
+    expect(reconcileStops(stage, { timelineProgress: timelineStop(1) }).pendingSeek)
+      .toBeNull()
+
+    const zero = transitionMachine(createMachineState(), {
+      type: 'direct-project',
+      index: 0,
+    })
+    expect(zero.pendingSeek).toBe(0)
+    expect(reconcileStops(zero, { timelineProgress: 0 }).pendingSeek).toBeNull()
   })
 
   it('preserves reverse conveyor seeks when retargeted at an intermediate stop', () => {
@@ -150,19 +177,19 @@ describe('machine runtime identity and reconciliation', () => {
     expect(state.committedCartridge).toBe(0)
 
     state = transitionMachine(state, { type: 'select-cartridge', index: 0 })
-    expect(state.pendingSeek.conveyor).toBe(0)
+    expect(state.pendingSeek).toBe(0)
 
     const unchangedIntermediate = reconcileStops(state, {
       conveyorProgress: conveyorStop(1),
     })
     expect(unchangedIntermediate).toBe(state)
-    expect(unchangedIntermediate.pendingSeek.conveyor).toBe(0)
+    expect(unchangedIntermediate.pendingSeek).toBe(0)
 
     const acknowledged = reconcileStops(unchangedIntermediate, {
-      conveyorProgress: conveyorStop(0),
+      timelineProgress: timelineStop(0),
     })
     expect(acknowledged.committedCartridge).toBe(0)
-    expect(acknowledged.pendingSeek.conveyor).toBeNull()
+    expect(acknowledged.pendingSeek).toBeNull()
   })
 
   it('preserves reverse direct-link seeks from an intermediate stop', () => {
@@ -174,20 +201,20 @@ describe('machine runtime identity and reconciliation', () => {
 
     state = transitionMachine(state, { type: 'direct-project', index: 0 })
     expect(state.selectionAuthority).toBe('direct-link')
-    expect(state.pendingSeek.conveyor).toBe(0)
+    expect(state.pendingSeek).toBe(0)
 
     const unchangedIntermediate = reconcileStops(state, {
       conveyorProgress: conveyorStop(1),
     })
     expect(unchangedIntermediate).toBe(state)
-    expect(unchangedIntermediate.pendingSeek.conveyor).toBe(0)
+    expect(unchangedIntermediate.pendingSeek).toBe(0)
 
     const acknowledged = reconcileStops(unchangedIntermediate, {
-      conveyorProgress: conveyorStop(0),
+      timelineProgress: timelineStop(0),
     })
     expect(acknowledged.selectedCartridge).toBe(0)
     expect(acknowledged.committedCartridge).toBe(0)
-    expect(acknowledged.pendingSeek.conveyor).toBeNull()
+    expect(acknowledged.pendingSeek).toBeNull()
   })
 
   it('preserves reverse timeline seeks when retargeted at an intermediate stop', () => {
@@ -200,19 +227,19 @@ describe('machine runtime identity and reconciliation', () => {
     expect(state.committedStage).toBe(0)
 
     state = transitionMachine(state, { type: 'set-stage-intent', index: 0 })
-    expect(state.pendingSeek.timeline).toBe(0)
+    expect(state.pendingSeek).toBe(0)
 
     const unchangedIntermediate = reconcileStops(state, {
       timelineProgress: timelineStop(1),
     })
     expect(unchangedIntermediate).toBe(state)
-    expect(unchangedIntermediate.pendingSeek.timeline).toBe(0)
+    expect(unchangedIntermediate.pendingSeek).toBe(0)
 
     const acknowledged = reconcileStops(unchangedIntermediate, {
       timelineProgress: timelineStop(0),
     })
     expect(acknowledged.committedStage).toBe(0)
-    expect(acknowledged.pendingSeek.timeline).toBeNull()
+    expect(acknowledged.pendingSeek).toBeNull()
   })
 
   it('tracks conveyor and timeline stop changes independently', () => {
@@ -220,11 +247,11 @@ describe('machine runtime identity and reconciliation', () => {
     state = reconcileStops(state, { conveyorProgress: conveyorStop(1) })
     expect(state.observedStops).toEqual({ conveyor: 1, timeline: 0 })
     expect(state.committedCartridge).toBe(1)
-    expect(state.committedStage).toBe(0)
+    expect(state.committedStage).toBe(1)
 
     state = reconcileStops(state, { timelineProgress: timelineStop(3) })
     expect(state.observedStops).toEqual({ conveyor: 1, timeline: 3 })
-    expect(state.committedCartridge).toBe(1)
+    expect(state.committedCartridge).toBe(3)
     expect(state.committedStage).toBe(3)
 
     const unchanged = reconcileStops(state, {
@@ -352,11 +379,13 @@ describe('machine runtime pause, focus, and presentation intent', () => {
     expect(isEffectivelyPaused(state)).toBe(false)
   })
 
-  it('records direct project and Skip focus as symbolic requests', () => {
+  it('records Skip focus as an ordinary symbolic request', () => {
     const direct = createMachineState({ hash: '#project-voleyevents' })
-    expect(direct.focusRequest).toEqual({ kind: 'project', cartridge: 3 })
+    expect(direct.focusRequest).toBeNull()
+    const skipped = transitionMachine(direct, { type: 'skip-machine' })
+    expect(skipped.focusRequest).toEqual({ kind: 'cartridge-list' })
     expect(
-      transitionMachine(direct, { type: 'clear-focus-request' }).focusRequest,
+      transitionMachine(skipped, { type: 'clear-focus-request' }).focusRequest,
     ).toBeNull()
   })
 

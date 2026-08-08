@@ -35,8 +35,9 @@ export default function App() {
 
       <main>
         <section
+          ref={console.runwayRef}
           id="machine-console"
-          className="service-console"
+          className="service-console presentation-runway"
           aria-labelledby="machine-title"
           tabIndex={-1}
           onKeyDown={console.onConsoleKeyDown}
@@ -60,6 +61,7 @@ export default function App() {
               onManipulationOutcome={console.onManipulationOutcome}
               effectivelyPaused={console.effectivelyPaused}
               reducedMotion={state.reducedMotion}
+              presentationBridge={console.presentationBridge}
             />
 
             <div className="status-ribbon" aria-label="Machine status">
@@ -75,6 +77,22 @@ export default function App() {
                 </span>
               </div>
               <div className="status-actions">
+                <button
+                  className="pause-control"
+                  type="button"
+                  disabled={state.stageIntent === 0}
+                  onClick={console.previousStage}
+                >
+                  Previous stage
+                </button>
+                <button
+                  className="pause-control"
+                  type="button"
+                  disabled={state.stageIntent === 3}
+                  onClick={console.nextStage}
+                >
+                  Next stage
+                </button>
                 {isSkipped && (
                   <button
                     className="resume-control"
@@ -171,7 +189,9 @@ export default function App() {
                   <h3>{cartridge.name}</h3>
                   <a
                     href={cartridge.hash}
-                    onClick={() => console.openProject(cartridge.index)}
+                    onClick={(event) =>
+                      console.openProject(cartridge.index, event)
+                    }
                   >
                     Open project entry <span aria-hidden="true">↗</span>
                   </a>

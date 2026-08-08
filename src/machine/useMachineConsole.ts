@@ -1,7 +1,19 @@
-import { useCallback, useEffect, useReducer, type KeyboardEvent } from 'react'
-import { type CartridgeIndex } from '../content/cartridges'
 import {
-  actionForExactProjectHash,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useReducer,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+} from 'react'
+import {
+  CARTRIDGE_IDENTITIES,
+  cartridgeByHash,
+  type CartridgeIndex,
+} from '../content/cartridges'
+import {
   createConsoleInitialState,
   elementIdForFocusRequest,
   resumePauseAction,
@@ -13,7 +25,21 @@ import {
   dispatchManipulationOutcome,
   type ManipulationTerminalCallback,
 } from './manipulation'
-import { isEffectivelyPaused, transitionMachine } from './runtime'
+import {
+  createMachineScrollCoordinator,
+  createPostHashReconciler,
+  createPresentationBridge,
+  focusMachineTarget,
+  shouldReconcileSameHashClick,
+  type MachineScrollCoordinator,
+  type PostHashReconciler,
+} from './scrollIntegration'
+import {
+  isEffectivelyPaused,
+  transitionMachine,
+  type MachineAction,
+  type StageIndex,
+} from './runtime'
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
 
@@ -27,7 +53,9 @@ function initialConsoleState() {
   }
 
   return createConsoleInitialState({
-    hash: window.location.hash,
+    // Exact hashes are reconciled only after the timeline and ScrollTrigger
+    // exist. This keeps startup/reload ordering identical to hashchange.
+    hash: '',
     reducedMotion: window.matchMedia(REDUCED_MOTION_QUERY).matches,
     documentHidden: document.hidden,
   })
@@ -47,22 +75,108 @@ export function useMachineConsole() {
     undefined,
     initialConsoleState,
   )
+  const stateRef = useRef(state)
+  const runwayRef = useRef<HTMLElement | null>(null)
+  const coordinatorRef = useRef<MachineScrollCoordinator | null>(null)
+  const hashReconcilerRef = useRef<PostHashReconciler | null>(null)
+  const deferredTargetRef = useRef<StageIndex | null>(null)
+  const effectivelyPaused = isEffectivelyPaused(state)
+  const [presentationBridge] = useState(() =>
+    createPresentationBridge(undefined, effectivelyPaused),
+  )
 
-  useEffect(() => {
-    const onHashChange = () => {
-      const action = actionForExactProjectHash(window.location.hash)
-      if (action) dispatch(action)
+  stateRef.current = state
+
+  useLayoutEffect(() => {
+    const runway = runwayRef.current
+    if (!runway) return
+
+    const coordinator = createMachineScrollCoordinator({
+      runway,
+      bridge: presentationBridge,
+      paused: isEffectivelyPaused(stateRef.current),
+      reducedMotion: stateRef.current.reducedMotion,
+      onConveyorStop: (index) => {
+        dispatch({ type: 'observe-conveyor', index })
+      },
+      onTimelineStop: (index) => {
+        dispatch({ type: 'observe-timeline', index })
+      },
+    })
+    coordinatorRef.current = coordinator
+
+    const reconciler = createPostHashReconciler({
+      getHash: () => window.location.hash,
+      indexForHash: (hash) => cartridgeByHash(hash)?.index ?? null,
+      requestFrame: window.requestAnimationFrame.bind(window),
+      cancelFrame: window.cancelAnimationFrame.bind(window),
+      refresh: () => coordinator.refresh(),
+      armGuard: (index) => {
+        const action = { type: 'direct-project', index } as const
+        stateRef.current = transitionMachine(stateRef.current, action)
+        dispatch(action)
+      },
+      seek: (index) => coordinator.requestTarget(index),
+      focus: (index, _options) => {
+        const target = document.getElementById(
+          elementIdForFocusRequest({ kind: 'project', cartridge: index }),
+        )
+        if (target) {
+          focusMachineTarget(target, _options.preventScroll ?? false)
+        }
+      },
+      onReconciled: () => {
+        coordinator.setPaused(isEffectivelyPaused(stateRef.current))
+      },
+    })
+    hashReconcilerRef.current = reconciler
+
+    const deferredTarget = deferredTargetRef.current
+    if (deferredTarget === null) {
+      reconciler.schedule()
+    } else {
+      deferredTargetRef.current = null
+      coordinator.refresh()
+      coordinator.requestTarget(deferredTarget)
     }
+
+    const onHashChange = () => reconciler.schedule()
     window.addEventListener('hashchange', onHashChange)
-    return () => window.removeEventListener('hashchange', onHashChange)
-  }, [])
+
+    return () => {
+      window.removeEventListener('hashchange', onHashChange)
+      reconciler.destroy()
+      coordinator.destroy()
+      if (hashReconcilerRef.current === reconciler) {
+        hashReconcilerRef.current = null
+      }
+      if (coordinatorRef.current === coordinator) coordinatorRef.current = null
+    }
+  }, [presentationBridge])
+
+  useLayoutEffect(() => {
+    // Resuming here lets descendant Canvas refs observe paused={false} before
+    // the coordinator publishes its retained target or native position.
+    if (!effectivelyPaused && hashReconcilerRef.current?.hasPending()) return
+    coordinatorRef.current?.setPaused(effectivelyPaused)
+  }, [effectivelyPaused])
+
+  useLayoutEffect(() => {
+    coordinatorRef.current?.setReducedMotion(state.reducedMotion)
+  }, [state.reducedMotion])
 
   useEffect(() => {
     const onVisibilityChange = () => {
-      dispatch({
+      const action: MachineAction = {
         type: 'set-document-hidden',
         hidden: document.hidden,
-      })
+      }
+      const next = transitionMachine(stateRef.current, action)
+      stateRef.current = next
+      if (isEffectivelyPaused(next)) {
+        coordinatorRef.current?.setPaused(true)
+      }
+      dispatch(action)
     }
     document.addEventListener('visibilitychange', onVisibilityChange)
     return () =>
@@ -85,19 +199,57 @@ export function useMachineConsole() {
     )
     if (!target) return
 
-    target.focus()
+    focusMachineTarget(target, state.focusRequest.kind === 'project')
     if (document.activeElement === target) {
       dispatch({ type: 'clear-focus-request' })
     }
   }, [state.focusRequest])
 
   const selectCartridge = useCallback((index: CartridgeIndex) => {
-    dispatch({ type: 'select-cartridge', index })
+    const action = { type: 'select-cartridge', index } as const
+    const next = transitionMachine(stateRef.current, action)
+    stateRef.current = next
+    coordinatorRef.current?.refresh()
+    dispatch(action)
+    if (coordinatorRef.current) {
+      coordinatorRef.current.requestTarget(next.stageIntent)
+    } else {
+      deferredTargetRef.current = next.stageIntent
+    }
   }, [])
 
-  const openProject = useCallback((index: CartridgeIndex) => {
-    dispatch({ type: 'direct-project', index })
+  const openProject = useCallback(
+    (index: CartridgeIndex, event: MouseEvent<HTMLAnchorElement>) => {
+      // Changed hashes reconcile through hashchange after native navigation.
+      // Only an unmodified same-hash activation needs the click fallback.
+      if (
+        shouldReconcileSameHashClick(
+          event,
+          window.location.hash,
+          CARTRIDGE_IDENTITIES[index].hash,
+        )
+      ) {
+        hashReconcilerRef.current?.schedule()
+      }
+    },
+    [],
+  )
+
+  const moveStage = useCallback((direction: -1 | 1) => {
+    const action = { type: 'move-stage-intent', direction } as const
+    const next = transitionMachine(stateRef.current, action)
+    stateRef.current = next
+    coordinatorRef.current?.refresh()
+    dispatch(action)
+    if (coordinatorRef.current) {
+      coordinatorRef.current.requestTarget(next.stageIntent)
+    } else {
+      deferredTargetRef.current = next.stageIntent
+    }
   }, [])
+
+  const previousStage = useCallback(() => moveStage(-1), [moveStage])
+  const nextStage = useCallback(() => moveStage(1), [moveStage])
 
   const activateModule = useCallback(() => {
     dispatch({ type: 'activate-module' })
@@ -111,25 +263,47 @@ export function useMachineConsole() {
   )
 
   const skipMachine = useCallback(() => {
-    dispatch({ type: 'skip-machine' })
+    const action = { type: 'skip-machine' } as const
+    const next = transitionMachine(stateRef.current, action)
+    stateRef.current = next
+    coordinatorRef.current?.setPaused(true)
+    dispatch(action)
   }, [])
 
   const resumeFromSkip = useCallback(() => {
-    dispatch(resumePauseAction('skip'))
+    const action = resumePauseAction('skip')
+    const next = transitionMachine(stateRef.current, action)
+    stateRef.current = next
+    dispatch(action)
+    if (isEffectivelyPaused(next)) {
+      coordinatorRef.current?.setPaused(true)
+    }
     window.requestAnimationFrame(() => {
-      document.getElementById('cartridge-handle')?.focus()
+      const target = document.getElementById('cartridge-handle')
+      if (target) focusMachineTarget(target, false)
     })
   }, [])
 
   const toggleUserPause = useCallback(() => {
-    dispatch(toggleUserPauseAction(state))
-  }, [state])
+    const action = toggleUserPauseAction(stateRef.current)
+    const next = transitionMachine(stateRef.current, action)
+    stateRef.current = next
+    if (isEffectivelyPaused(next)) {
+      coordinatorRef.current?.setPaused(true)
+    }
+    dispatch(action)
+  }, [])
 
   const onConsoleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLElement>) => {
       const route = routeConsoleKey(event.key, keyZoneForTarget(event.target))
       if (!route) return
       if (route.preventDefault) event.preventDefault()
+      if (route.action.type === 'skip-machine') {
+        const next = transitionMachine(stateRef.current, route.action)
+        stateRef.current = next
+        coordinatorRef.current?.setPaused(true)
+      }
       dispatch(route.action)
     },
     [],
@@ -137,9 +311,13 @@ export function useMachineConsole() {
 
   return {
     state,
-    effectivelyPaused: isEffectivelyPaused(state),
+    effectivelyPaused,
+    runwayRef,
+    presentationBridge,
     selectCartridge,
     openProject,
+    previousStage,
+    nextStage,
     activateModule,
     onManipulationOutcome,
     skipMachine,

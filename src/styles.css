@@ -147,6 +147,10 @@ footer {
   padding-block: clamp(1.25rem, 2.8vw, 2.5rem) 4rem;
 }
 
+.presentation-runway {
+  min-height: 300vh;
+}
+
 .console-heading {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(18rem, 30rem);

@@ -32,11 +32,6 @@ import { presentProgress, type MotionMode } from '../motion'
 export type StageIndex = 0 | 1 | 2 | 3
 export type SelectionAuthority = 'scroll' | 'explicit' | 'direct-link'
 
-export interface PendingSeek {
-  readonly conveyor: CartridgeIndex | null
-  readonly timeline: StageIndex | null
-}
-
 export interface ObservedStops {
   readonly conveyor: CartridgeIndex
   readonly timeline: StageIndex
@@ -61,7 +56,7 @@ export interface MachineState {
   readonly committedStage: StageIndex
   readonly conveyor: ConveyorState
   readonly timeline: TimelineState
-  readonly pendingSeek: PendingSeek
+  readonly pendingSeek: StageIndex | null
   readonly observedStops: ObservedStops
   readonly pauseCauses: PauseCauses
   readonly focusRequest: FocusRequest | null
@@ -80,6 +75,9 @@ export type MachineAction =
   | { readonly type: 'select-cartridge'; readonly index: CartridgeIndex }
   | { readonly type: 'direct-project'; readonly index: CartridgeIndex }
   | { readonly type: 'set-stage-intent'; readonly index: StageIndex }
+  | { readonly type: 'move-stage-intent'; readonly direction: -1 | 1 }
+  | { readonly type: 'observe-conveyor'; readonly index: CartridgeIndex }
+  | { readonly type: 'observe-timeline'; readonly index: StageIndex }
   | { readonly type: 'move-module'; readonly point: Point }
   | {
       readonly type: 'nudge-module'
@@ -105,27 +103,27 @@ const INITIAL_PAUSE_CAUSES: PauseCauses = {
   skip: false,
 }
 
+function requestStageIntent(
+  state: MachineState,
+  index: StageIndex,
+  authority: SelectionAuthority,
+  focusRequest: FocusRequest | null = state.focusRequest,
+): MachineState {
+  return {
+    ...state,
+    selectedCartridge: index,
+    stageIntent: index,
+    selectionAuthority: authority,
+    pendingSeek: index,
+    focusRequest,
+  }
+}
+
 function directProjectIntent(
   state: MachineState,
   index: CartridgeIndex,
 ): MachineState {
-  const alreadyObserved = state.observedStops.conveyor === index
-  return {
-    ...state,
-    selectedCartridge: index,
-    committedCartridge: alreadyObserved
-      ? index
-      : state.committedCartridge,
-    selectionAuthority: 'direct-link',
-    conveyor: alreadyObserved
-      ? scrubConveyor(state.conveyor, conveyorStop(index))
-      : state.conveyor,
-    pendingSeek: {
-      ...state.pendingSeek,
-      conveyor: alreadyObserved ? null : index,
-    },
-    focusRequest: { kind: 'project', cartridge: index },
-  }
+  return requestStageIntent(state, index, 'direct-link')
 }
 
 export function createMachineState(
@@ -140,7 +138,7 @@ export function createMachineState(
     committedStage: 0,
     conveyor: INITIAL_CONVEYOR,
     timeline: initialTimelineState,
-    pendingSeek: { conveyor: null, timeline: null },
+    pendingSeek: null,
     observedStops: { conveyor: 0, timeline: 0 },
     pauseCauses: INITIAL_PAUSE_CAUSES,
     focusRequest: null,
@@ -174,40 +172,23 @@ export function transitionMachine(
 ): MachineState {
   switch (action.type) {
     case 'select-cartridge': {
-      const alreadyObserved = state.observedStops.conveyor === action.index
-      return {
-        ...state,
-        selectedCartridge: action.index,
-        committedCartridge: alreadyObserved
-          ? action.index
-          : state.committedCartridge,
-        selectionAuthority: 'explicit',
-        conveyor: alreadyObserved
-          ? scrubConveyor(state.conveyor, conveyorStop(action.index))
-          : state.conveyor,
-        pendingSeek: {
-          ...state.pendingSeek,
-          conveyor: alreadyObserved ? null : action.index,
-        },
-      }
+      return requestStageIntent(state, action.index, 'explicit')
     }
     case 'direct-project':
       return directProjectIntent(state, action.index)
-    case 'set-stage-intent': {
-      const alreadyObserved = state.observedStops.timeline === action.index
-      return {
-        ...state,
-        stageIntent: action.index,
-        committedStage: alreadyObserved ? action.index : state.committedStage,
-        timeline: alreadyObserved
-          ? scrubTimeline(state.timeline, timelineStop(action.index))
-          : state.timeline,
-        pendingSeek: {
-          ...state.pendingSeek,
-          timeline: alreadyObserved ? null : action.index,
-        },
-      }
+    case 'set-stage-intent':
+      return requestStageIntent(state, action.index, 'explicit')
+    case 'move-stage-intent': {
+      const index = Math.min(
+        MACHINE_STAGES.length - 1,
+        Math.max(0, state.stageIntent + action.direction),
+      ) as StageIndex
+      return requestStageIntent(state, index, 'explicit')
     }
+    case 'observe-conveyor':
+      return reconcileObservedStop(state, 'conveyor', action.index)
+    case 'observe-timeline':
+      return reconcileObservedStop(state, 'timeline', action.index)
     case 'move-module':
       return { ...state, assembly: moveModule(state.assembly, action.point) }
     case 'nudge-module':
@@ -287,6 +268,43 @@ export interface StopObservation {
   readonly timelineProgress?: number
 }
 
+function reconcileObservedStop(
+  state: MachineState,
+  channel: keyof ObservedStops,
+  index: StageIndex,
+): MachineState {
+  const changed = state.observedStops[channel] !== index
+  const settlesGuard =
+    channel === 'timeline' && state.pendingSeek === index
+
+  if (!changed && !settlesGuard) return state
+
+  let next = changed
+    ? {
+        ...state,
+        observedStops: { ...state.observedStops, [channel]: index },
+      }
+    : state
+
+  if (state.pendingSeek !== null) {
+    if (!settlesGuard) return next
+  }
+
+  next = {
+    ...next,
+    selectedCartridge: index,
+    committedCartridge: index,
+    selectionAuthority: 'scroll',
+    stageIntent: index,
+    committedStage: index,
+    conveyor: scrubConveyor(next.conveyor, conveyorStop(index)),
+    timeline: scrubTimeline(next.timeline, timelineStop(index)),
+    pendingSeek: null,
+  }
+
+  return next
+}
+
 export function reconcileStops(
   state: MachineState,
   observation: StopObservation,
@@ -299,69 +317,13 @@ export function reconcileStops(
     observation.timelineProgress === undefined
       ? null
       : asStageIndex(timelineIndex(observation.timelineProgress))
-  const conveyorChanged =
-    conveyor !== null && conveyor !== state.observedStops.conveyor
-  const timelineChanged =
-    timeline !== null && timeline !== state.observedStops.timeline
-  const conveyorAcknowledged =
-    conveyor !== null && conveyor === state.pendingSeek.conveyor
-  const timelineAcknowledged =
-    timeline !== null && timeline === state.pendingSeek.timeline
-
-  if (
-    !conveyorChanged &&
-    !timelineChanged &&
-    !conveyorAcknowledged &&
-    !timelineAcknowledged
-  ) {
-    return state
-  }
-
   let next = state
 
-  if (conveyor !== null && (conveyorChanged || conveyorAcknowledged)) {
-    const pending = state.pendingSeek.conveyor
-    if (pending === null || conveyor === pending) {
-      next = {
-        ...next,
-        selectedCartridge: conveyor,
-        committedCartridge: conveyor,
-        selectionAuthority: 'scroll',
-        conveyor: scrubConveyor(next.conveyor, conveyorStop(conveyor)),
-        pendingSeek: {
-          ...next.pendingSeek,
-          conveyor: pending === conveyor ? null : pending,
-        },
-      }
-    }
-    if (conveyorChanged) {
-      next = {
-        ...next,
-        observedStops: { ...next.observedStops, conveyor },
-      }
-    }
+  if (conveyor !== null) {
+    next = reconcileObservedStop(next, 'conveyor', conveyor)
   }
-
-  if (timeline !== null && (timelineChanged || timelineAcknowledged)) {
-    const pending = state.pendingSeek.timeline
-    if (pending === null || timeline === pending) {
-      next = {
-        ...next,
-        stageIntent: timeline,
-        committedStage: timeline,
-        timeline: scrubTimeline(next.timeline, timelineStop(timeline)),
-        pendingSeek: {
-          ...next.pendingSeek,
-          timeline: pending === timeline ? null : pending,
-        },
-      }
-    }
-    if (timelineChanged) {
-      next = {
-        ...next,
-        observedStops: { ...next.observedStops, timeline },
-      }
-    }
+  if (timeline !== null) {
+    next = reconcileObservedStop(next, 'timeline', timeline)
   }
 
   return next
