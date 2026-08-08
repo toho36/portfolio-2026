@@ -1,5 +1,12 @@
-import { Canvas, useThree } from '@react-three/fiber'
-import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useReducer,
+  useRef,
+  type MutableRefObject,
+} from 'react'
 import {
   Group,
   PerspectiveCamera,
@@ -28,6 +35,14 @@ import {
   grabbedWorldHitToAssemblyPoint,
   intersectClientWithRailPlane,
 } from './cartridgeProjection'
+import {
+  bindAdaptiveDprActivity,
+  controlledDprAfterManagerReport,
+  createAdaptiveDprController,
+  createResumeActivityGate,
+  type AdaptiveDprController,
+  type ResumeActivityGate,
+} from './adaptiveDpr'
 import type { ManipulationTerminalCallback } from './manipulation'
 import type { PresentationBridge } from './scrollIntegration'
 
@@ -39,6 +54,7 @@ interface RendererHandshakeProps {
   readonly onManipulationOutcome: ManipulationTerminalCallback
   readonly paused: boolean
   readonly presentationBridge: PresentationBridge
+  readonly resumeGate: ResumeActivityGate
 }
 
 function RendererHandshake({
@@ -47,6 +63,7 @@ function RendererHandshake({
   onManipulationOutcome,
   paused,
   presentationBridge,
+  resumeGate,
 }: RendererHandshakeProps) {
   const presentationRef = useRef<Group>(null)
   const railRef = useRef<Group>(null)
@@ -76,10 +93,10 @@ function RendererHandshake({
           group.rotation.x = (values.timelineProgress - 0.5) * 0.08
           group.rotation.y = (values.conveyorProgress - 0.5) * 0.5
           group.scale.setScalar(0.96 + values.timelineProgress * 0.04)
-          invalidate()
+          if (!resumeGate.isBlocked()) invalidate()
         },
       }),
-    [invalidate, presentationBridge],
+    [invalidate, presentationBridge, resumeGate],
   )
 
   useLayoutEffect(() => {
@@ -100,9 +117,9 @@ function RendererHandshake({
       if (cartridgeRef.current) {
         cartridgeRef.current.position.copy(assemblyPointToRailLocal(point))
       }
-      invalidate()
+      if (!resumeGate.isBlocked()) invalidate()
     },
-    [invalidate],
+    [invalidate, resumeGate],
   )
 
   useLayoutEffect(() => {
@@ -316,6 +333,76 @@ function RendererHandshake({
   )
 }
 
+interface AdaptiveDprManagerProps {
+  readonly dpr: number
+  readonly paused: boolean
+  readonly reducedMotion: boolean
+  readonly resumeGate: ResumeActivityGate
+  readonly activityReporterRef: MutableRefObject<(() => void) | null>
+  readonly reportDpr: (dpr: number) => void
+}
+
+function AdaptiveDprManager({
+  dpr,
+  paused,
+  reducedMotion,
+  resumeGate,
+  activityReporterRef,
+  reportDpr,
+}: AdaptiveDprManagerProps) {
+  const { invalidate, performance: rendererPerformance } = useThree()
+  const performanceRef = useRef(rendererPerformance)
+  const invalidateRef = useRef(invalidate)
+  const reportDprRef = useRef(reportDpr)
+  const controllerRef = useRef<AdaptiveDprController | null>(null)
+
+  performanceRef.current = rendererPerformance
+  invalidateRef.current = invalidate
+  reportDprRef.current = reportDpr
+
+  useLayoutEffect(() => {
+    const controller = createAdaptiveDprController({
+      initialDpr: dpr,
+      initiallyPaused: paused || resumeGate.isBlocked(),
+      initiallyReducedMotion: reducedMotion,
+      gate: resumeGate,
+      now: () => globalThis.performance?.now() ?? Date.now(),
+      timer: {
+        set: (callback, delayMs) => globalThis.setTimeout(callback, delayMs),
+        clear: (handle) =>
+          globalThis.clearTimeout(handle as ReturnType<typeof setTimeout>),
+      },
+      regress: () => performanceRef.current.regress(),
+      invalidate: () => invalidateRef.current(),
+      reportDpr: (nextDpr) => reportDprRef.current(nextDpr),
+    })
+    const reporter = () => controller.recordActivity()
+    controllerRef.current = controller
+    activityReporterRef.current = reporter
+    return () => {
+      if (activityReporterRef.current === reporter) {
+        activityReporterRef.current = null
+      }
+      if (controllerRef.current === controller) controllerRef.current = null
+      controller.destroy()
+    }
+  }, [activityReporterRef, resumeGate])
+
+  useLayoutEffect(() => {
+    const controller = controllerRef.current
+    if (!controller) return
+    controller.acknowledgeDpr(dpr)
+    controller.setPaused(paused)
+    controller.setReducedMotion(reducedMotion, rendererPerformance)
+  }, [dpr, paused, reducedMotion, rendererPerformance])
+
+  useFrame((state, delta) =>
+    controllerRef.current?.sample(delta, state.performance),
+  )
+
+  return null
+}
+
 export interface MachineCanvasProps {
   readonly selectedCartridge: CartridgeIndex
   readonly assembly: AssemblyState
@@ -342,6 +429,33 @@ export default function MachineCanvas({
   onFailure,
 }: MachineCanvasProps) {
   const removeContextListeners = useRef<() => void>(() => {})
+  const resumeGateRef = useRef<ResumeActivityGate | null>(null)
+  const committedPausedRef = useRef(paused)
+  const activityReporterRef = useRef<(() => void) | null>(null)
+  const [dpr, reportDpr] = useReducer(
+    controlledDprAfterManagerReport,
+    reducedMotion ? 1 : 1.5,
+  )
+
+  if (resumeGateRef.current === null) {
+    resumeGateRef.current = createResumeActivityGate()
+  }
+  const resumeGate = resumeGateRef.current
+  if (committedPausedRef.current && !paused) resumeGate.arm()
+
+  const reportActivity = useCallback(() => {
+    activityReporterRef.current?.()
+  }, [])
+
+  useLayoutEffect(() => {
+    committedPausedRef.current = paused
+    if (!paused && resumeGate.isBlocked()) resumeGate.beginSettlement()
+  }, [paused, resumeGate])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    return bindAdaptiveDprActivity(window, resumeGate, reportActivity)
+  }, [reportActivity, resumeGate])
 
   useLayoutEffect(
     () => () => {
@@ -411,7 +525,7 @@ export default function MachineCanvas({
   return (
     <Canvas
       camera={{ position: [0, 1.2, 6.5], fov: 42 }}
-      dpr={reducedMotion ? 1 : [1, 1.5]}
+      dpr={dpr}
       frameloop={paused ? 'never' : 'demand'}
       gl={createRenderer}
       onCreated={({ gl }) => {
@@ -425,12 +539,21 @@ export default function MachineCanvas({
       <color attach="background" args={['#0a0b0f']} />
       <ambientLight intensity={1.7} />
       <directionalLight position={[4, 6, 5]} intensity={3.2} />
+      <AdaptiveDprManager
+        dpr={dpr}
+        paused={paused}
+        reducedMotion={reducedMotion}
+        resumeGate={resumeGate}
+        activityReporterRef={activityReporterRef}
+        reportDpr={reportDpr}
+      />
       <RendererHandshake
         selectedCartridge={selectedCartridge}
         assembly={assembly}
         onManipulationOutcome={onManipulationOutcome}
         paused={paused}
         presentationBridge={presentationBridge}
+        resumeGate={resumeGate}
       />
     </Canvas>
   )
