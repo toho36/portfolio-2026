@@ -10,7 +10,6 @@ import {
   CARTRIDGE_STORIES,
   cartridgeByHash,
   type CartridgeIdentity,
-  type CartridgeSlug,
 } from './content/cartridges'
 import {
   createProjectDiscovery,
@@ -19,11 +18,10 @@ import {
 import { MachineBoundary } from './machine/MachineBoundary'
 import { projectElementId } from './machine/consoleAdapter'
 import { useMachineConsole } from './machine/useMachineConsole'
-
-interface DetailActivation {
-  readonly identity: CartridgeIdentity
-  readonly sequence: number
-}
+import {
+  ProjectDetailDialog,
+  type DetailActivation,
+} from './ProjectDetailDialog'
 
 interface PendingOrigin {
   readonly fromHash: string
@@ -52,77 +50,6 @@ function isOrdinaryActivation(event: MouseEvent<HTMLAnchorElement>): boolean {
   )
 }
 
-function DiscoveryMechanism({
-  slug,
-  label,
-  reward,
-}: {
-  readonly slug: CartridgeSlug
-  readonly label: string
-  readonly reward: string
-}) {
-  const accessibleLabel = `${label}: ${reward}`
-
-  if (slug === 'gameonvb') {
-    return (
-      <div
-        className="discovery-mechanism event-dial"
-        role="img"
-        aria-label={accessibleLabel}
-      >
-        <span className="dial-ring" aria-hidden="true">
-          <i />
-        </span>
-        <span className="mechanism-track" aria-hidden="true" />
-      </div>
-    )
-  }
-
-  if (slug === 'suburbs') {
-    return (
-      <div
-        className="discovery-mechanism deck-flip"
-        role="img"
-        aria-label={accessibleLabel}
-      >
-        <span className="deck-surface" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-          <i />
-        </span>
-      </div>
-    )
-  }
-
-  if (slug === 'screen-switch') {
-    return (
-      <div
-        className="discovery-mechanism display-swap"
-        role="img"
-        aria-label={accessibleLabel}
-      >
-        <span className="display-plate display-plate-a" aria-hidden="true" />
-        <span className="display-plate display-plate-b" aria-hidden="true" />
-      </div>
-    )
-  }
-
-  return (
-    <div
-      className="discovery-mechanism ledger-gate"
-      role="img"
-      aria-label={accessibleLabel}
-    >
-      <span className="ledger-token" aria-hidden="true" />
-      <span className="gate-rails" aria-hidden="true">
-        <i />
-        <i />
-      </span>
-    </div>
-  )
-}
-
 export default function App() {
   const console = useMachineConsole()
   const { state } = console
@@ -139,9 +66,6 @@ export default function App() {
   const [activeDetail, setActiveDetail] = useState<DetailActivation | null>(null)
   const [discovery, setDiscovery] = useState(createProjectDiscovery)
   const selected = CARTRIDGE_IDENTITIES[state.selectedCartridge]
-  const activeStory = activeDetail
-    ? CARTRIDGE_STORIES[activeDetail.identity.slug]
-    : null
   const isSkipped = state.pauseCauses.skip
   const isUserPaused = state.pauseCauses.user
   const isSeated = state.assembly.seated
@@ -557,81 +481,13 @@ export default function App() {
         </section>
       </main>
 
-      <dialog
-        ref={dialogRef}
-        className="project-dialog"
-        aria-labelledby="project-detail-title"
+      <ProjectDetailDialog
+        dialogRef={dialogRef}
+        activeDetail={activeDetail}
+        discovery={discovery}
+        reducedMotion={state.reducedMotion}
         onClose={onDetailClose}
-      >
-        {activeDetail && activeStory && (
-          <div
-            className="project-detail"
-            data-project={activeDetail.identity.slug}
-            key={activeDetail.sequence}
-          >
-            <header className="project-detail-header">
-              <div>
-                <p className="eyebrow">Cartridge discovery</p>
-                <h2 id="project-detail-title" tabIndex={-1}>
-                  {activeDetail.identity.name}
-                </h2>
-              </div>
-              <form method="dialog">
-                <button className="dialog-close" type="submit">
-                  Close detail <span aria-hidden="true">×</span>
-                </button>
-              </form>
-            </header>
-
-            <p className="project-detail-preview">{activeStory.preview}</p>
-
-            <DiscoveryMechanism
-              slug={activeDetail.identity.slug}
-              label={activeStory.discovery.label}
-              reward={activeStory.discovery.immediateReward}
-            />
-            <p className="discovery-readout" role="status">
-              <strong>
-                {discovery.latest?.kind === 'replay' ? 'Replay' : 'Discovery'}
-              </strong>
-              <span>{activeStory.discovery.label}</span>
-              <span>{activeStory.discovery.immediateReward}</span>
-            </p>
-
-            <dl className="project-story">
-              <div>
-                <dt>Role</dt>
-                <dd>{activeStory.role}</dd>
-              </div>
-              <div>
-                <dt>Constraint</dt>
-                <dd>{activeStory.constraint}</dd>
-              </div>
-              <div>
-                <dt>Decision</dt>
-                <dd>{activeStory.decision}</dd>
-              </div>
-              <div>
-                <dt>Evidence</dt>
-                <dd>{activeStory.evidence}</dd>
-              </div>
-            </dl>
-
-            <div className="project-detail-footer">
-              {activeStory.verifiedUrl && (
-                <a href={activeStory.verifiedUrl}>
-                  Visit verified project <span aria-hidden="true">↗</span>
-                </a>
-              )}
-              {discovery.completion && (
-                <p className="circuit-complete" role="status">
-                  {discovery.completion}
-                </p>
-              )}
-            </div>
-          </div>
-        )}
-      </dialog>
+      />
 
       <footer>
         <span>Vitek Machine / service console</span>
