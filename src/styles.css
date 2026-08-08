@@ -252,6 +252,10 @@ h2 {
   opacity: 0.28;
 }
 
+.machine-canvas-layer canvas {
+  touch-action: pan-y;
+}
+
 .viewport-identity {
   position: absolute;
   z-index: 3;
