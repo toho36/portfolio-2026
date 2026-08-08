@@ -6,6 +6,8 @@ import {
 } from 'three'
 import { gsap } from '../motion/gsap'
 import type { CartridgeIndex } from '../content/cartridges'
+import type { AssemblyState } from '../loops/assembly/model'
+import type { ManipulationTerminalCallback } from './manipulation'
 
 const CARTRIDGE_SIGNALS = ['#ff5a1f', '#42e8ff', '#d8d1c4', '#ff7a45'] as const
 
@@ -55,7 +57,8 @@ function RendererHandshake({
 
 export interface MachineCanvasProps {
   readonly selectedCartridge: CartridgeIndex
-  readonly seated: boolean
+  readonly assembly: AssemblyState
+  readonly onManipulationOutcome: ManipulationTerminalCallback
   readonly paused: boolean
   readonly reducedMotion: boolean
   readonly onReady: () => void
@@ -68,7 +71,8 @@ type RendererDefaults = Omit<WebGLRendererParameters, 'canvas'> & {
 
 export default function MachineCanvas({
   selectedCartridge,
-  seated,
+  assembly,
+  onManipulationOutcome: _onManipulationOutcome,
   paused,
   reducedMotion,
   onReady,
@@ -160,7 +164,7 @@ export default function MachineCanvas({
       <directionalLight position={[4, 6, 5]} intensity={3.2} />
       <RendererHandshake
         selectedCartridge={selectedCartridge}
-        seated={seated}
+        seated={assembly.seated}
       />
     </Canvas>
   )

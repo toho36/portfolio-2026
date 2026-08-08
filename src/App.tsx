@@ -56,7 +56,8 @@ export default function App() {
             <MachineBoundary
               selectedCartridge={state.selectedCartridge}
               selectedName={selected.name}
-              seated={isSeated}
+              assembly={state.assembly}
+              onManipulationOutcome={console.onManipulationOutcome}
               effectivelyPaused={console.effectivelyPaused}
               reducedMotion={state.reducedMotion}
             />

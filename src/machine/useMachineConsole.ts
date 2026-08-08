@@ -9,6 +9,10 @@ import {
   toggleUserPauseAction,
   type ConsoleKeyZone,
 } from './consoleAdapter'
+import {
+  dispatchManipulationOutcome,
+  type ManipulationTerminalCallback,
+} from './manipulation'
 import { isEffectivelyPaused, transitionMachine } from './runtime'
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
@@ -99,6 +103,13 @@ export function useMachineConsole() {
     dispatch({ type: 'activate-module' })
   }, [])
 
+  const onManipulationOutcome = useCallback<ManipulationTerminalCallback>(
+    (outcome) => {
+      dispatchManipulationOutcome(dispatch, outcome)
+    },
+    [],
+  )
+
   const skipMachine = useCallback(() => {
     dispatch({ type: 'skip-machine' })
   }, [])
@@ -130,6 +141,7 @@ export function useMachineConsole() {
     selectCartridge,
     openProject,
     activateModule,
+    onManipulationOutcome,
     skipMachine,
     resumeFromSkip,
     toggleUserPause,

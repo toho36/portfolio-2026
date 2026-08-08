@@ -10,6 +10,8 @@ import {
 } from 'react'
 import { deriveRendererPresentation, type RendererPhase } from './consoleAdapter'
 import type { CartridgeIndex } from '../content/cartridges'
+import type { AssemblyState } from '../loops/assembly/model'
+import type { ManipulationTerminalCallback } from './manipulation'
 
 class MachineModuleLoadError extends Error {
   constructor(cause: unknown) {
@@ -68,7 +70,8 @@ function supportsWebGL(): boolean {
 export interface MachineBoundaryProps {
   readonly selectedCartridge: CartridgeIndex
   readonly selectedName: string
-  readonly seated: boolean
+  readonly assembly: AssemblyState
+  readonly onManipulationOutcome: ManipulationTerminalCallback
   readonly effectivelyPaused: boolean
   readonly reducedMotion: boolean
 }
@@ -76,7 +79,8 @@ export interface MachineBoundaryProps {
 export function MachineBoundary({
   selectedCartridge,
   selectedName,
-  seated,
+  assembly,
+  onManipulationOutcome,
   effectivelyPaused,
   reducedMotion,
 }: MachineBoundaryProps) {
@@ -127,7 +131,8 @@ export function MachineBoundary({
               <Suspense fallback={null}>
                 <MachineCanvas
                   selectedCartridge={selectedCartridge}
-                  seated={seated}
+                  assembly={assembly}
+                  onManipulationOutcome={onManipulationOutcome}
                   paused={effectivelyPaused}
                   reducedMotion={reducedMotion}
                   onReady={handleRendererReady}
