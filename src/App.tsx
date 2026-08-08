@@ -323,7 +323,7 @@ export default function App() {
               presentationBridge={console.presentationBridge}
             />
 
-            <div className="status-ribbon" aria-label="Machine status">
+            <section className="status-ribbon" aria-label="Machine status">
               <div className="status-primary">
                 <span className="status-code">{isSeated ? 'LOCKED' : 'READY'}</span>
                 <span>
@@ -370,9 +370,9 @@ export default function App() {
                   {isUserPaused ? 'Resume motion' : 'Pause motion'}
                 </button>
               </div>
-            </div>
+            </section>
 
-            <div className="cartridge-dock" aria-labelledby="dock-title">
+            <section className="cartridge-dock" aria-labelledby="dock-title">
               <div className="dock-label">
                 <p className="eyebrow">Physical project rail</p>
                 <h2 id="dock-title">Cartridge dock</h2>
@@ -419,7 +419,7 @@ export default function App() {
                 Handle: arrow keys position; Enter or Space operates. Escape
                 exits to projects.
               </p>
-            </div>
+            </section>
           </div>
 
           <section
