@@ -272,6 +272,15 @@ export default function App() {
 
   return (
     <>
+      <a
+        className="skip-link"
+        href="#cartridge-list"
+        onClick={console.skipMachine}
+        onKeyDown={console.onConsoleKeyDown}
+      >
+        Skip to projects <span aria-hidden="true">↓</span>
+      </a>
+
       <header className="site-header">
         <a className="brand" href="#machine-console" aria-label="Vitek Machine home">
           <span className="brand-mark" aria-hidden="true">VM</span>
@@ -282,15 +291,6 @@ export default function App() {
         </a>
         <p className="header-note">Four projects. One mechanical index.</p>
       </header>
-
-      <a
-        className="skip-link"
-        href="#cartridge-list"
-        onClick={console.skipMachine}
-        onKeyDown={console.onConsoleKeyDown}
-      >
-        Skip to projects <span aria-hidden="true">↓</span>
-      </a>
 
       <main>
         <section
