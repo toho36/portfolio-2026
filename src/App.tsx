@@ -1,15 +1,350 @@
-import { CARTRIDGE_IDENTITIES } from './content/cartridges'
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+} from 'react'
+import {
+  CARTRIDGE_IDENTITIES,
+  CARTRIDGE_STORIES,
+  cartridgeByHash,
+  type CartridgeIdentity,
+  type CartridgeSlug,
+} from './content/cartridges'
+import {
+  createProjectDiscovery,
+  visitProject,
+} from './content/projectDiscovery'
 import { MachineBoundary } from './machine/MachineBoundary'
 import { projectElementId } from './machine/consoleAdapter'
 import { useMachineConsole } from './machine/useMachineConsole'
 
+interface DetailActivation {
+  readonly identity: CartridgeIdentity
+  readonly sequence: number
+}
+
+interface PendingOrigin {
+  readonly fromHash: string
+  readonly hash: string
+  readonly link: HTMLAnchorElement
+}
+
+interface DetailSyncRequest {
+  readonly hash: string
+  readonly origin: HTMLAnchorElement | null
+}
+
+function hashFromUrl(url: string): string {
+  return new URL(url).hash
+}
+
+function isOrdinaryActivation(event: MouseEvent<HTMLAnchorElement>): boolean {
+  return (
+    !event.defaultPrevented &&
+    event.button === 0 &&
+    !event.altKey &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !event.shiftKey &&
+    (!event.currentTarget.target || event.currentTarget.target === '_self')
+  )
+}
+
+function DiscoveryMechanism({
+  slug,
+  label,
+  reward,
+}: {
+  readonly slug: CartridgeSlug
+  readonly label: string
+  readonly reward: string
+}) {
+  const accessibleLabel = `${label}: ${reward}`
+
+  if (slug === 'gameonvb') {
+    return (
+      <div
+        className="discovery-mechanism event-dial"
+        role="img"
+        aria-label={accessibleLabel}
+      >
+        <span className="dial-ring" aria-hidden="true">
+          <i />
+        </span>
+        <span className="mechanism-track" aria-hidden="true" />
+      </div>
+    )
+  }
+
+  if (slug === 'suburbs') {
+    return (
+      <div
+        className="discovery-mechanism deck-flip"
+        role="img"
+        aria-label={accessibleLabel}
+      >
+        <span className="deck-surface" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+          <i />
+        </span>
+      </div>
+    )
+  }
+
+  if (slug === 'screen-switch') {
+    return (
+      <div
+        className="discovery-mechanism display-swap"
+        role="img"
+        aria-label={accessibleLabel}
+      >
+        <span className="display-plate display-plate-a" aria-hidden="true" />
+        <span className="display-plate display-plate-b" aria-hidden="true" />
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className="discovery-mechanism ledger-gate"
+      role="img"
+      aria-label={accessibleLabel}
+    >
+      <span className="ledger-token" aria-hidden="true" />
+      <span className="gate-rails" aria-hidden="true">
+        <i />
+        <i />
+      </span>
+    </div>
+  )
+}
+
 export default function App() {
   const console = useMachineConsole()
   const { state } = console
+  const dialogRef = useRef<HTMLDialogElement | null>(null)
+  const detailFrameRef = useRef<number | null>(null)
+  const detailSyncQueueRef = useRef<DetailSyncRequest[]>([])
+  const focusFrameRef = useRef<number | null>(null)
+  const sequenceRef = useRef(0)
+  const activeDetailRef = useRef<DetailActivation | null>(null)
+  const originRef = useRef<HTMLAnchorElement | null>(null)
+  const pendingOriginRef = useRef<PendingOrigin[]>([])
+  const hashCloseIntentRef = useRef(false)
+  const hashCloseEventRef = useRef(false)
+  const [activeDetail, setActiveDetail] = useState<DetailActivation | null>(null)
+  const [discovery, setDiscovery] = useState(createProjectDiscovery)
   const selected = CARTRIDGE_IDENTITIES[state.selectedCartridge]
+  const activeStory = activeDetail
+    ? CARTRIDGE_STORIES[activeDetail.identity.slug]
+    : null
   const isSkipped = state.pauseCauses.skip
   const isUserPaused = state.pauseCauses.user
   const isSeated = state.assembly.seated
+
+  activeDetailRef.current = activeDetail
+
+  const cancelFocusReturn = useCallback(() => {
+    if (focusFrameRef.current !== null) {
+      window.cancelAnimationFrame(focusFrameRef.current)
+      focusFrameRef.current = null
+    }
+  }, [])
+
+  const scheduleHashDestinationFocus = useCallback(() => {
+    cancelFocusReturn()
+    focusFrameRef.current = window.requestAnimationFrame(() => {
+      focusFrameRef.current = null
+      const encodedId = window.location.hash.slice(1)
+      let target: HTMLElement | null = null
+
+      if (encodedId) {
+        try {
+          target = document.getElementById(decodeURIComponent(encodedId))
+        } catch {
+          target = document.getElementById(encodedId)
+        }
+      }
+
+      if (target) {
+        target.focus({ preventScroll: true })
+      }
+      if (
+        document.activeElement !== target &&
+        document.activeElement instanceof HTMLElement
+      ) {
+        document.activeElement.blur()
+      }
+    })
+  }, [cancelFocusReturn])
+
+  const scheduleDetailSync = useCallback(
+    (hash: string, origin: HTMLAnchorElement | null) => {
+      detailSyncQueueRef.current.push({ hash, origin })
+      cancelFocusReturn()
+
+      if (detailFrameRef.current !== null) return
+
+      detailFrameRef.current = window.requestAnimationFrame(() => {
+        detailFrameRef.current = null
+        const requests = detailSyncQueueRef.current.splice(0)
+        let nextDetail: DetailActivation | null = null
+        let nextOrigin: HTMLAnchorElement | null = null
+
+        setDiscovery((current) =>
+          requests.reduce((nextDiscovery, request) => {
+            const identity = cartridgeByHash(request.hash)
+            return identity
+              ? visitProject(nextDiscovery, identity.slug)
+              : nextDiscovery
+          }, current),
+        )
+
+        for (const request of requests) {
+          const identity = cartridgeByHash(request.hash)
+
+          if (!identity) {
+            nextDetail = null
+            nextOrigin = null
+            continue
+          }
+
+          sequenceRef.current += 1
+          nextDetail = { identity, sequence: sequenceRef.current }
+          nextOrigin = request.origin?.isConnected
+            ? request.origin
+            : document.querySelector<HTMLAnchorElement>(
+                `.project-entry a[href="${identity.hash}"]`,
+              )
+        }
+
+        hashCloseIntentRef.current = nextDetail === null
+        originRef.current = nextOrigin
+        setActiveDetail(nextDetail)
+      })
+    },
+    [cancelFocusReturn],
+  )
+
+  useLayoutEffect(() => {
+    scheduleDetailSync(window.location.hash, null)
+
+    const onHashChange = (event: HashChangeEvent) => {
+      const fromHash = hashFromUrl(event.oldURL)
+      const hash = hashFromUrl(event.newURL)
+      const pendingOriginIndex = pendingOriginRef.current.findIndex(
+        (pending) =>
+          pending.fromHash === fromHash && pending.hash === hash,
+      )
+      const pendingOrigin =
+        pendingOriginIndex >= 0
+          ? pendingOriginRef.current[pendingOriginIndex]
+          : null
+      pendingOriginRef.current = pendingOriginRef.current.filter(
+        (pending, index) =>
+          index !== pendingOriginIndex && pending.fromHash !== fromHash,
+      )
+
+      if (!cartridgeByHash(hash)) {
+        originRef.current = null
+        if (dialogRef.current?.open) hashCloseIntentRef.current = true
+      } else {
+        hashCloseIntentRef.current = false
+      }
+      scheduleDetailSync(hash, pendingOrigin?.link ?? null)
+    }
+    window.addEventListener('hashchange', onHashChange)
+
+    return () => {
+      window.removeEventListener('hashchange', onHashChange)
+      if (detailFrameRef.current !== null) {
+        window.cancelAnimationFrame(detailFrameRef.current)
+        detailFrameRef.current = null
+      }
+      detailSyncQueueRef.current = []
+      pendingOriginRef.current = []
+      cancelFocusReturn()
+    }
+  }, [cancelFocusReturn, scheduleDetailSync])
+
+  useLayoutEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+
+    if (!activeDetail) {
+      if (dialog.open) {
+        hashCloseIntentRef.current = false
+        hashCloseEventRef.current = true
+        dialog.close()
+        scheduleHashDestinationFocus()
+      }
+      return
+    }
+
+    if (!dialog.open) dialog.showModal()
+    document.getElementById('project-detail-title')?.focus({
+      preventScroll: true,
+    })
+  }, [activeDetail, scheduleHashDestinationFocus])
+
+  const openProjectDetail = useCallback(
+    (
+      cartridge: CartridgeIdentity,
+      event: MouseEvent<HTMLAnchorElement>,
+    ) => {
+      console.openProject(cartridge.index, event)
+      if (!isOrdinaryActivation(event)) return
+
+      const link = event.currentTarget
+      if (window.location.hash === cartridge.hash) {
+        scheduleDetailSync(cartridge.hash, link)
+      } else {
+        pendingOriginRef.current.push({
+          fromHash: window.location.hash,
+          hash: cartridge.hash,
+          link,
+        })
+      }
+    },
+    [console, scheduleDetailSync],
+  )
+
+  const onDetailClose = useCallback(() => {
+    if (hashCloseIntentRef.current || hashCloseEventRef.current) {
+      hashCloseIntentRef.current = false
+      hashCloseEventRef.current = false
+      return
+    }
+
+    const closedDetail = activeDetailRef.current
+    const origin = originRef.current
+    originRef.current = null
+    activeDetailRef.current = null
+    setActiveDetail(null)
+
+    if (
+      closedDetail &&
+      window.location.hash === closedDetail.identity.hash
+    ) {
+      window.history.replaceState(
+        window.history.state,
+        '',
+        '#cartridge-list',
+      )
+    }
+
+    if (origin?.isConnected) {
+      cancelFocusReturn()
+      focusFrameRef.current = window.requestAnimationFrame(() => {
+        focusFrameRef.current = null
+        origin.focus({ preventScroll: true })
+      })
+    }
+  }, [cancelFocusReturn])
 
   return (
     <>
@@ -173,34 +508,130 @@ export default function App() {
               <p className="eyebrow">Native access / always available</p>
               <h2 id="project-register-title">Project cartridges</h2>
               <p>Standard links remain available in every machine state.</p>
+              <ul
+                className="operation-cues"
+                aria-label="Project entry operation"
+              >
+                <li>
+                  <strong>Desktop</strong><span>Select entry</span>
+                </li>
+                <li>
+                  <strong>Touch</strong><span>Tap entry</span>
+                </li>
+                <li>
+                  <strong>Keyboard</strong><span>Tab + Enter</span>
+                </li>
+              </ul>
             </div>
 
             <div className="project-list">
-              {CARTRIDGE_IDENTITIES.map((cartridge) => (
-                <article
-                  id={projectElementId(cartridge.index)}
-                  className="project-entry"
-                  key={cartridge.slug}
-                  tabIndex={-1}
-                >
-                  <span className="project-index" aria-hidden="true">
-                    {String(cartridge.index + 1).padStart(2, '0')}
-                  </span>
-                  <h3>{cartridge.name}</h3>
-                  <a
-                    href={cartridge.hash}
-                    onClick={(event) =>
-                      console.openProject(cartridge.index, event)
-                    }
+              {CARTRIDGE_IDENTITIES.map((cartridge) => {
+                const story = CARTRIDGE_STORIES[cartridge.slug]
+                return (
+                  <article
+                    id={projectElementId(cartridge.index)}
+                    className="project-entry"
+                    key={cartridge.slug}
+                    tabIndex={-1}
                   >
-                    Open project entry <span aria-hidden="true">↗</span>
-                  </a>
-                </article>
-              ))}
+                    <span className="project-index" aria-hidden="true">
+                      {String(cartridge.index + 1).padStart(2, '0')}
+                    </span>
+                    <div className="project-summary">
+                      <h3>{cartridge.name}</h3>
+                      <p>{story.preview}</p>
+                    </div>
+                    <a
+                      href={cartridge.hash}
+                      onClick={(event) =>
+                        openProjectDetail(cartridge, event)
+                      }
+                    >
+                      Open project entry <span aria-hidden="true">↗</span>
+                    </a>
+                  </article>
+                )
+              })}
             </div>
           </section>
         </section>
       </main>
+
+      <dialog
+        ref={dialogRef}
+        className="project-dialog"
+        aria-labelledby="project-detail-title"
+        onClose={onDetailClose}
+      >
+        {activeDetail && activeStory && (
+          <div
+            className="project-detail"
+            data-project={activeDetail.identity.slug}
+            key={activeDetail.sequence}
+          >
+            <header className="project-detail-header">
+              <div>
+                <p className="eyebrow">Cartridge discovery</p>
+                <h2 id="project-detail-title" tabIndex={-1}>
+                  {activeDetail.identity.name}
+                </h2>
+              </div>
+              <form method="dialog">
+                <button className="dialog-close" type="submit">
+                  Close detail <span aria-hidden="true">×</span>
+                </button>
+              </form>
+            </header>
+
+            <p className="project-detail-preview">{activeStory.preview}</p>
+
+            <DiscoveryMechanism
+              slug={activeDetail.identity.slug}
+              label={activeStory.discovery.label}
+              reward={activeStory.discovery.immediateReward}
+            />
+            <p className="discovery-readout" role="status">
+              <strong>
+                {discovery.latest?.kind === 'replay' ? 'Replay' : 'Discovery'}
+              </strong>
+              <span>{activeStory.discovery.label}</span>
+              <span>{activeStory.discovery.immediateReward}</span>
+            </p>
+
+            <dl className="project-story">
+              <div>
+                <dt>Role</dt>
+                <dd>{activeStory.role}</dd>
+              </div>
+              <div>
+                <dt>Constraint</dt>
+                <dd>{activeStory.constraint}</dd>
+              </div>
+              <div>
+                <dt>Decision</dt>
+                <dd>{activeStory.decision}</dd>
+              </div>
+              <div>
+                <dt>Evidence</dt>
+                <dd>{activeStory.evidence}</dd>
+              </div>
+            </dl>
+
+            <div className="project-detail-footer">
+              {activeStory.verifiedUrl && (
+                <a href={activeStory.verifiedUrl}>
+                  Visit verified project <span aria-hidden="true">↗</span>
+                </a>
+              )}
+              {discovery.completion && (
+                <p className="circuit-complete" role="status">
+                  {discovery.completion}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+      </dialog>
 
       <footer>
         <span>Vitek Machine / service console</span>
