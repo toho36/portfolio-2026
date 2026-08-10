@@ -14,6 +14,7 @@ import {
   type RoutePath,
 } from './content/routes'
 import { CONTACT, FLAGSHIPS, HERO, SIDE_QUESTS } from './content/systems'
+import { VoleyEventsPage } from './pages/VoleyEvents'
 
 interface AppProps {
   readonly initialPath?: string
@@ -282,6 +283,8 @@ export default function App({ initialPath }: AppProps) {
       <main id="main-content" tabIndex={-1}>
         {route.path === '/' ? (
           <HomePage currentPath={route.path} onNavigate={onNavigate} />
+        ) : route.path === '/voleyevents' ? (
+          <VoleyEventsPage onNavigate={onNavigate} />
         ) : (
           <RoutePage currentPath={route.path} onNavigate={onNavigate} />
         )}

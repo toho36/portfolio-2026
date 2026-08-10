@@ -82,13 +82,16 @@ describe('systems-builder shell', () => {
     )
   })
 
-  it('renders minimal route pages and falls unknown paths back to home', () => {
+  it('renders flagship routes and falls unknown paths back to home', () => {
     const voleyEvents = render('/voleyevents/')
     const goalLoop = render('/goal-loop')
     const unknown = render('/not-a-route')
 
-    expect(voleyEvents).toContain('<h1>VoleyEvents</h1>')
+    expect(voleyEvents).toContain(
+      'Registration and operations software for recurring recreational volleyball events.',
+    )
     expect(voleyEvents).toContain('href="/"')
+    expect(voleyEvents).toContain('href="/goal-loop"')
     expect(goalLoop).toContain('<h1>Goal Loop</h1>')
     expect(goalLoop).toContain('href="/"')
     expect(unknown).toContain(

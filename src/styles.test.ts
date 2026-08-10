@@ -49,3 +49,55 @@ describe('accessible typography-led styles', () => {
     expect(`${app}\n${main}\n${test}`).not.toMatch(/styles\.css\?raw/)
   })
 })
+
+describe('VoleyEvents lifecycle styles', () => {
+  it('enhances one settled participant token with a reversible view timeline', () => {
+    const keyframes = styles.slice(
+      styles.indexOf('@keyframes participant-advance'),
+      styles.indexOf(
+        '@media (prefers-reduced-motion: no-preference)',
+        styles.indexOf('@keyframes participant-advance'),
+      ),
+    )
+
+    expect(styles).toContain('@supports (animation-timeline: view())')
+    expect(styles).toContain('animation-timeline: --lifecycle-progress')
+    expect(styles).toMatch(
+      /\.participant-token\s*\{[^}]*animation:\s*participant-advance linear both[^}]*animation-duration:\s*auto[^}]*animation-timeline:\s*--lifecycle-progress/,
+    )
+    expect(styles).toMatch(
+      /\.participant-token\s*\{[^}]*transform:\s*translateY\(656px\)/,
+    )
+    expect(keyframes).toMatch(/from\s*\{[^}]*transform:/)
+    expect(keyframes).toMatch(/to\s*\{[^}]*transform:/)
+    expect(keyframes).not.toMatch(/(?:left|top|width|height):/)
+  })
+
+  it('keeps the lifecycle stacked and contained on mobile', () => {
+    const mobile = styles.slice(styles.indexOf('@media (max-width: 760px)'))
+
+    expect(mobile).toMatch(
+      /\.lifecycle-stage\s*\{[^}]*grid-template-columns:\s*1fr/,
+    )
+    expect(mobile).toMatch(
+      /\.lifecycle-layout\s*\{[^}]*grid-template-columns:\s*minmax\(4\.5rem,\s*5\.5rem\)\s+minmax\(0,\s*1fr\)/,
+    )
+    expect(mobile).toMatch(
+      /\.lifecycle-court svg\s*\{[^}]*width:\s*100%[^}]*height:\s*100%/,
+    )
+    expect(styles).toMatch(
+      /\.lifecycle-court svg\s*\{[^}]*min-height:\s*55rem[^}]*overflow:\s*hidden/,
+    )
+    expect(styles).not.toContain('100vw')
+  })
+
+  it('settles the participant token under reduced motion', () => {
+    const reduced = styles.slice(
+      styles.indexOf('@media (prefers-reduced-motion: reduce)'),
+    )
+
+    expect(reduced).toMatch(
+      /\.participant-token\s*\{[^}]*opacity:\s*1[^}]*transform:\s*translateY\(656px\)\s*!important/,
+    )
+  })
+})

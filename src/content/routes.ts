@@ -11,7 +11,7 @@ export const ROUTES = [
     id: 'voleyevents',
     path: '/voleyevents',
     label: 'VoleyEvents',
-    title: 'VoleyEvents — Hoang Viet To',
+    title: 'VoleyEvents Match Operations — Hoang Viet To',
     description:
       'An operational product for recurring recreational volleyball events.',
   },
