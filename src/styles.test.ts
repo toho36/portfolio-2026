@@ -32,6 +32,15 @@ describe('accessible typography-led styles', () => {
     )
   })
 
+  it('contains all three primary links inside the mobile header', () => {
+    const mobile = styles.slice(styles.indexOf('@media (max-width: 760px)'))
+
+    expect(mobile).toMatch(
+      /\.site-nav\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/,
+    )
+    expect(mobile).toMatch(/\.site-nav a\s*\{[^}]*min-width:\s*0/)
+  })
+
   it('does not use the Vitest-incompatible CSS raw import', () => {
     const app = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8')
     const main = readFileSync(new URL('./main.tsx', import.meta.url), 'utf8')

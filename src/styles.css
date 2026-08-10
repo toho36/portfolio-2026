@@ -387,13 +387,15 @@ footer p {
   }
 
   .site-nav {
+    display: grid;
     width: 100%;
-    justify-content: space-between;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .site-nav a {
-    flex: 1 1 auto;
+    min-width: 0;
     justify-content: center;
+    padding-inline: 0.25rem;
   }
 
   .hero {
