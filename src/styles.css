@@ -664,6 +664,469 @@ h1 {
   }
 }
 
+.goal-loop {
+  --run-field: #111315;
+  --run-ink: #f4efe5;
+  --run-decision: #ff6846;
+  --run-evidence: #68d7e8;
+  --run-muted: #aaa9a3;
+  --run-line: rgba(244, 239, 229, 0.2);
+  min-width: 0;
+  overflow: clip;
+  color: var(--run-ink);
+  background:
+    linear-gradient(90deg, transparent 49.9%, rgba(104, 215, 232, 0.035) 50%, transparent 50.1%),
+    var(--run-field);
+}
+
+.goal-loop .eyebrow {
+  color: var(--run-evidence);
+}
+
+.goal-loop .run-hero {
+  display: grid;
+  min-height: clamp(36rem, 78svh, 52rem);
+  align-content: end;
+  padding: clamp(3rem, 7vw, 7rem) clamp(1.25rem, 5vw, 5rem);
+  border: 1px solid var(--run-line);
+  background:
+    radial-gradient(circle at 84% 18%, rgba(255, 104, 70, 0.13), transparent 27rem),
+    linear-gradient(rgba(104, 215, 232, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(104, 215, 232, 0.06) 1px, transparent 1px);
+  background-size: auto, clamp(3rem, 7vw, 6rem) clamp(3rem, 7vw, 6rem);
+}
+
+.goal-loop .run-hero h1 {
+  max-width: 13ch;
+  margin-bottom: 1.5rem;
+  color: var(--run-ink);
+  font-size: clamp(2.8rem, 7vw, 7.4rem);
+  letter-spacing: -0.07em;
+  line-height: 0.88;
+}
+
+.goal-loop .run-hero-lede {
+  max-width: 47rem;
+  margin-bottom: 2rem;
+  color: var(--run-muted);
+  font-size: clamp(1.05rem, 1.8vw, 1.45rem);
+  line-height: 1.55;
+}
+
+.goal-loop .hero-jump,
+.goal-loop .back-link,
+.goal-loop .next-link {
+  color: var(--run-ink);
+}
+
+.goal-loop .run-section,
+.goal-loop .run-tape,
+.goal-loop .run-pair,
+.goal-loop .run-navigation {
+  margin-inline: clamp(1.25rem, 5vw, 5rem);
+}
+
+.goal-loop .run-section {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 0.8fr) minmax(16rem, 1fr);
+  gap: clamp(2rem, 7vw, 8rem);
+  align-items: end;
+  padding-block: clamp(5rem, 9vw, 9rem);
+  border-bottom: 1px solid var(--run-line);
+}
+
+.goal-loop .run-section h2,
+.goal-loop .run-tape h2 {
+  margin-bottom: 0;
+  color: var(--run-ink);
+  font-size: clamp(2.1rem, 4.8vw, 5rem);
+  letter-spacing: -0.055em;
+  line-height: 0.95;
+}
+
+.goal-loop .run-section > p,
+.goal-loop .run-tape-heading > p:last-child {
+  margin-bottom: 0;
+  color: var(--run-muted);
+  font-size: clamp(1rem, 1.5vw, 1.22rem);
+  line-height: 1.65;
+}
+
+.goal-loop .run-bounds {
+  border-bottom-color: var(--run-decision);
+}
+
+.goal-loop .run-tape {
+  padding-block: clamp(5rem, 10vw, 10rem);
+  scroll-margin-top: 1rem;
+}
+
+.goal-loop .run-tape-heading {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(9rem, 0.35fr) minmax(0, 1fr);
+  gap: 1.5rem clamp(2rem, 6vw, 7rem);
+  margin-bottom: clamp(4rem, 8vw, 7rem);
+}
+
+.goal-loop .run-tape-heading .eyebrow {
+  grid-row: span 2;
+}
+
+.goal-loop .run-tape-heading h2 {
+  max-width: 14ch;
+}
+
+.goal-loop .run-tape-heading > p:last-child {
+  max-width: 46rem;
+}
+
+.goal-loop .run-tape-layout {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(5.5rem, 8rem) minmax(0, 1fr);
+  gap: clamp(1rem, 4vw, 4rem);
+  align-items: stretch;
+  border-top: 1px solid var(--run-evidence);
+  border-bottom: 1px solid var(--run-evidence);
+}
+
+.goal-loop .run-trace {
+  min-width: 0;
+  overflow: hidden;
+  border-right: 1px solid var(--run-line);
+  background:
+    linear-gradient(90deg, transparent 49%, rgba(104, 215, 232, 0.12) 49%, rgba(104, 215, 232, 0.12) 51%, transparent 51%),
+    repeating-linear-gradient(0deg, transparent 0 4rem, rgba(244, 239, 229, 0.04) 4rem calc(4rem + 1px));
+}
+
+.goal-loop .run-trace svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 118rem;
+  overflow: hidden;
+}
+
+.goal-loop .run-trace-line,
+.goal-loop .run-trace-branch,
+.goal-loop .run-trace-stop,
+.goal-loop .run-block-mark,
+.goal-loop .run-marker path {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.goal-loop .run-trace-line {
+  stroke: var(--run-evidence);
+  stroke-dasharray: 960;
+  stroke-dashoffset: 0;
+  stroke-width: 4;
+}
+
+.goal-loop .run-trace-branch,
+.goal-loop .run-block-mark {
+  stroke: var(--run-decision);
+  stroke-linecap: round;
+  stroke-width: 4;
+}
+
+.goal-loop .run-trace-branch {
+  stroke-dasharray: 7 8;
+}
+
+.goal-loop .run-trace-stop {
+  fill: var(--run-field);
+  stroke: var(--run-evidence);
+  stroke-width: 3;
+}
+
+.goal-loop .run-marker {
+  opacity: 1;
+  transform: translateY(960px);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.goal-loop .run-marker circle {
+  fill: var(--run-ink);
+  stroke: var(--run-decision);
+  stroke-width: 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.goal-loop .run-marker path {
+  stroke: var(--run-field);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
+}
+
+.goal-loop .run-track {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.goal-loop .run-stage {
+  display: grid;
+  min-width: 0;
+  min-height: 18.5rem;
+  align-content: center;
+  padding: clamp(2.5rem, 5vw, 5rem) clamp(0rem, 3vw, 3rem) clamp(2.5rem, 5vw, 5rem) 0;
+  border-bottom: 1px solid var(--run-line);
+}
+
+.goal-loop .run-stage:last-child {
+  border-bottom: 0;
+}
+
+.goal-loop .run-stage-heading {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.goal-loop .run-role {
+  margin-bottom: 0.55rem;
+  color: var(--run-evidence);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.goal-loop .run-stage h3 {
+  margin-bottom: 0;
+  color: var(--run-ink);
+  font-size: clamp(2rem, 4.5vw, 4.8rem);
+  letter-spacing: -0.055em;
+  line-height: 0.92;
+}
+
+.goal-loop .run-state {
+  flex: none;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--run-decision);
+  color: var(--run-ink);
+  background: rgba(255, 104, 70, 0.1);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.goal-loop .run-stage dl {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(7rem, 0.28fr) minmax(0, 1fr);
+  margin: 0;
+  border-top: 1px solid var(--run-line);
+}
+
+.goal-loop .run-stage dt,
+.goal-loop .run-stage dd {
+  min-width: 0;
+  margin: 0;
+  padding-block: 0.9rem;
+  border-bottom: 1px solid var(--run-line);
+  line-height: 1.55;
+}
+
+.goal-loop .run-stage dt {
+  padding-right: 1rem;
+  color: var(--run-evidence);
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.goal-loop .run-stage dd {
+  overflow-wrap: anywhere;
+  color: var(--run-muted);
+}
+
+.goal-loop .run-revision-note {
+  min-width: 0;
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  border-left: 3px solid var(--run-decision);
+  background: rgba(255, 104, 70, 0.07);
+}
+
+.goal-loop .run-revision-note > p {
+  margin-bottom: 0.8rem;
+  color: var(--run-decision);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.goal-loop .run-revision-note ul {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.goal-loop .run-revision {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(9rem, 0.35fr) minmax(0, 1fr);
+  gap: 0.75rem 1.25rem;
+  color: var(--run-muted);
+  line-height: 1.5;
+}
+
+.goal-loop .run-revision strong {
+  color: var(--run-ink);
+}
+
+.goal-loop .run-revision strong::before {
+  content: "↶ ";
+  color: var(--run-decision);
+}
+
+.goal-loop .run-outcomes {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 2rem;
+  border: 1px solid var(--run-line);
+  background: var(--run-line);
+}
+
+.goal-loop .run-outcome {
+  min-width: 0;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  background: var(--run-field);
+}
+
+.goal-loop .run-outcome > span {
+  display: inline-flex;
+  margin-bottom: 1.25rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid currentcolor;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.goal-loop .run-outcome-pass > span {
+  color: var(--run-evidence);
+}
+
+.goal-loop .run-outcome-blocked > span {
+  color: var(--run-decision);
+}
+
+.goal-loop .run-outcome h4 {
+  margin: 0 0 0.75rem;
+  color: var(--run-ink);
+  font-size: clamp(1.25rem, 2.2vw, 2rem);
+  letter-spacing: -0.035em;
+}
+
+.goal-loop .run-outcome p {
+  margin-bottom: 0;
+  overflow-wrap: anywhere;
+  color: var(--run-muted);
+  line-height: 1.55;
+}
+
+.goal-loop .run-outcome-blocked {
+  box-shadow: inset 0 3px var(--run-decision);
+}
+
+.goal-loop .run-optimization {
+  border-top: 1px solid var(--run-evidence);
+}
+
+.goal-loop .run-pair {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-bottom: 1px solid var(--run-line);
+}
+
+.goal-loop .run-pair .run-section {
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  margin-inline: 0;
+  padding-right: clamp(1.5rem, 5vw, 5rem);
+  border-bottom: 0;
+}
+
+.goal-loop .run-pair .run-section + .run-section {
+  padding-right: 0;
+  padding-left: clamp(1.5rem, 5vw, 5rem);
+  border-left: 1px solid var(--run-line);
+}
+
+.goal-loop .run-pair .run-section h2 {
+  max-width: 13ch;
+  font-size: clamp(1.9rem, 3.8vw, 3.8rem);
+}
+
+.goal-loop .run-navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: clamp(2rem, 5vw, 4rem);
+  border-top: 1px solid var(--run-line);
+}
+
+@keyframes run-marker-advance {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(960px);
+  }
+}
+
+@keyframes run-trace-grow {
+  from {
+    stroke-dashoffset: 960;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .goal-loop .run-tape {
+      view-timeline-name: --run-progress;
+      view-timeline-axis: block;
+    }
+
+    .goal-loop .run-trace-line {
+      animation: run-trace-grow linear both;
+      animation-duration: auto;
+      animation-timeline: --run-progress;
+      animation-range: entry 12% exit 84%;
+    }
+
+    .goal-loop .run-marker {
+      animation: run-marker-advance linear both;
+      animation-duration: auto;
+      animation-timeline: --run-progress;
+      animation-range: entry 12% exit 84%;
+    }
+  }
+}
+
 footer {
   display: grid;
   grid-template-columns: minmax(13rem, 1fr) auto auto;
@@ -815,6 +1278,81 @@ footer p {
     flex-direction: column;
   }
 
+  .goal-loop .run-section,
+  .goal-loop .run-tape-heading {
+    grid-template-columns: 1fr;
+  }
+
+  .goal-loop .run-section {
+    gap: 1.5rem;
+  }
+
+  .goal-loop .run-tape-heading .eyebrow {
+    grid-row: auto;
+  }
+
+  .goal-loop .run-tape-layout {
+    grid-template-columns: minmax(3.5rem, 4.5rem) minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .goal-loop .run-trace svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .goal-loop .run-stage {
+    padding-right: 0;
+  }
+
+  .goal-loop .run-stage-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .goal-loop .run-stage dl {
+    grid-template-columns: 1fr;
+  }
+
+  .goal-loop .run-stage dt {
+    padding-bottom: 0.2rem;
+    border-bottom: 0;
+  }
+
+  .goal-loop .run-stage dd {
+    padding-top: 0;
+  }
+
+  .goal-loop .run-revision {
+    grid-template-columns: 1fr;
+  }
+
+  .goal-loop .run-outcomes,
+  .goal-loop .run-pair {
+    grid-template-columns: 1fr;
+  }
+
+  .goal-loop .run-pair .run-section,
+  .goal-loop .run-pair .run-section + .run-section {
+    padding: 3.5rem 0;
+    border-left: 0;
+  }
+
+  .goal-loop .run-pair .run-section + .run-section {
+    border-top: 1px solid var(--run-line);
+  }
+
+  .goal-loop .run-navigation {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .goal-loop .run-navigation .target-link {
+    width: 100%;
+    justify-content: space-between;
+    margin-left: 0;
+  }
+
   .case-navigation {
     align-items: stretch;
     flex-direction: column;
@@ -859,5 +1397,15 @@ footer p {
   .participant-token {
     opacity: 1;
     transform: translateY(656px) !important;
+  }
+
+  .goal-loop .run-marker {
+    opacity: 1;
+    transform: translateY(960px) !important;
+  }
+
+  .goal-loop .run-trace-line {
+    animation: none !important;
+    stroke-dashoffset: 0;
   }
 }

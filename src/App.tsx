@@ -14,6 +14,7 @@ import {
   type RoutePath,
 } from './content/routes'
 import { CONTACT, FLAGSHIPS, HERO, SIDE_QUESTS } from './content/systems'
+import { GoalLoopPage } from './pages/GoalLoop'
 import { VoleyEventsPage } from './pages/VoleyEvents'
 
 interface AppProps {
@@ -152,31 +153,6 @@ function HomePage({
   )
 }
 
-function RoutePage({
-  currentPath,
-  onNavigate,
-}: Pick<RouteLinkProps, 'currentPath' | 'onNavigate'>) {
-  const flagship = FLAGSHIPS.find(({ path }) => path === currentPath)
-
-  if (!flagship) return null
-
-  return (
-    <article className="route-entry" data-reveal>
-      <p className="eyebrow">System entry / {flagship.index}</p>
-      <h1>{flagship.name}</h1>
-      <p className="route-summary">{flagship.summary}</p>
-      <RouteLink
-        className="back-link"
-        currentPath={currentPath}
-        href="/"
-        onNavigate={onNavigate}
-      >
-        <span aria-hidden="true">←</span> Back to index
-      </RouteLink>
-    </article>
-  )
-}
-
 export default function App({ initialPath }: AppProps) {
   const [route, setRoute] = useState(() =>
     resolveRoute(
@@ -286,7 +262,7 @@ export default function App({ initialPath }: AppProps) {
         ) : route.path === '/voleyevents' ? (
           <VoleyEventsPage onNavigate={onNavigate} />
         ) : (
-          <RoutePage currentPath={route.path} onNavigate={onNavigate} />
+          <GoalLoopPage onNavigate={onNavigate} />
         )}
       </main>
 

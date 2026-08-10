@@ -101,3 +101,81 @@ describe('VoleyEvents lifecycle styles', () => {
     )
   })
 })
+
+describe('Goal Loop run-trace styles', () => {
+  it('keeps the graphite vocabulary scoped to Goal Loop', () => {
+    const goalLoopRule = styles.match(/\.goal-loop\s*\{([^}]+)\}/)?.[1]
+
+    expect(goalLoopRule).toBeDefined()
+    expect(goalLoopRule).toMatch(/--run-field:/)
+    expect(goalLoopRule).toMatch(/--run-ink:/)
+    expect(goalLoopRule).toMatch(/--run-decision:/)
+    expect(goalLoopRule).toMatch(/--run-evidence:/)
+    for (const property of [
+      '--run-field:',
+      '--run-ink:',
+      '--run-decision:',
+      '--run-evidence:',
+    ]) {
+      expect(styles.split(property)).toHaveLength(2)
+    }
+    expect(goalLoopRule).not.toMatch(/--court-/)
+  })
+
+  it('grows the trace and advances its marker on a reversible view timeline', () => {
+    const keyframes = styles.slice(
+      styles.indexOf('@keyframes run-marker-advance'),
+      styles.indexOf(
+        '@media (prefers-reduced-motion: no-preference)',
+        styles.indexOf('@keyframes run-marker-advance'),
+      ),
+    )
+
+    expect(styles).toContain('view-timeline-name: --run-progress')
+    expect(styles).toMatch(
+      /\.run-trace-line\s*\{[^}]*stroke-dasharray:\s*960[^}]*stroke-dashoffset:\s*0/,
+    )
+    expect(styles).toMatch(
+      /\.run-trace-line\s*\{[^}]*animation:\s*run-trace-grow linear both[^}]*animation-duration:\s*auto[^}]*animation-timeline:\s*--run-progress/,
+    )
+    expect(styles).toMatch(
+      /\.run-marker\s*\{[^}]*animation:\s*run-marker-advance linear both[^}]*animation-duration:\s*auto[^}]*animation-timeline:\s*--run-progress/,
+    )
+    expect(styles).toMatch(
+      /\.run-marker\s*\{[^}]*transform:\s*translateY\(960px\)/,
+    )
+    expect(keyframes).toMatch(/from\s*\{[^}]*transform:/)
+    expect(keyframes).toMatch(/to\s*\{[^}]*transform:/)
+    expect(keyframes).not.toMatch(/(?:left|top|width|height):/)
+    expect(keyframes).toMatch(
+      /@keyframes run-trace-grow\s*\{[\s\S]*from\s*\{[^}]*stroke-dashoffset:\s*960[\s\S]*to\s*\{[^}]*stroke-dashoffset:\s*0/,
+    )
+  })
+
+  it('contains the trace and definition copy on mobile', () => {
+    const mobile = styles.slice(styles.indexOf('@media (max-width: 760px)'))
+
+    expect(mobile).toMatch(
+      /\.run-tape-layout\s*\{[^}]*grid-template-columns:\s*minmax\(3\.5rem,\s*4\.5rem\)\s+minmax\(0,\s*1fr\)/,
+    )
+    expect(mobile).toMatch(
+      /\.run-stage dl\s*\{[^}]*grid-template-columns:\s*1fr/,
+    )
+    expect(styles).toMatch(/\.run-stage\s*\{[^}]*min-width:\s*0/)
+    expect(styles).toMatch(/\.run-stage dd\s*\{[^}]*overflow-wrap:\s*anywhere/)
+    expect(styles).not.toContain('100vw')
+  })
+
+  it('settles the final marker under reduced motion', () => {
+    const reduced = styles.slice(
+      styles.indexOf('@media (prefers-reduced-motion: reduce)'),
+    )
+
+    expect(reduced).toMatch(
+      /\.run-marker\s*\{[^}]*opacity:\s*1[^}]*transform:\s*translateY\(960px\)\s*!important/,
+    )
+    expect(reduced).toMatch(
+      /\.run-trace-line\s*\{[^}]*animation:\s*none\s*!important[^}]*stroke-dashoffset:\s*0/,
+    )
+  })
+})

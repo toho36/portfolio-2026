@@ -19,9 +19,9 @@ export const ROUTES = [
     id: 'goal-loop',
     path: '/goal-loop',
     label: 'Goal Loop',
-    title: 'Goal Loop — Hoang Viet To',
+    title: 'Goal Loop Run Anatomy — Hoang Viet To',
     description:
-      'A bounded multi-model software delivery and optimization system.',
+      'A bounded, evidence-driven software delivery run with independent critique, deterministic checks, review and fail-closed outcomes.',
   },
 ] as const
 

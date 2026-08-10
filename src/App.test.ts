@@ -92,8 +92,10 @@ describe('systems-builder shell', () => {
     )
     expect(voleyEvents).toContain('href="/"')
     expect(voleyEvents).toContain('href="/goal-loop"')
-    expect(goalLoop).toContain('<h1>Goal Loop</h1>')
+    expect(goalLoop).toContain('id="goal-loop-title"')
+    expect(goalLoop).toContain('id="run-tape"')
     expect(goalLoop).toContain('href="/"')
+    expect(goalLoop).toContain('href="/voleyevents"')
     expect(unknown).toContain(
       'I turn messy operations into software — and software delivery into a system.',
     )
