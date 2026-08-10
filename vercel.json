@@ -1,5 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/voleyevents", "destination": "/index.html" },
+    { "source": "/voleyevents/", "destination": "/index.html" },
+    { "source": "/goal-loop", "destination": "/index.html" },
+    { "source": "/goal-loop/", "destination": "/index.html" }
+  ]
 }
