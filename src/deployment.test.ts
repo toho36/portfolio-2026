@@ -20,7 +20,7 @@ const notFoundSource = readFileSync(
 )
 
 describe('static deployment configuration', () => {
-  it('narrowly rewrites both flagship routes and trailing-slash forms', () => {
+  it('narrowly rewrites all three non-root routes and trailing-slash forms', () => {
     const vercel = JSON.parse(vercelSource) as {
       outputDirectory: string
       rewrites: { source: string; destination: string }[]
@@ -32,6 +32,8 @@ describe('static deployment configuration', () => {
       { source: '/voleyevents/', destination: '/index.html' },
       { source: '/goal-loop', destination: '/index.html' },
       { source: '/goal-loop/', destination: '/index.html' },
+      { source: '/playground', destination: '/index.html' },
+      { source: '/playground/', destination: '/index.html' },
     ])
     expect(vercelSource).not.toMatch(/\/\(\.\*\)|:\w+\*|\/\*|404\.html/)
   })
@@ -55,6 +57,7 @@ describe('static deployment configuration', () => {
       'https://portfolio-pied-eight-38.vercel.app/',
       'https://portfolio-pied-eight-38.vercel.app/voleyevents',
       'https://portfolio-pied-eight-38.vercel.app/goal-loop',
+      'https://portfolio-pied-eight-38.vercel.app/playground',
     ])
     expect(robotsSource).toContain('User-agent: *\nAllow: /')
     expect(robotsSource).toContain(

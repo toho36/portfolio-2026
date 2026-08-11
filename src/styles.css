@@ -1182,6 +1182,170 @@ h1 {
   border-top: 1px solid var(--run-line);
 }
 
+.playground {
+  color: var(--paper);
+  background: var(--ink);
+}
+
+.relay-choreography {
+  position: relative;
+  min-width: 0;
+  border-bottom: 1px solid var(--line);
+  isolation: isolate;
+}
+
+.relay-hero {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  min-height: calc(100svh - 5.5rem);
+  align-content: start;
+  padding-block: clamp(4rem, 9vw, 8rem);
+  pointer-events: none;
+}
+
+.relay-hero h1 {
+  max-width: 10ch;
+  margin-bottom: 1.5rem;
+  font-size: clamp(3rem, 8vw, 8rem);
+  line-height: 0.86;
+}
+
+.relay-instruction {
+  max-width: 32rem;
+  margin-bottom: 0;
+  color: var(--paper);
+  font-size: clamp(1rem, 1.8vw, 1.35rem);
+  line-height: 1.5;
+}
+
+.relay-stage {
+  position: sticky;
+  z-index: 0;
+  top: 5.5rem;
+  display: grid;
+  height: calc(100svh - 5.5rem);
+  min-height: 30rem;
+  place-items: center;
+  margin-top: calc(-100svh + 5.5rem);
+  overflow: hidden;
+  color: var(--paper);
+  pointer-events: none;
+}
+
+.relay-stage svg {
+  width: 100%;
+  height: auto;
+  min-height: 30rem;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.relay-assembly path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.relay-rail {
+  stroke: currentcolor;
+  stroke-width: 5;
+}
+
+.relay-ring {
+  stroke: var(--line);
+  stroke-width: 4;
+}
+
+.relay-return {
+  stroke: var(--focus);
+  stroke-width: 4;
+}
+
+.relay-return-back {
+  opacity: 0.4;
+}
+
+.relay-return-front {
+  stroke: var(--paper);
+  stroke-width: 7;
+}
+
+.relay-signal {
+  fill: var(--signal);
+  stroke: var(--ink);
+  stroke-width: 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.relay-signal-fold,
+.relay-signal-feedback {
+  fill: var(--focus);
+}
+
+.relay-beats {
+  position: relative;
+  z-index: 1;
+  padding-bottom: 10svh;
+}
+
+.relay-beat {
+  display: grid;
+  width: min(29rem, 48%);
+  min-height: 88svh;
+  align-content: center;
+  margin-left: auto;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  background: linear-gradient(90deg, transparent, var(--ink) 18%);
+}
+
+.relay-beat-index {
+  margin-bottom: 1rem;
+  color: var(--signal);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.relay-beat h2 {
+  margin-bottom: 1rem;
+  font-size: clamp(2.5rem, 5vw, 5.5rem);
+  letter-spacing: -0.065em;
+  line-height: 0.9;
+}
+
+.relay-beat > p:not(.relay-beat-index) {
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.relay-beat nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-inline: -0.75rem;
+}
+
+.relay-beat-link,
+.relay-navigation .target-link {
+  color: var(--paper);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-underline-offset: 0.35em;
+  text-transform: uppercase;
+}
+
+.relay-navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: clamp(2rem, 5vw, 4rem);
+  border-top: 1px solid var(--line);
+}
+
 @keyframes run-marker-advance {
   from {
     transform: translateY(0);
@@ -1261,7 +1425,8 @@ footer p {
   .site-nav {
     display: grid;
     width: 100%;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 0.3rem;
   }
 
   .site-nav a {
@@ -1443,6 +1608,40 @@ footer p {
   }
 
   .goal-loop .run-navigation .target-link {
+    width: 100%;
+    justify-content: space-between;
+    margin-left: 0;
+  }
+
+  .relay-hero {
+    min-height: calc(100svh - 10rem);
+    padding-top: 3rem;
+  }
+
+  .relay-stage {
+    top: 10rem;
+    height: calc(100svh - 10rem);
+    min-height: 24rem;
+    margin-top: calc(-100svh + 10rem);
+  }
+
+  .relay-stage svg {
+    min-height: 22rem;
+  }
+
+  .relay-beat {
+    width: min(100%, 27rem);
+    min-height: 82svh;
+    padding-inline: 1.25rem;
+    background: linear-gradient(90deg, transparent, var(--ink) 12%);
+  }
+
+  .relay-navigation {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .relay-navigation .target-link {
     width: 100%;
     justify-content: space-between;
     margin-left: 0;

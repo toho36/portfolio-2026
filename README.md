@@ -9,11 +9,14 @@ them.
 - `/` — systems-builder overview, flagship work, side projects, contact and CVs
 - `/voleyevents` — operational product case study
 - `/goal-loop` — bounded software-delivery system case study
+- `/playground` — experimental Signal Relay semantic HTML/SVG baseline
 
 ## Stack
 
-React 19, TypeScript and Vite, with native CSS/SVG motion. The shipped portfolio
-does not require a 3D renderer or a separate animation runtime.
+React 19, TypeScript and Vite, with native CSS and SVG. The current Playground
+baseline has no animation or WebGL runtime. GSAP and Three.js are not installed;
+if later approved, they arrive as route-local lazy runtimes under
+`src/playground/`.
 
 ## Commands
 
@@ -25,5 +28,7 @@ does not require a 3D renderer or a separate animation runtime.
 ## Deployment
 
 Vite emits the static site to `dist`. Vercel serves that directory and rewrites
-the two case-study routes, including their trailing-slash forms, to `index.html`
-for direct loads. Hosting-level misses use the branded static `404.html` page.
+`/voleyevents`, `/goal-loop` and `/playground`, including their trailing-slash
+forms, to `index.html` for direct loads. Hosting-level misses use the branded
+static `404.html` page. Without JavaScript, the current single React entry is
+blank; this site does not prerender or server-render routes.

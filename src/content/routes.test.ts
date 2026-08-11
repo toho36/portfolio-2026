@@ -5,6 +5,7 @@ import {
   getRouteNavigationUrl,
   pushRouteNavigation,
   resolveRoute,
+  routeMetadata,
   subscribeToRouteChanges,
 } from './routes'
 import { CONTACT, FLAGSHIPS, SIDE_QUESTS } from './systems'
@@ -22,15 +23,46 @@ const ordinaryClick = {
 }
 
 describe('route records', () => {
-  it('admits only the three ordinary routes and resolves safely', () => {
+  it('admits only the four ordinary routes and resolves safely', () => {
     expect(ROUTES.map(({ path }) => path)).toEqual([
       '/',
       '/voleyevents',
       '/goal-loop',
+      '/playground',
     ])
     expect(resolveRoute('/voleyevents/').path).toBe('/voleyevents')
     expect(resolveRoute('/goal-loop///').path).toBe('/goal-loop')
+    expect(resolveRoute('/playground/').path).toBe('/playground')
     expect(resolveRoute('/unknown').path).toBe('/')
+  })
+
+  it('derives canonical metadata for every ordinary route', () => {
+    expect(ROUTES.map(routeMetadata)).toEqual([
+      {
+        title: 'Hoang Viet To — independent software systems builder',
+        description:
+          'An independent software systems builder turning messy operations into reliable products and improving the loops that ship them.',
+        canonical: 'https://portfolio-pied-eight-38.vercel.app/',
+      },
+      {
+        title: 'VoleyEvents Match Operations — Hoang Viet To',
+        description:
+          'An operational product for recurring recreational volleyball events.',
+        canonical: 'https://portfolio-pied-eight-38.vercel.app/voleyevents',
+      },
+      {
+        title: 'Goal Loop Run Anatomy — Hoang Viet To',
+        description:
+          'A bounded, evidence-driven software delivery run with independent critique, deterministic checks, review and fail-closed outcomes.',
+        canonical: 'https://portfolio-pied-eight-38.vercel.app/goal-loop',
+      },
+      {
+        title: 'Signal Relay Playground — Hoang Viet To',
+        description:
+          'An experimental reversible spatial signal relay built with native scroll, GSAP and progressive WebGL.',
+        canonical: 'https://portfolio-pied-eight-38.vercel.app/playground',
+      },
+    ])
   })
 
   it('keeps truthful content and only the verified side-quest URLs', () => {
@@ -57,6 +89,12 @@ describe('route-link eligibility', () => {
         href: '/goal-loop/?source=index',
       }),
     ).toBe('/goal-loop?source=index')
+    expect(
+      getRouteNavigationUrl({
+        ...ordinaryClick,
+        href: '/playground/?beat=fold',
+      }),
+    ).toBe('/playground?beat=fold')
   })
 
   it('pushes only changed locations and subscribes cleanly to popstate', () => {

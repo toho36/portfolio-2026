@@ -23,10 +23,28 @@ export const ROUTES = [
     description:
       'A bounded, evidence-driven software delivery run with independent critique, deterministic checks, review and fail-closed outcomes.',
   },
+  {
+    id: 'playground',
+    path: '/playground',
+    label: 'Playground',
+    title: 'Signal Relay Playground — Hoang Viet To',
+    description:
+      'An experimental reversible spatial signal relay built with native scroll, GSAP and progressive WebGL.',
+  },
 ] as const
 
 export type Route = (typeof ROUTES)[number]
 export type RoutePath = Route['path']
+
+export const SITE_ORIGIN = 'https://portfolio-pied-eight-38.vercel.app'
+
+export function routeMetadata(route: Route) {
+  return {
+    title: route.title,
+    description: route.description,
+    canonical: `${SITE_ORIGIN}${route.path}`,
+  }
+}
 
 const ROUTE_PATHS = new Set<string>(ROUTES.map(({ path }) => path))
 

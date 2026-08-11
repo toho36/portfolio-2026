@@ -21,11 +21,19 @@ const retiredModulePaths = [
   '/content/cartridges.test.ts',
 ] as const
 
-const retiredDependencies = [
+const GLOBALLY_FORBIDDEN_DEPENDENCIES = [
   '@react-three/fiber',
   '@types/three',
+] as const
+
+const PLAYGROUND_SCOPED_DEPENDENCIES = [
   'gsap',
   'three',
+] as const
+
+const ABSENT_DEPENDENCIES = [
+  ...GLOBALLY_FORBIDDEN_DEPENDENCIES,
+  ...PLAYGROUND_SCOPED_DEPENDENCIES,
 ] as const
 
 const packageSource = readFileSync(
@@ -57,6 +65,19 @@ function importsRetiredDependency(source: string, dependency: string) {
   )
 }
 
+function importsForbiddenDependency(
+  modulePath: string,
+  source: string,
+  dependency: string,
+) {
+  if (!importsRetiredDependency(source, dependency)) return false
+
+  const routeScoped = (
+    PLAYGROUND_SCOPED_DEPENDENCIES as readonly string[]
+  ).includes(dependency)
+  return !routeScoped || !modulePath.startsWith('./playground/')
+}
+
 describe('retired source closure', () => {
   it('contains none of the retired runtime modules', () => {
     const modulePaths = Object.keys(sourceModules)
@@ -70,9 +91,9 @@ describe('retired source closure', () => {
     for (const [path, source] of Object.entries(sourceModules)) {
       if (path.endsWith('/sourceClosure.test.ts')) continue
 
-      for (const dependency of retiredDependencies) {
+      for (const dependency of ABSENT_DEPENDENCIES) {
         expect(
-          importsRetiredDependency(source, dependency),
+          importsForbiddenDependency(path, source, dependency),
           `${path} imports ${dependency}`,
         ).toBe(false)
       }
@@ -80,7 +101,7 @@ describe('retired source closure', () => {
   })
 
   it('recognizes every forbidden import shape for bare and subpath specifiers', () => {
-    for (const dependency of retiredDependencies) {
+    for (const dependency of ABSENT_DEPENDENCIES) {
       const examples = [
         `import '${dependency}'`,
         `import value from "${dependency}/subpath"`,
@@ -91,6 +112,44 @@ describe('retired source closure', () => {
       for (const example of examples) {
         expect(importsRetiredDependency(example, dependency)).toBe(true)
       }
+    }
+  })
+
+  it('permits gsap and three only below the route-local runtime root', () => {
+    for (const dependency of PLAYGROUND_SCOPED_DEPENDENCIES) {
+      const source = `import value from '${dependency}/subpath'`
+
+      expect(
+        importsForbiddenDependency(
+          './playground/runtime.ts',
+          source,
+          dependency,
+        ),
+      ).toBe(false)
+      expect(
+        importsForbiddenDependency(
+          './pages/Playground.tsx',
+          source,
+          dependency,
+        ),
+      ).toBe(true)
+      expect(
+        importsForbiddenDependency(
+          './content/routes.ts',
+          source,
+          dependency,
+        ),
+      ).toBe(true)
+    }
+
+    for (const dependency of GLOBALLY_FORBIDDEN_DEPENDENCIES) {
+      expect(
+        importsForbiddenDependency(
+          './playground/runtime.ts',
+          `import '${dependency}'`,
+          dependency,
+        ),
+      ).toBe(true)
     }
   })
 
@@ -115,7 +174,7 @@ describe('retired source closure', () => {
       build: 'tsc --noEmit && vite build',
     })
 
-    for (const dependency of retiredDependencies) {
+    for (const dependency of ABSENT_DEPENDENCIES) {
       expect(declaredDependencies).not.toHaveProperty(dependency)
       expect(packageLock.packages).not.toHaveProperty(
         `node_modules/${dependency}`,

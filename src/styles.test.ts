@@ -32,11 +32,11 @@ describe('accessible typography-led styles', () => {
     )
   })
 
-  it('contains all three primary links inside the mobile header', () => {
+  it('contains all four primary links inside a 2×2 mobile header', () => {
     const mobile = styles.slice(styles.indexOf('@media (max-width: 760px)'))
 
     expect(mobile).toMatch(
-      /\.site-nav\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/,
+      /\.site-nav\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/,
     )
     expect(mobile).toMatch(/\.site-nav a\s*\{[^}]*min-width:\s*0/)
   })
@@ -56,6 +56,28 @@ describe('accessible typography-led styles', () => {
     const test = readFileSync(new URL('./styles.test.ts', import.meta.url), 'utf8')
 
     expect(`${app}\n${main}\n${test}`).not.toMatch(/styles\.css\?raw/)
+  })
+})
+
+describe('Signal Relay baseline styles', () => {
+  it('keeps one sticky responsive SVG stage inside the choreography', () => {
+    expect(styles).toMatch(
+      /\.relay-choreography\s*\{[^}]*position:\s*relative[^}]*min-width:\s*0/,
+    )
+    expect(styles).toMatch(
+      /\.relay-stage\s*\{[^}]*position:\s*sticky[^}]*overflow:\s*hidden/,
+    )
+    expect(styles).toMatch(
+      /\.relay-stage svg\s*\{[^}]*width:\s*100%[^}]*height:\s*auto[^}]*min-height:[^}]*overflow:\s*hidden/,
+    )
+    expect(styles).not.toContain('100vw')
+  })
+
+  it('uses only the approved shell tokens for relay material and signal', () => {
+    expect(styles).toMatch(/\.relay-rail\s*\{[^}]*stroke:\s*currentcolor/)
+    expect(styles).toMatch(/\.relay-ring\s*\{[^}]*stroke:\s*var\(--line\)/)
+    expect(styles).toMatch(/\.relay-return\s*\{[^}]*stroke:\s*var\(--focus\)/)
+    expect(styles).toMatch(/\.relay-signal\s*\{[^}]*fill:\s*var\(--signal\)/)
   })
 })
 

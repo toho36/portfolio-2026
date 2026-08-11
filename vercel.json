@@ -6,6 +6,8 @@
     { "source": "/voleyevents", "destination": "/index.html" },
     { "source": "/voleyevents/", "destination": "/index.html" },
     { "source": "/goal-loop", "destination": "/index.html" },
-    { "source": "/goal-loop/", "destination": "/index.html" }
+    { "source": "/goal-loop/", "destination": "/index.html" },
+    { "source": "/playground", "destination": "/index.html" },
+    { "source": "/playground/", "destination": "/index.html" }
   ]
 }

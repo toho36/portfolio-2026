@@ -10,11 +10,14 @@ import {
   getRouteNavigationUrl,
   pushRouteNavigation,
   resolveRoute,
+  routeMetadata,
   subscribeToRouteChanges,
+  type Route,
   type RoutePath,
 } from './content/routes'
 import { CONTACT, FLAGSHIPS, HERO, SIDE_QUESTS } from './content/systems'
 import { GoalLoopPage } from './pages/GoalLoop'
+import { PlaygroundPage } from './pages/Playground'
 import { VoleyEventsPage } from './pages/VoleyEvents'
 
 interface AppProps {
@@ -83,6 +86,21 @@ export function installRevealMotion(
   }
 
   return cleanup
+}
+
+export function applyRouteMetadata(doc: Document, route: Route) {
+  const metadata = routeMetadata(route)
+
+  doc.title = metadata.title
+  doc
+    .querySelector('meta[name="description"]')
+    ?.setAttribute('content', metadata.description)
+  doc
+    .querySelector('link[rel="canonical"]')
+    ?.setAttribute('href', metadata.canonical)
+  doc
+    .querySelector('meta[property="og:url"]')
+    ?.setAttribute('content', metadata.canonical)
 }
 
 function HomePage({
@@ -197,8 +215,8 @@ export default function App({ initialPath }: AppProps) {
   }, [])
 
   useEffect(() => {
-    document.title = route.title
-  }, [route.title])
+    applyRouteMetadata(document, route)
+  }, [route])
 
   useEffect(() => {
     const root = document.documentElement
@@ -232,6 +250,28 @@ export default function App({ initialPath }: AppProps) {
     }
   }, [route.path])
 
+  let routeContent: ReactNode
+  switch (route.path) {
+    case '/':
+      routeContent = (
+        <HomePage currentPath={route.path} onNavigate={onNavigate} />
+      )
+      break
+    case '/voleyevents':
+      routeContent = <VoleyEventsPage onNavigate={onNavigate} />
+      break
+    case '/goal-loop':
+      routeContent = <GoalLoopPage onNavigate={onNavigate} />
+      break
+    case '/playground':
+      routeContent = <PlaygroundPage onNavigate={onNavigate} />
+      break
+    default: {
+      const exhaustiveRoute: never = route
+      routeContent = exhaustiveRoute
+    }
+  }
+
   return (
     <div id="top" className={`site-shell route-${route.id}`}>
       <a className="skip-link target-link" href="#main-content">
@@ -263,13 +303,7 @@ export default function App({ initialPath }: AppProps) {
       </header>
 
       <main id="main-content" tabIndex={-1}>
-        {route.path === '/' ? (
-          <HomePage currentPath={route.path} onNavigate={onNavigate} />
-        ) : route.path === '/voleyevents' ? (
-          <VoleyEventsPage onNavigate={onNavigate} />
-        ) : (
-          <GoalLoopPage onNavigate={onNavigate} />
-        )}
+        {routeContent}
       </main>
 
       <footer>

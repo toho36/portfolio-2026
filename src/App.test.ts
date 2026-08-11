@@ -1,8 +1,9 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import App, { installRevealMotion } from './App'
+import App, { applyRouteMetadata, installRevealMotion } from './App'
 import { readFileSync } from 'node:fs'
+import { ROUTES, routeMetadata } from './content/routes'
 
 function render(path = '/') {
   return renderToStaticMarkup(createElement(App, { initialPath: path }))
@@ -54,17 +55,20 @@ describe('systems-builder shell', () => {
     expect(markup).not.toMatch(/href="#project-|<dialog|href="#"/)
   })
 
-  it('preserves contacts, both native CV downloads, and landmarks', () => {
+  it('preserves contacts, both native CV downloads, landmarks, and link targets', () => {
     const markup = render()
     const firstAnchor = markup.match(/<a[^>]+href="([^"]+)"/)?.[1]
 
     expect(firstAnchor).toBe('#main-content')
     expect(markup).toContain('id="main-content"')
-    for (const fragment of markup.matchAll(/href="#([^"]+)"/g)) {
-      expect(markup).toContain(`id="${fragment[1]}"`)
-    }
-    for (const anchor of markup.matchAll(/<a\s+([^>]+)>/g)) {
-      expect(anchor[1]).toMatch(/class="[^"]*\btarget-link\b/)
+    for (const path of ROUTES.map(({ path }) => path)) {
+      const routeMarkup = render(path)
+      for (const fragment of routeMarkup.matchAll(/href="#([^"]+)"/g)) {
+        expect(routeMarkup).toContain(`id="${fragment[1]}"`)
+      }
+      for (const anchor of routeMarkup.matchAll(/<a\s+([^>]+)>/g)) {
+        expect(anchor[1]).toMatch(/class="[^"]*\btarget-link\b/)
+      }
     }
     expect(markup).toContain('<header')
     expect(markup).toContain('<main')
@@ -84,9 +88,11 @@ describe('systems-builder shell', () => {
     )
   })
 
-  it('renders flagship routes and falls unknown paths back to home', () => {
+  it('renders all four routes distinctly and falls unknown paths back to home', () => {
     const voleyEvents = render('/voleyevents/')
     const goalLoop = render('/goal-loop')
+    const playground = render('/playground')
+    const playgroundSlash = render('/playground/')
     const unknown = render('/not-a-route')
 
     expect(voleyEvents).toContain(
@@ -98,9 +104,63 @@ describe('systems-builder shell', () => {
     expect(goalLoop).toContain('id="run-tape"')
     expect(goalLoop).toContain('href="/"')
     expect(goalLoop).toContain('href="/voleyevents"')
+    for (const markup of [playground, playgroundSlash]) {
+      expect(markup).toContain('id="relay-title"')
+      expect(markup).toContain('>SIGNAL RELAY</h1>')
+      expect(markup).toContain('id="relay-input"')
+      expect(markup).toContain('id="relay-fold"')
+      expect(markup).toContain('id="relay-feedback"')
+      expect(markup).toContain('id="relay-closed"')
+      expect(markup).toContain('<svg')
+      expect(markup).not.toContain('id="goal-loop-title"')
+      expect(markup).not.toContain('id="run-tape"')
+    }
     expect(unknown).toContain(
       'I turn messy operations into software — and software delivery into a system.',
     )
+  })
+
+  it('applies title, description, canonical and og:url for every route', () => {
+    for (const route of ROUTES) {
+      const attributes = new Map<string, string>()
+      const nodes = new Map<
+        string,
+        { setAttribute: (name: string, value: string) => void }
+      >(
+        [
+          'meta[name="description"]',
+          'link[rel="canonical"]',
+          'meta[property="og:url"]',
+        ].map((selector) => [
+          selector,
+          {
+            setAttribute: (name: string, value: string) =>
+              attributes.set(`${selector}:${name}`, value),
+          },
+        ] as [
+          string,
+          { setAttribute: (name: string, value: string) => void },
+        ]),
+      )
+      const fakeDocument = {
+        title: '',
+        querySelector: (selector: string) => nodes.get(selector) ?? null,
+      } as unknown as Document
+      const expected = routeMetadata(route)
+
+      applyRouteMetadata(fakeDocument, route)
+
+      expect(fakeDocument.title).toBe(expected.title)
+      expect(attributes.get('meta[name="description"]:content')).toBe(
+        expected.description,
+      )
+      expect(attributes.get('link[rel="canonical"]:href')).toBe(
+        expected.canonical,
+      )
+      expect(attributes.get('meta[property="og:url"]:content')).toBe(
+        expected.canonical,
+      )
+    }
   })
 
   it('removes the machine, loop, and modal runtime paths instead of hiding them', () => {
