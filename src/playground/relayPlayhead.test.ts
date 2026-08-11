@@ -5,6 +5,7 @@ import {
   createRelayPlayhead,
   getRelayFragmentAction,
   measureRelayGeometry,
+  relayProgressForScroll,
   type RelayFragmentClick,
 } from './relayPlayhead'
 import type { RelayMotionFacade } from './loadRelayRuntime'
@@ -70,6 +71,16 @@ describe('relay playhead geometry', () => {
     expect(geometry.classifyDocumentScroll(470.74999999999994)).toBe(
       'relay-input',
     )
+  })
+
+  it('publishes clamped reversible progress from native scroll', () => {
+    const geometry = { origin: 200, end: 1000 }
+
+    expect(relayProgressForScroll(geometry, 100)).toBe(0)
+    expect(relayProgressForScroll(geometry, 600)).toBe(0.5)
+    expect(relayProgressForScroll(geometry, 1000)).toBe(1)
+    expect(relayProgressForScroll(geometry, 600)).toBe(0.5)
+    expect(relayProgressForScroll(geometry, 200)).toBe(0)
   })
 })
 
@@ -906,7 +917,7 @@ describe('relay playhead lifecycle integration', () => {
       '',
       'Next beat: FOLD',
       '',
-      'Next beat: FEEDBACK',
+      'Next beat: TUNNEL',
     ])
     expect(harness.historyWrites).toEqual([
       '/playground#relay-fold',

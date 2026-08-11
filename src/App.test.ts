@@ -106,7 +106,7 @@ describe('systems-builder shell', () => {
     expect(goalLoop).toContain('href="/voleyevents"')
     for (const markup of [playground, playgroundSlash]) {
       expect(markup).toContain('id="relay-title"')
-      expect(markup).toContain('>SIGNAL RELAY</h1>')
+      expect(markup).toContain('>SYSTEM FIELD</h1>')
       expect(markup).toContain('id="relay-input"')
       expect(markup).toContain('id="relay-fold"')
       expect(markup).toContain('id="relay-feedback"')

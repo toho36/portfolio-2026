@@ -81,17 +81,18 @@ export function PlaygroundPage({ onNavigate }: PlaygroundPageProps) {
           className="relay-hero"
           aria-labelledby="relay-title"
         >
-          <p className="eyebrow">Playground / Closed Signal</p>
-          <h1 id="relay-title">SIGNAL RELAY</h1>
+          <p className="eyebrow">Playground / Spatial System</p>
+          <h1 id="relay-title">SYSTEM FIELD</h1>
           <p className="relay-instruction">
-            Scroll to route the signal. Reverse to rewind.
+            Move across the field to send a wave. Scroll to fold the system; reverse
+            to restore it.
           </p>
           <p
             ref={statusRef}
             className="relay-status"
             data-relay-status="true"
           >
-            Current beat: INPUT
+            Current beat: FLAT
           </p>
         </section>
 
@@ -102,60 +103,37 @@ export function PlaygroundPage({ onNavigate }: PlaygroundPageProps) {
           data-relay-stage="true"
         >
           <svg
+            className="system-field-fallback"
+            data-system-field-fallback="true"
             viewBox="0 0 960 720"
             preserveAspectRatio="xMidYMid meet"
             role="presentation"
             aria-hidden="true"
           >
-            <g className="relay-assembly">
-              <path
-                className="relay-return relay-return-back"
-                d="M690 360C850 360 850 610 610 610C370 610 245 555 245 455"
-              />
-              <path className="relay-rail" d="M40 360H350" />
-              <path
-                className="relay-ring relay-ring-outer"
-                d="M350 360A230 230 0 1 1 810 360A230 230 0 1 1 350 360"
-              />
-              <path
-                className="relay-ring relay-ring-middle"
-                d="M410 360A170 170 0 1 1 750 360A170 170 0 1 1 410 360"
-              />
-              <path
-                className="relay-ring relay-ring-inner"
-                d="M470 360A110 110 0 1 1 690 360A110 110 0 1 1 470 360"
-              />
-              <path
-                className="relay-return relay-return-front"
-                d="M245 455C245 405 285 360 350 360"
-              />
-              <g className="relay-signals">
-                <circle
-                  className="relay-signal relay-signal-input"
-                  cx="175"
-                  cy="360"
-                  r="10"
-                />
-                <circle
-                  className="relay-signal relay-signal-fold"
-                  cx="580"
-                  cy="130"
-                  r="10"
-                />
-                <circle
-                  className="relay-signal relay-signal-feedback"
-                  cx="785"
-                  cy="540"
-                  r="10"
-                />
-                <circle
-                  className="relay-signal relay-signal-closed"
-                  cx="245"
-                  cy="455"
-                  r="10"
-                />
-              </g>
-            </g>
+            <defs>
+              <pattern
+                id="system-field-grid"
+                width="20"
+                height="20"
+                patternUnits="userSpaceOnUse"
+              >
+                <circle className="system-field-node" cx="10" cy="10" r="2.5" />
+              </pattern>
+            </defs>
+            <rect
+              className="system-field-grid"
+              x="160"
+              y="40"
+              width="640"
+              height="640"
+              fill="url(#system-field-grid)"
+            />
+            <circle
+              className="system-field-origin"
+              cx="480"
+              cy="360"
+              r="8"
+            />
           </svg>
         </div>
 
@@ -169,9 +147,9 @@ export function PlaygroundPage({ onNavigate }: PlaygroundPageProps) {
             className="relay-beat"
             aria-labelledby="relay-input-title"
           >
-            <p className="relay-beat-index">01 / Input rail</p>
-            <h2 id="relay-input-title">INPUT</h2>
-            <p>The signal enters along a straight warm-metal rail.</p>
+            <p className="relay-beat-index">01 / Rest state</p>
+            <h2 id="relay-input-title">FLAT</h2>
+            <p>A 32 by 32 field waits in a quiet, legible plane.</p>
             <nav aria-label="Beat navigation">
               <BeatLink
                 action="next"
@@ -185,11 +163,10 @@ export function PlaygroundPage({ onNavigate }: PlaygroundPageProps) {
             className="relay-beat"
             aria-labelledby="relay-fold-title"
           >
-            <p className="relay-beat-index">02 / Nested gates</p>
+            <p className="relay-beat-index">02 / Curvature</p>
             <h2 id="relay-fold-title">FOLD</h2>
             <p>
-              The rail folds through three nested rings, crossing behind and
-              in front to establish depth.
+              Native scroll bends the outer columns away from the flat plane.
             </p>
             <nav aria-label="Beat navigation">
               <BeatLink
@@ -208,11 +185,10 @@ export function PlaygroundPage({ onNavigate }: PlaygroundPageProps) {
             className="relay-beat"
             aria-labelledby="relay-feedback-title"
           >
-            <p className="relay-beat-index">03 / Return branch</p>
-            <h2 id="relay-feedback-title">FEEDBACK</h2>
+            <p className="relay-beat-index">03 / Passage</p>
+            <h2 id="relay-feedback-title">TUNNEL</h2>
             <p>
-              A returning branch passes behind the assembly and bends back
-              toward the input path.
+              The folded field closes around a reversible spatial corridor.
             </p>
             <nav aria-label="Beat navigation">
               <BeatLink
@@ -231,11 +207,10 @@ export function PlaygroundPage({ onNavigate }: PlaygroundPageProps) {
             className="relay-beat"
             aria-labelledby="relay-closed-title"
           >
-            <p className="relay-beat-index">04 / Reconnection</p>
-            <h2 id="relay-closed-title">CLOSED</h2>
+            <p className="relay-beat-index">04 / Bright return</p>
+            <h2 id="relay-closed-title">FEEDBACK</h2>
             <p>
-              The return aligns with its origin, closing the circuit for one
-              complete signal path.
+              One bright return travels from the tunnel edge back to origin.
             </p>
             <nav aria-label="Beat navigation">
               <BeatLink
@@ -245,7 +220,7 @@ export function PlaygroundPage({ onNavigate }: PlaygroundPageProps) {
               <BeatLink
                 action="replay"
                 href="#relay-input"
-              >Replay relay</BeatLink>
+              >Replay field</BeatLink>
             </nav>
           </section>
         </div>

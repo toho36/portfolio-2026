@@ -9,14 +9,15 @@ them.
 - `/` — systems-builder overview, flagship work, side projects, contact and CVs
 - `/voleyevents` — operational product case study
 - `/goal-loop` — bounded software-delivery system case study
-- `/playground` — reversible native-scroll Signal Relay experiment
+- `/playground` — reversible native-scroll System Field experiment
 
 ## Stack
 
-React 19, TypeScript and Vite, with native CSS and SVG. Playground lazily loads
-GSAP and ScrollTrigger from `src/playground/` when motion is allowed; semantic
-HTML/SVG remains the reduced-motion fallback and Three.js remains gated by the
-separate spatial-value experiment.
+React 19, TypeScript and Vite, with native CSS and SVG. Playground independently
+lazy-loads GSAP/ScrollTrigger and direct Three.js from `src/playground/` when
+motion is allowed. Native scroll remains the sole progress source, and semantic
+HTML plus the static SVG node grid remains usable under reduced motion or
+WebGL/context failure.
 
 ## Commands
 

@@ -3,14 +3,14 @@ export type RelayAnnouncementAction = 'previous' | 'next' | 'replay'
 export const RELAY_ACTION_LABELS = {
   previous: 'Previous beat',
   next: 'Next beat',
-  replay: 'Replay relay',
+  replay: 'Replay field',
 } as const
 
 export const RELAY_BEAT_TITLES = {
-  'relay-input': 'INPUT',
+  'relay-input': 'FLAT',
   'relay-fold': 'FOLD',
-  'relay-feedback': 'FEEDBACK',
-  'relay-closed': 'CLOSED',
+  'relay-feedback': 'TUNNEL',
+  'relay-closed': 'FEEDBACK',
 } as const
 
 export type RelayBeatId = keyof typeof RELAY_BEAT_TITLES

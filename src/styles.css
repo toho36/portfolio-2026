@@ -1333,12 +1333,21 @@ html.relay-scroll-owner {
   align-content: start;
   padding-block: clamp(4rem, 9vw, 8rem);
   pointer-events: none;
+  min-width: 0;
+  background: linear-gradient(
+    90deg,
+    var(--ink) 0%,
+    color-mix(in srgb, var(--ink) 96%, transparent) 28%,
+    color-mix(in srgb, var(--ink) 72%, transparent) 44%,
+    transparent 64%
+  );
 }
 
 .relay-hero h1 {
-  max-width: 10ch;
+  max-width: 9ch;
   margin-bottom: 1.5rem;
-  font-size: clamp(3rem, 8vw, 8rem);
+  font-size: clamp(2.75rem, 7.6vw, 8rem);
+  letter-spacing: -0.065em;
   line-height: 0.86;
 }
 
@@ -1380,62 +1389,60 @@ html.relay-scroll-owner {
   display: grid;
   height: calc(100svh - 5.5rem);
   min-height: 30rem;
+  min-width: 0;
   place-items: center;
   margin-top: calc(-100svh + 5.5rem);
   overflow: hidden;
   color: var(--paper);
-  pointer-events: none;
+  pointer-events: auto;
+  touch-action: pan-y;
 }
 
 .relay-stage svg {
+  grid-area: 1 / 1;
   width: 100%;
   height: auto;
   min-height: 30rem;
   max-height: 100%;
   overflow: hidden;
+  pointer-events: none;
 }
 
-.relay-assembly path {
-  fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
+.system-field-fallback {
+  color: var(--paper);
+  opacity: 0.72;
 }
 
-.relay-rail {
-  stroke: currentcolor;
-  stroke-width: 5;
+.system-field-node {
+  fill: currentcolor;
 }
 
-.relay-ring {
-  stroke: var(--line);
-  stroke-width: 4;
+.system-field-grid {
+  opacity: 0.64;
 }
 
-.relay-return {
-  stroke: var(--focus);
-  stroke-width: 4;
-}
-
-.relay-return-back {
-  opacity: 0.4;
-}
-
-.relay-return-front {
-  stroke: var(--paper);
-  stroke-width: 7;
-}
-
-.relay-signal {
-  fill: var(--signal);
-  stroke: var(--ink);
-  stroke-width: 4;
-  vector-effect: non-scaling-stroke;
-}
-
-.relay-signal-fold,
-.relay-signal-feedback {
+.system-field-origin {
   fill: var(--focus);
+}
+
+.system-field-canvas {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: translateX(-3rem);
+  pointer-events: auto;
+  touch-action: pan-y;
+}
+
+.playground[data-system-field='ready'] .system-field-fallback {
+  opacity: 0;
+}
+
+.playground[data-system-field='ready'] .system-field-origin {
+  opacity: 0;
 }
 
 .relay-beats {
@@ -1447,6 +1454,7 @@ html.relay-scroll-owner {
 .relay-beat {
   display: grid;
   width: min(29rem, 48%);
+  min-width: 0;
   min-height: 88svh;
   align-content: center;
   margin-left: auto;
@@ -1464,6 +1472,7 @@ html.relay-scroll-owner {
 }
 
 .relay-beat h2 {
+  max-width: 100%;
   margin-bottom: 1rem;
   font-size: clamp(2.5rem, 5vw, 5.5rem);
   letter-spacing: -0.065em;
@@ -1826,6 +1835,11 @@ footer p {
     padding-top: 3rem;
   }
 
+  .relay-hero h1 {
+    max-width: 100%;
+    font-size: clamp(2.7rem, 14.5vw, 4.6rem);
+  }
+
   .relay-stage {
     top: 10rem;
     height: calc(100svh - 10rem);
@@ -1841,6 +1855,12 @@ footer p {
     max-height: 45%;
   }
 
+  .system-field-canvas {
+    height: 52%;
+    top: auto;
+    transform: none;
+  }
+
   .relay-beat {
     width: min(100%, 27rem);
     min-height: 82svh;
@@ -1848,6 +1868,10 @@ footer p {
     padding-block: 3rem;
     padding-inline: 1.25rem;
     background: none;
+  }
+
+  .relay-beat h2 {
+    font-size: clamp(2.35rem, 13vw, 4rem);
   }
 
   .relay-navigation {

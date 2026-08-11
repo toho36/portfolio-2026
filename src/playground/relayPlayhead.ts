@@ -18,6 +18,10 @@ import {
   type ScrollOwnershipLedger,
 } from './scrollOwnership'
 import { installDocumentScrollBehavior } from './documentScrollBehavior'
+import {
+  createSystemFieldController,
+  type SystemFieldController,
+} from './systemFieldController'
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
 const BEAT_SELECTOR = '.relay-beat[id]'
@@ -69,10 +73,22 @@ export interface RelayPlayheadOptions {
   readonly window?: Window
   /** Test seam; production always uses the registered lazy facade loader. */
   readonly importMotion?: () => Promise<RelayMotionFacade>
+  /** Test seam for the independent route-local Three enhancement. */
+  readonly importThree?: () => Promise<unknown>
 }
 
 export interface RelayPlayhead {
   destroy(): void
+}
+
+export function relayProgressForScroll(
+  geometry: Pick<RelayGeometry, 'origin' | 'end'>,
+  scrollY: number,
+) {
+  const interval = geometry.end - geometry.origin
+  if (interval <= 0) return 0
+  const progress = (finiteCoordinate(scrollY) - geometry.origin) / interval
+  return Math.min(1, Math.max(0, progress))
 }
 
 interface RouteMotionRuntime {
@@ -235,9 +251,6 @@ function createRouteMotionRuntime(
         scrub: true,
       },
     })
-    const signals = Array.from(
-      elements.stage.querySelectorAll<SVGElement>('.relay-signal'),
-    )
     const interval = geometry.end - geometry.origin
 
     // This duration defines the exact native-scroll/timeline mapping. Visual
@@ -247,33 +260,6 @@ function createRouteMotionRuntime(
       { '--relay-playhead': 1, duration: Math.max(interval, 0.001) },
       0,
     )
-    timeline.set(signals, { opacity: 0 }, 0)
-
-    geometry.resolver.beats.forEach((beat, index) => {
-      const signal = signals[index]
-      if (!signal) return
-      if (index === 0) {
-        timeline.set(signal, { opacity: 1 }, 0)
-        return
-      }
-
-      const previous = geometry.resolver.beats[index - 1]
-      const duration = beat.seekTarget - previous.seekTarget
-      if (duration <= 0) {
-        timeline.set(signal, { opacity: 1, scale: 1 }, beat.seekTarget)
-        return
-      }
-      timeline.fromTo(
-        signal,
-        { opacity: 0, scale: 0.65, transformOrigin: 'center' },
-        {
-          opacity: 1,
-          scale: 1,
-          duration,
-        },
-        previous.seekTarget,
-      )
-    })
   }, elements.route)
 
   requestRefresh(
@@ -398,11 +384,28 @@ export function createRelayPlayhead(
   let resizeFrame: number | null = null
   let fragmentFrame: number | null = null
   let fragmentTimer: number | null = null
+  let fieldSettleTimer: number | null = null
   let layoutWidth = win.innerWidth
   let refreshPerformed = false
   let destroyed = false
   const previousRuntimeState = elements.route.dataset.relayRuntime
   const previousBeatState = elements.route.dataset.relayBeat
+
+  // Tests and non-production callers without the committed fallback keep the
+  // playhead usable without constructing the progressive renderer.
+  const hasSystemFieldFallback = typeof elements.stage.querySelector ===
+    'function' && elements.stage.querySelector(
+      '[data-system-field-fallback]',
+    ) !== null
+  const systemField: SystemFieldController | null = hasSystemFieldFallback
+    ? createSystemFieldController({
+        stage: elements.stage,
+        route: elements.route,
+        media,
+        window: win,
+        importThree: options.importThree,
+      })
+    : null
 
   const announcer = createRelayAnnouncer({
     host: elements.liveRegion,
@@ -438,14 +441,33 @@ export function createRelayPlayhead(
     refreshFrame = win.requestAnimationFrame(runWhenIdle)
   }
 
+  function publishFieldProgress(settling: boolean) {
+    if (!systemField) return
+    const geometry = createGeometry(elements, doc, win)
+    systemField.setProgress(
+      relayProgressForScroll(geometry, win.scrollY),
+      settling,
+    )
+  }
+
   function updateStatus() {
+    const geometry = createGeometry(elements, doc, win)
     const id = runtime
       ? runtime.classifyDocumentScroll(win.scrollY)
-      : createGeometry(elements, doc, win).classifyDocumentScroll(win.scrollY)
+      : geometry.classifyDocumentScroll(win.scrollY)
     if (!relayBeatId(id)) return
 
     elements.route.dataset.relayBeat = id
     elements.status.textContent = `Current beat: ${RELAY_BEAT_TITLES[id]}`
+
+    if (systemField) {
+      publishFieldProgress(true)
+      if (fieldSettleTimer !== null) win.clearTimeout(fieldSettleTimer)
+      fieldSettleTimer = win.setTimeout(() => {
+        fieldSettleTimer = null
+        if (!destroyed) publishFieldProgress(false)
+      }, 96)
+    }
   }
   win.addEventListener('scroll', updateStatus, { passive: true })
   updateStatus()
@@ -541,6 +563,7 @@ export function createRelayPlayhead(
 
   const handleResize = () => {
     if (destroyed || media.matches) return
+    systemField?.resize()
     if (win.innerWidth === layoutWidth) return
     if (resizeFrame !== null) win.cancelAnimationFrame(resizeFrame)
     const rebuildWhenIdle = () => {
@@ -639,7 +662,10 @@ export function createRelayPlayhead(
       fragmentFrame = null
       if (fragmentTimer !== null) win.clearTimeout(fragmentTimer)
       fragmentTimer = null
+      if (fieldSettleTimer !== null) win.clearTimeout(fieldSettleTimer)
+      fieldSettleTimer = null
       destroyRuntime()
+      systemField?.destroy()
       announcer.destroy()
       elements.liveRegion.textContent = ''
       scrollBehavior.destroy()

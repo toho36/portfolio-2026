@@ -7,35 +7,35 @@ function render(path = '/playground') {
   return renderToStaticMarkup(createElement(App, { initialPath: path }))
 }
 
-describe('Signal Relay Playground baseline', () => {
+describe('System Field Playground', () => {
   it('renders the approved instruction and four labelled beats in order', () => {
     const markup = render()
     const expected = [
       {
         id: 'relay-input',
-        title: 'INPUT',
-        body: 'The signal enters along a straight warm-metal rail.',
+        title: 'FLAT',
+        body: 'A 32 by 32 field waits in a quiet, legible plane.',
       },
       {
         id: 'relay-fold',
         title: 'FOLD',
-        body: 'The rail folds through three nested rings, crossing behind and in front to establish depth.',
+        body: 'Native scroll bends the outer columns away from the flat plane.',
       },
       {
         id: 'relay-feedback',
-        title: 'FEEDBACK',
-        body: 'A returning branch passes behind the assembly and bends back toward the input path.',
+        title: 'TUNNEL',
+        body: 'The folded field closes around a reversible spatial corridor.',
       },
       {
         id: 'relay-closed',
-        title: 'CLOSED',
-        body: 'The return aligns with its origin, closing the circuit for one complete signal path.',
+        title: 'FEEDBACK',
+        body: 'One bright return travels from the tunnel edge back to origin.',
       },
     ]
 
-    expect(markup).toContain('<h1 id="relay-title">SIGNAL RELAY</h1>')
+    expect(markup).toContain('<h1 id="relay-title">SYSTEM FIELD</h1>')
     expect(markup).toContain(
-      'Scroll to route the signal. Reverse to rewind.',
+      'Move across the field to send a wave. Scroll to fold the system; reverse to restore it.',
     )
     expect(markup).toContain('class="relay-choreography"')
 
@@ -53,7 +53,7 @@ describe('Signal Relay Playground baseline', () => {
     })
   })
 
-  it('keeps the authored SVG topology complete without runtime media', () => {
+  it('renders the static 32 by 32 SVG fallback before runtime media', () => {
     const markup = render()
     const svg = markup.slice(markup.indexOf('<svg'), markup.indexOf('</svg>'))
 
@@ -61,16 +61,13 @@ describe('Signal Relay Playground baseline', () => {
       /<svg[^>]*viewBox="0 0 960 720"[^>]*preserveAspectRatio="xMidYMid meet"[^>]*role="presentation"/,
     )
     expect(svg).toContain('aria-hidden="true"')
-    expect(svg).toContain('class="relay-rail"')
-    expect(svg.match(/class="relay-ring relay-ring-/g)).toHaveLength(3)
-    expect(svg.indexOf('relay-return-back')).toBeLessThan(
-      svg.indexOf('relay-ring relay-ring-outer'),
-    )
-    expect(svg.indexOf('relay-return-front')).toBeGreaterThan(
-      svg.indexOf('relay-ring relay-ring-inner'),
-    )
-    expect(svg.match(/class="relay-signal relay-signal-/g)).toHaveLength(4)
-    expect(svg).not.toMatch(/<(?:image|text|foreignObject|rect|ellipse|polygon)/i)
+    expect(svg).toContain('data-system-field-fallback="true"')
+    expect(svg).toContain('id="system-field-grid"')
+    expect(svg).toContain('width="20" height="20"')
+    expect(svg).toContain('class="system-field-node"')
+    expect(svg).toContain('width="640" height="640"')
+    expect(svg).toContain('fill="url(#system-field-grid)"')
+    expect(svg).not.toMatch(/relay-(?:rail|ring|return|signal)/)
     expect(markup).not.toMatch(
       /<(?:canvas|video|picture)|data:image|\bGSAP\b|\bThree\.js\b|\bWebGL\b/,
     )
@@ -85,7 +82,7 @@ describe('Signal Relay Playground baseline', () => {
       )
       expect(markup).toContain('>Previous beat</a>')
       expect(markup).toContain('>Next beat</a>')
-      expect(markup).toContain('>Replay relay</a>')
+      expect(markup).toContain('>Replay field</a>')
       for (const fragment of markup.matchAll(/href="#([^"]+)"/g)) {
         expect(markup).toContain(`id="${fragment[1]}"`)
       }

@@ -131,9 +131,9 @@ describe('relay announcer', () => {
       '',
       'Next beat: FOLD',
       '',
-      'Previous beat: INPUT',
+      'Previous beat: FLAT',
       '',
-      'Replay relay: INPUT',
+      'Replay field: FLAT',
     ])
   })
 
@@ -161,7 +161,7 @@ describe('relay announcer', () => {
       '',
       'Next beat: FOLD',
       '',
-      'Previous beat: INPUT',
+      'Previous beat: FLAT',
     ])
   })
 
@@ -189,9 +189,9 @@ describe('relay announcer', () => {
     scheduler.runAll()
     expect(region.writes).toEqual([
       '',
-      'Next beat: FEEDBACK',
+      'Next beat: TUNNEL',
       '',
-      'Replay relay: INPUT',
+      'Replay field: FLAT',
     ])
   })
 

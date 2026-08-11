@@ -38,13 +38,17 @@ const ABSENT_DEPENDENCIES = [
 
 const PACKAGE_ABSENT_DEPENDENCIES = [
   ...GLOBALLY_FORBIDDEN_DEPENDENCIES,
-  'three',
 ] as const
 
 const GSAP_VERSION = '3.15.0'
 const GSAP_RESOLVED = 'https://registry.npmjs.org/gsap/-/gsap-3.15.0.tgz'
 const GSAP_INTEGRITY =
   'sha512-dMW4CWBTUK1AEEDeZc1g4xpPGIrSf9fJF960qbTZmN/QwZIWY5wgliS6JWl9/25fpTGJrMRtSjGtOmPnfjZB+A=='
+const THREE_VERSION = '0.185.1'
+const THREE_RESOLVED =
+  'https://registry.npmjs.org/three/-/three-0.185.1.tgz'
+const THREE_INTEGRITY =
+  'sha512-5aojFCXKwnjBRZvUnt3WFfEcvUJgkN5LlijRFN95hMy8WVkG4I0QNcJE+OuWvuJ0bOdStrbfXn0pkd6/QyiAlg=='
 
 const packageSource = readFileSync(
   new URL('../package.json', import.meta.url),
@@ -140,6 +144,29 @@ describe('retired source closure', () => {
     ])
   })
 
+  it('exposes Three through one independent route-local dynamic loader', () => {
+    const importingModules = Object.entries(sourceModules)
+      .filter(
+        ([path]) =>
+          path !== './sourceClosure.test.ts' && !path.endsWith('.test.ts'),
+      )
+      .filter(([, source]) => importsRetiredDependency(source, 'three'))
+      .map(([path]) => path)
+
+    expect(importingModules).toEqual([
+      './playground/loadSystemFieldRuntime.ts',
+    ])
+    expect(sourceModules['./playground/loadSystemFieldRuntime.ts'].match(
+      /import\(['"]three['"]\)/g,
+    )).toHaveLength(1)
+    expect(sourceModules['./playground/loadRelayRuntime.ts']).not.toContain(
+      "import('three')",
+    )
+    expect(sourceModules['./playground/three.d.ts']).toContain(
+      "declare module 'three'",
+    )
+  })
+
   it('permits gsap and three only below the route-local runtime root', () => {
     for (const dependency of PLAYGROUND_SCOPED_DEPENDENCIES) {
       const source = `import value from '${dependency}/subpath'`
@@ -214,6 +241,14 @@ describe('retired source closure', () => {
       version: GSAP_VERSION,
       resolved: GSAP_RESOLVED,
       integrity: GSAP_INTEGRITY,
+    })
+    expect(packageJson.dependencies?.three).toBe(THREE_VERSION)
+    expect(packageJson.devDependencies?.three).toBeUndefined()
+    expect(packageLock.packages[''].dependencies?.three).toBe(THREE_VERSION)
+    expect(packageLock.packages['node_modules/three']).toMatchObject({
+      version: THREE_VERSION,
+      resolved: THREE_RESOLVED,
+      integrity: THREE_INTEGRITY,
     })
 
     for (const dependency of PACKAGE_ABSENT_DEPENDENCIES) {
