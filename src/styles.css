@@ -1601,10 +1601,19 @@ footer p {
     opacity: 0.22;
   }
 
+  .court-hero,
+  .goal-loop .run-hero {
+    min-height: auto;
+    align-content: start;
+  }
+
   .court-hero-graphic {
-    top: 0.25rem;
-    right: 1rem;
-    width: 52vw;
+    position: static;
+    grid-row: 5;
+    grid-column: 1;
+    justify-self: end;
+    width: min(48vw, 11rem);
+    margin-top: 1rem;
     opacity: 0.76;
   }
 

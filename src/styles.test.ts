@@ -144,6 +144,36 @@ describe('VoleyEvents lifecycle styles', () => {
   })
 })
 
+describe('mobile-first case-study hero composition', () => {
+  const mobileBreakpoint = styles.indexOf('@media (max-width: 760px)')
+  const desktop = styles.slice(0, mobileBreakpoint)
+  const mobile = styles.slice(mobileBreakpoint)
+
+  it('starts both case-study heroes promptly and places the court graphic after the CTA', () => {
+    expect(mobile).toMatch(
+      /\.court-hero,\s*\.goal-loop \.run-hero\s*\{[^}]*min-height:\s*auto[^}]*align-content:\s*start/,
+    )
+    expect(mobile).toMatch(
+      /\.court-hero-graphic\s*\{[^}]*position:\s*static[^}]*grid-row:\s*5[^}]*grid-column:\s*1[^}]*justify-self:\s*end[^}]*width:\s*min\(48vw,\s*11rem\)[^}]*margin-top:\s*1rem[^}]*opacity:\s*0\.76/,
+    )
+    expect(mobile).not.toMatch(
+      /\.court-hero-graphic\s*\{[^}]*display:\s*none/,
+    )
+  })
+
+  it('retains the desktop hero clamps and absolute court graphic', () => {
+    expect(desktop).toMatch(
+      /\.court-hero\s*\{[^}]*min-height:\s*clamp\(36rem,\s*78svh,\s*51rem\)[^}]*align-content:\s*end/,
+    )
+    expect(desktop).toMatch(
+      /\.goal-loop \.run-hero\s*\{[^}]*min-height:\s*clamp\(36rem,\s*78svh,\s*52rem\)[^}]*align-content:\s*end/,
+    )
+    expect(desktop).toMatch(
+      /\.court-hero-graphic\s*\{[^}]*position:\s*absolute[^}]*width:\s*min\(42vw,\s*38rem\)/,
+    )
+  })
+})
+
 describe('Goal Loop run-trace styles', () => {
   it('keeps the graphite vocabulary scoped to Goal Loop', () => {
     const goalLoopRule = styles.match(/\.goal-loop\s*\{([^}]+)\}/)?.[1]
