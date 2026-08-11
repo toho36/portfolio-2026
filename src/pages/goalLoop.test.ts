@@ -1,13 +1,20 @@
+import { readFileSync } from 'node:fs'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import App from '../App'
 import {
   GOAL_LOOP,
+  GOAL_LOOP_HISTORY,
   GOAL_LOOP_OUTCOMES,
   GOAL_LOOP_REVISIONS,
   GOAL_LOOP_STAGES,
+  historyAfterText,
+  historyBeforeText,
+  historyReductionText,
+  historyTrackPercent,
 } from '../content/goalLoop'
+import type { GoalLoopHistoryMetric } from '../content/goalLoopHistory.generated'
 import { ROUTES } from '../content/routes'
 
 const SIMULATED_ARTIFACT_PATTERN =
@@ -28,6 +35,10 @@ function containsSimulatedArtifact(values: readonly string[]) {
 
 function render(path = '/goal-loop') {
   return renderToStaticMarkup(createElement(App, { initialPath: path }))
+}
+
+function numericTokens(value: string) {
+  return value.match(/\d+(?:[,.]\d+)*/g) ?? []
 }
 
 describe('Goal Loop Run Anatomy case study', () => {
@@ -128,6 +139,79 @@ describe('Goal Loop Run Anatomy case study', () => {
     expect(optimization).toMatch(/wall-clock duration|review iterations|block rate/i)
     expect(content).not.toMatch(/\d|%|€|\$|£|\bms\b|p95|tokens|req\/s/i)
     expect(content).not.toMatch(/AI magic|fully autonomous|self-improving/i)
+  })
+
+  it('renders only the audited history comparisons from the frozen dataset', () => {
+    const markup = render()
+    const optimization = markup.slice(
+      markup.indexOf('class="run-section run-optimization"'),
+      markup.indexOf('class="run-section run-boundary"'),
+    )
+    const pageSource = readFileSync(
+      new URL('./GoalLoop.tsx', import.meta.url),
+      'utf8',
+    )
+    const metrics: readonly GoalLoopHistoryMetric[] = GOAL_LOOP_HISTORY.metrics
+    const datasetMetricTokens = metrics.flatMap((metric) =>
+      [
+        metric.before,
+        metric.beforeMax,
+        metric.after,
+        metric.reductionPercent,
+      ]
+        .filter((value): value is number => value !== undefined)
+        .map(String),
+    )
+
+    for (const token of datasetMetricTokens) {
+      expect(pageSource).not.toContain(token)
+    }
+
+    expect(optimization).toContain('<ol class="run-history-rows">')
+    expect(optimization.match(/<li class="run-history-row"/g)).toHaveLength(
+      GOAL_LOOP_HISTORY.metrics.length,
+    )
+
+    for (const metric of metrics) {
+      expect(optimization).toContain(metric.label)
+      expect(optimization).toContain(
+        `Before <strong>${historyBeforeText(metric)}</strong>`,
+      )
+      expect(optimization).toContain(
+        `After <strong>${historyAfterText(metric)}</strong>`,
+      )
+      expect(optimization).toContain(historyReductionText(metric))
+      expect(optimization).toContain(metric.proof)
+      expect(optimization).toContain(
+        `--after-scale:${historyTrackPercent(metric)}`,
+      )
+    }
+
+    expect(optimization).toContain('at least 87.7% less wait')
+    expect(optimization.match(/at least/g)).toHaveLength(1)
+    expect(optimization).toContain('2,365–2,432 s')
+    expect(optimization).toContain(GOAL_LOOP_HISTORY.source.label)
+    expect(optimization).toContain(GOAL_LOOP_HISTORY.source.path)
+    expect(optimization).not.toMatch(/href=/)
+    expect(optimization).not.toMatch(/<canvas|<video|<img|data:image/i)
+
+    const visibleText = optimization.replace(/<[^>]+>/g, ' ')
+    const styleValues = [...optimization.matchAll(/style="([^"]+)"/g)]
+      .map((match) => match[1])
+      .join(' ')
+    const allowedTokens = new Set([
+      ...numericTokens(JSON.stringify(GOAL_LOOP_HISTORY)),
+      ...metrics.flatMap((metric) => [
+        ...numericTokens(historyBeforeText(metric)),
+        ...numericTokens(historyAfterText(metric)),
+        ...numericTokens(historyReductionText(metric)),
+        String(historyTrackPercent(metric)),
+      ]),
+    ])
+
+    for (const token of numericTokens(`${visibleText} ${styleValues}`)) {
+      expect(allowedTokens.has(token)).toBe(true)
+    }
   })
 
   it('keeps the full explanation semantic and free of simulated artifacts', () => {

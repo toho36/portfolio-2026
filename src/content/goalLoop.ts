@@ -1,3 +1,8 @@
+import {
+  GOAL_LOOP_HISTORY,
+  type GoalLoopHistoryMetric,
+} from './goalLoopHistory.generated'
+
 export type GoalLoopStageId =
   | 'plan'
   | 'critique'
@@ -147,6 +152,48 @@ export const GOAL_LOOP_OUTCOMES = {
   },
   blocked: GOAL_LOOP_BLOCKED,
 } as const
+
+export { GOAL_LOOP_HISTORY }
+
+export const GOAL_LOOP_HISTORY_PRESENTATION = {
+  eyebrow: 'Audited history',
+  lede:
+    'Each comparison uses its own conservative before value as the baseline. The fixed marker identifies the measured after boundary.',
+} as const
+
+function historyUnit(metric: GoalLoopHistoryMetric) {
+  return metric.unit === 'seconds' ? 's' : metric.unit
+}
+
+function historyValue(value: number) {
+  return value.toLocaleString('en-US')
+}
+
+export function historyTrackPercent(metric: GoalLoopHistoryMetric) {
+  const percent = (metric.after / metric.before) * 100
+
+  return Math.round(percent * 10_000) / 10_000
+}
+
+export function historyBeforeText(metric: GoalLoopHistoryMetric) {
+  const before = historyValue(metric.before)
+  const range = metric.beforeMax
+    ? `${before}–${historyValue(metric.beforeMax)}`
+    : before
+
+  return `${range} ${historyUnit(metric)}`
+}
+
+export function historyAfterText(metric: GoalLoopHistoryMetric) {
+  return `${historyValue(metric.after)} ${historyUnit(metric)}`
+}
+
+export function historyReductionText(metric: GoalLoopHistoryMetric) {
+  const prefix = metric.lowerBound ? 'at least ' : ''
+  const comparison = metric.unit === 'calls' ? 'fewer' : 'less wait'
+
+  return `${prefix}${historyValue(metric.reductionPercent)}% ${comparison}`
+}
 
 export const GOAL_LOOP = {
   hero: {

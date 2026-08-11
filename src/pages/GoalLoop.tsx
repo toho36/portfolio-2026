@@ -1,10 +1,20 @@
-import type { MouseEvent, ReactNode } from 'react'
+import type { CSSProperties, MouseEvent, ReactNode } from 'react'
 import {
   GOAL_LOOP,
+  GOAL_LOOP_HISTORY,
+  GOAL_LOOP_HISTORY_PRESENTATION,
   GOAL_LOOP_OUTCOMES,
   GOAL_LOOP_REVISIONS,
   GOAL_LOOP_STAGES,
+  historyAfterText,
+  historyBeforeText,
+  historyReductionText,
+  historyTrackPercent,
 } from '../content/goalLoop'
+
+type HistoryRowStyle = CSSProperties & {
+  '--after-scale': number
+}
 
 interface GoalLoopPageProps {
   readonly onNavigate: (event: MouseEvent<HTMLAnchorElement>) => void
@@ -190,6 +200,46 @@ export function GoalLoopPage({ onNavigate }: GoalLoopPageProps) {
           <h2 id="optimization-title">{GOAL_LOOP.optimization.title}</h2>
         </div>
         <p>{GOAL_LOOP.optimization.body}</p>
+        <div className="run-history">
+          <div className="run-history-heading">
+            <p className="eyebrow">{GOAL_LOOP_HISTORY_PRESENTATION.eyebrow}</p>
+            <h3>{GOAL_LOOP_HISTORY.title}</h3>
+            <p>{GOAL_LOOP_HISTORY_PRESENTATION.lede}</p>
+          </div>
+          <ol className="run-history-rows">
+            {GOAL_LOOP_HISTORY.metrics.map((metric) => {
+              const style: HistoryRowStyle = {
+                '--after-scale': historyTrackPercent(metric),
+              }
+
+              return (
+                <li className="run-history-row" key={metric.id} style={style}>
+                  <h3>{metric.label}</h3>
+                  <p className="run-history-values">
+                    <span>
+                      Before <strong>{historyBeforeText(metric)}</strong>
+                    </span>
+                    <span>
+                      After <strong>{historyAfterText(metric)}</strong>
+                    </span>
+                  </p>
+                  <p className="run-history-delta">
+                    {historyReductionText(metric)}
+                  </p>
+                  <div className="run-history-track" aria-hidden="true">
+                    <span className="run-history-fill" />
+                    <span className="run-history-mark" />
+                  </div>
+                  <p className="run-history-proof">{metric.proof}</p>
+                </li>
+              )
+            })}
+          </ol>
+          <p className="run-history-source">
+            {GOAL_LOOP_HISTORY.scope} · {GOAL_LOOP_HISTORY.source.label} ·{' '}
+            {GOAL_LOOP_HISTORY.source.path}
+          </p>
+        </div>
       </section>
 
       <div className="run-pair">

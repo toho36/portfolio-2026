@@ -218,4 +218,51 @@ describe('Goal Loop run-trace styles', () => {
     )
     expect(reduced).not.toMatch(/\.run-trace-line\s*\{/)
   })
+
+  it('keeps audited history geometry static and animates only its marker', () => {
+    const keyframes = styles.slice(
+      styles.indexOf('@keyframes run-history-mark-settle'),
+      styles.indexOf(
+        '@media (prefers-reduced-motion: no-preference)',
+        styles.indexOf('@keyframes run-history-mark-settle'),
+      ),
+    )
+    const beforeReducedMotion = styles.slice(
+      0,
+      styles.indexOf('@media (prefers-reduced-motion: reduce)'),
+    )
+
+    expect(keyframes).toMatch(/from\s*\{[^}]*opacity:[^}]*transform:/)
+    expect(keyframes).toMatch(/to\s*\{[^}]*opacity:[^}]*transform:/)
+    expect(keyframes).not.toMatch(/(?:left|top|width|height|animation):/)
+    expect(styles).toMatch(
+      /\.run-history-fill\s*\{[^}]*width:\s*calc\(var\(--after-scale\)\s*\*\s*1%\)/,
+    )
+    expect(styles).toMatch(
+      /\.run-history-mark\s*\{[^}]*left:\s*calc\(var\(--after-scale\)\s*\*\s*1%\)/,
+    )
+    expect(beforeReducedMotion).not.toMatch(
+      /\.run-history-(?:track|fill|values)\s*\{[^}]*animation:/,
+    )
+    expect(styles).toContain('view-timeline-name: --run-history-row')
+    expect(styles).toMatch(
+      /\.run-history-mark\s*\{[^}]*animation:\s*run-history-mark-settle linear both[^}]*animation-duration:\s*auto[^}]*animation-timeline:\s*--run-history-row/,
+    )
+  })
+
+  it('settles history motion and stacks its values on mobile', () => {
+    const mobile = styles.slice(styles.indexOf('@media (max-width: 760px)'))
+    const reduced = styles.slice(
+      styles.indexOf('@media (prefers-reduced-motion: reduce)'),
+    )
+
+    expect(mobile).toMatch(
+      /\.run-history-values\s*\{[^}]*grid-template-columns:\s*1fr/,
+    )
+    expect(mobile).toMatch(/\.run-history-row\s*\{[^}]*min-width:\s*0/)
+    expect(mobile).not.toContain('100vw')
+    expect(reduced).toMatch(
+      /\.run-history-mark\s*\{[^}]*opacity:\s*1[^}]*transform:\s*none\s*!important/,
+    )
+  })
 })
