@@ -99,6 +99,7 @@ describe('VoleyEvents Match Operations case study', () => {
     expect(lifecycle).toMatch(/<div class="lifecycle-court" aria-hidden="true">/)
     expect(lifecycle).toContain('preserveAspectRatio="xMidYMid slice"')
     expect(lifecycle).not.toMatch(/<h3[^>]*aria-hidden|<p[^>]*aria-hidden/)
+    expect(markup).toContain('src="/assets/voleyevents-operations.svg"')
   })
 
   it('preserves shared shell navigation on direct and trailing-slash routes', () => {
@@ -115,7 +116,7 @@ describe('VoleyEvents Match Operations case study', () => {
       expect(markup).toContain('href="/hoang-viet-to-cv-cz.docx"')
       expect(markup).toContain('href="/">')
       expect(markup).toContain('href="/goal-loop"')
-      expect(markup).toContain('Back to index')
+      expect(markup).toContain('Back to homepage')
       expect(markup).toContain('Next: Goal Loop')
     }
   })
@@ -128,8 +129,7 @@ describe('VoleyEvents Match Operations case study', () => {
     expect(content).not.toMatch(
       /customer quote|testimonial|players|payments total/i,
     )
-    expect(markup).not.toMatch(
-      /<canvas|<video|<img|data:image|dashboard screenshot/i,
-    )
+    expect(markup).not.toMatch(/<canvas|<video|data:image|dashboard screenshot/i)
+    expect(markup.match(/<img/g)).toHaveLength(1)
   })
 })

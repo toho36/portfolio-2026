@@ -226,7 +226,7 @@ export function GoalLoopPage({ onNavigate }: GoalLoopPageProps) {
           <span aria-hidden="true">←</span> Back: VoleyEvents
         </RouteAnchor>
         <RouteAnchor className="next-link" href="/" onNavigate={onNavigate}>
-          Next: Index <span aria-hidden="true">→</span>
+          Next: Homepage <span aria-hidden="true">→</span>
         </RouteAnchor>
       </nav>
     </article>

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 720" role="img" aria-label="Abstract connected software systems map">
+  <style>
+    .grid { stroke: #f2efe6; stroke-opacity: .12; stroke-width: 1 }
+    .route { fill: none; stroke: #d9ff43; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 10 12; animation: flow 9s linear infinite }
+    .branch { fill: none; stroke: #63e6ff; stroke-opacity: .72; stroke-width: 2 }
+    .node { fill: #090909; stroke: #f2efe6; stroke-width: 3 }
+    .signal { fill: #d9ff43; transform-box: fill-box; transform-origin: center; animation: pulse 2.8s ease-in-out infinite }
+    .signal.two { animation-delay: -1.4s }
+    @keyframes flow { to { stroke-dashoffset: -132 } }
+    @keyframes pulse { 0%, 100% { opacity: .45; transform: scale(.72) } 50% { opacity: 1; transform: scale(1) } }
+    @media (prefers-reduced-motion: reduce) { .route, .signal { animation: none } .signal { opacity: 1 } }
+  </style>
+  <g class="grid">
+    <path d="M0 120H720M0 240H720M0 360H720M0 480H720M0 600H720"/>
+    <path d="M120 0V720M240 0V720M360 0V720M480 0V720M600 0V720"/>
+  </g>
+  <path class="route" d="M92 574C175 574 182 418 270 418S363 236 454 236 532 110 632 110"/>
+  <path class="branch" d="M270 418C352 418 352 560 450 560M454 236C532 236 527 390 624 390"/>
+  <g class="node"><rect x="54" y="536" width="76" height="76"/><rect x="232" y="380" width="76" height="76"/><rect x="416" y="198" width="76" height="76"/><rect x="594" y="72" width="76" height="76"/><rect x="412" y="522" width="76" height="76"/><rect x="586" y="352" width="76" height="76"/></g>
+  <circle class="signal" cx="92" cy="574" r="11"/>
+  <circle class="signal two" cx="454" cy="236" r="11"/>
+  <path class="branch" d="M68 92h154M68 112h104M68 132h128"/>
+</svg>

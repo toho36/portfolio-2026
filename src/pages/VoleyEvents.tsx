@@ -35,6 +35,12 @@ export function VoleyEventsPage({ onNavigate }: VoleyEventsPageProps) {
         aria-labelledby="voleyevents-title"
         data-reveal
       >
+        <img
+          alt=""
+          aria-hidden="true"
+          className="court-hero-graphic"
+          src="/assets/voleyevents-operations.svg"
+        />
         <p className="eyebrow">{VOLEYEVENTS.hero.eyebrow}</p>
         <h1 id="voleyevents-title">{VOLEYEVENTS.hero.title}</h1>
         <p className="court-hero-lede">{VOLEYEVENTS.hero.lede}</p>
@@ -143,7 +149,7 @@ export function VoleyEventsPage({ onNavigate }: VoleyEventsPageProps) {
 
       <nav className="case-navigation" aria-label="Case study navigation">
         <RouteAnchor className="back-link" href="/" onNavigate={onNavigate}>
-          <span aria-hidden="true">←</span> Back to index
+          <span aria-hidden="true">←</span> Back to homepage
         </RouteAnchor>
         <RouteAnchor
           className="next-link"

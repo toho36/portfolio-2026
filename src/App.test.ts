@@ -30,6 +30,8 @@ describe('systems-builder shell', () => {
       markup.indexOf('id="flagships"'),
     )
     expect(hero).not.toMatch(/frontend|full[-\s]?stack/i)
+    expect(hero).toContain('src="/assets/systems-field.svg"')
+    expect(markup).toContain('>Homepage</a>')
   })
 
   it('orders ordinary flagship routes inside the flagship section', () => {

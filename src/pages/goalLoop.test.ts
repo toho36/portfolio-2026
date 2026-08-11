@@ -164,7 +164,7 @@ describe('Goal Loop Run Anatomy case study', () => {
       expect(markup).toContain('href="/voleyevents"')
       expect(markup).toContain('href="/"')
       expect(markup).toContain('Back: VoleyEvents')
-      expect(markup).toContain('Next: Index')
+      expect(markup).toContain('Next: Homepage')
     }
   })
 })

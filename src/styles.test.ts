@@ -41,6 +41,15 @@ describe('accessible typography-led styles', () => {
     expect(mobile).toMatch(/\.site-nav a\s*\{[^}]*min-width:\s*0/)
   })
 
+  it('keeps VoleyEvents focus and footer hover visible on the light shell', () => {
+    expect(styles).toMatch(
+      /\.route-voleyevents a:focus-visible,[\s\S]*outline-color:\s*#1557ff/,
+    )
+    expect(styles).toMatch(
+      /\.route-voleyevents \.contact-nav a:hover\s*\{[^}]*color:\s*#1557ff/,
+    )
+  })
+
   it('does not use the Vitest-incompatible CSS raw import', () => {
     const app = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8')
     const main = readFileSync(new URL('./main.tsx', import.meta.url), 'utf8')
@@ -62,6 +71,7 @@ describe('VoleyEvents lifecycle styles', () => {
 
     expect(styles).toContain('@supports (animation-timeline: view())')
     expect(styles).toContain('animation-timeline: --lifecycle-progress')
+    expect(styles).toContain('animation-range: entry 0% exit 100%')
     expect(styles).toMatch(
       /\.participant-token\s*\{[^}]*animation:\s*participant-advance linear both[^}]*animation-duration:\s*auto[^}]*animation-timeline:\s*--lifecycle-progress/,
     )
@@ -122,7 +132,7 @@ describe('Goal Loop run-trace styles', () => {
     expect(goalLoopRule).not.toMatch(/--court-/)
   })
 
-  it('grows the trace and advances its marker on a reversible view timeline', () => {
+  it('keeps the trace stable and advances only its marker on a reversible view timeline', () => {
     const keyframes = styles.slice(
       styles.indexOf('@keyframes run-marker-advance'),
       styles.indexOf(
@@ -135,21 +145,30 @@ describe('Goal Loop run-trace styles', () => {
     expect(styles).toMatch(
       /\.run-trace-line\s*\{[^}]*stroke-dasharray:\s*960[^}]*stroke-dashoffset:\s*0/,
     )
-    expect(styles).toMatch(
-      /\.run-trace-line\s*\{[^}]*animation:\s*run-trace-grow linear both[^}]*animation-duration:\s*auto[^}]*animation-timeline:\s*--run-progress/,
-    )
+    expect(styles).not.toContain('@keyframes run-trace-grow')
+    expect(
+      styles.slice(0, styles.indexOf('@media (prefers-reduced-motion: reduce)')),
+    ).not.toMatch(/\.run-trace-line\s*\{[^}]*animation:/)
     expect(styles).toMatch(
       /\.run-marker\s*\{[^}]*animation:\s*run-marker-advance linear both[^}]*animation-duration:\s*auto[^}]*animation-timeline:\s*--run-progress/,
     )
+    expect(styles).toContain('animation-range: entry 0% exit 100%')
     expect(styles).toMatch(
       /\.run-marker\s*\{[^}]*transform:\s*translateY\(960px\)/,
     )
     expect(keyframes).toMatch(/from\s*\{[^}]*transform:/)
     expect(keyframes).toMatch(/to\s*\{[^}]*transform:/)
     expect(keyframes).not.toMatch(/(?:left|top|width|height):/)
-    expect(keyframes).toMatch(
-      /@keyframes run-trace-grow\s*\{[\s\S]*from\s*\{[^}]*stroke-dashoffset:\s*960[\s\S]*to\s*\{[^}]*stroke-dashoffset:\s*0/,
-    )
+  })
+
+  it('renders status labels as text, not fake buttons', () => {
+    const stageState = styles.match(/\.stage-state\s*\{([^}]+)\}/)?.[1]
+    const runState = styles.match(/\.goal-loop \.run-state\s*\{([^}]+)\}/)?.[1]
+
+    expect(stageState).toBeDefined()
+    expect(runState).toBeDefined()
+    expect(stageState).not.toMatch(/border:|background:/)
+    expect(runState).not.toMatch(/border:|background:/)
   })
 
   it('contains the trace and definition copy on mobile', () => {

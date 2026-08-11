@@ -92,6 +92,12 @@ function HomePage({
   return (
     <>
       <section className="hero" aria-labelledby="hero-title" data-reveal>
+        <img
+          alt=""
+          aria-hidden="true"
+          className="hero-graphic"
+          src="/assets/systems-field.svg"
+        />
         <p className="eyebrow">{HERO.eyebrow}</p>
         <h1 id="hero-title">{HERO.title}</h1>
         <p className="hero-introduction">{HERO.introduction}</p>
@@ -227,7 +233,7 @@ export default function App({ initialPath }: AppProps) {
   }, [route.path])
 
   return (
-    <div id="top" className="site-shell">
+    <div id="top" className={`site-shell route-${route.id}`}>
       <a className="skip-link target-link" href="#main-content">
         Skip to content
       </a>

@@ -2,7 +2,7 @@ export const ROUTES = [
   {
     id: 'home',
     path: '/',
-    label: 'Index',
+    label: 'Homepage',
     title: 'Hoang Viet To — independent software systems builder',
     description:
       'An independent software systems builder turning messy operations into reliable products and improving the loops that ship them.',

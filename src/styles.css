@@ -63,6 +63,11 @@ p {
   min-height: 100vh;
 }
 
+.route-voleyevents {
+  color: #102044;
+  background: #f7f3e8;
+}
+
 .site-header,
 main,
 footer {
@@ -102,6 +107,37 @@ footer {
   justify-content: space-between;
   gap: 1.5rem;
   border-bottom: 1px solid var(--line);
+}
+
+.route-voleyevents .site-header {
+  border-bottom-color: rgba(16, 32, 68, 0.28);
+}
+
+.route-voleyevents .brand,
+.route-voleyevents .site-nav a,
+.route-voleyevents footer,
+.route-voleyevents footer a {
+  color: #102044;
+}
+
+.route-voleyevents .brand small,
+.route-voleyevents .site-nav a:not([aria-current="page"]),
+.route-voleyevents footer p {
+  color: rgba(16, 32, 68, 0.68);
+}
+
+.route-voleyevents .site-nav a:hover,
+.route-voleyevents .site-nav a[aria-current="page"] {
+  color: #1557ff;
+}
+
+.route-voleyevents a:focus-visible,
+.route-voleyevents [tabindex]:focus-visible {
+  outline-color: #1557ff;
+}
+
+.route-voleyevents .contact-nav a:hover {
+  color: #1557ff;
 }
 
 .brand {
@@ -150,11 +186,30 @@ main:focus {
 }
 
 .hero {
+  position: relative;
   display: grid;
   min-height: clamp(31rem, 72svh, 45rem);
   align-content: center;
+  overflow: clip;
   padding-block: clamp(4rem, 10vw, 9rem);
   border-bottom: 1px solid var(--line);
+  isolation: isolate;
+}
+
+.hero > :not(.hero-graphic) {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-graphic {
+  position: absolute;
+  z-index: 0;
+  top: 6%;
+  right: -1%;
+  width: min(46vw, 40rem);
+  height: auto;
+  opacity: 0.56;
+  pointer-events: none;
 }
 
 .eyebrow {
@@ -356,6 +411,7 @@ h1 {
 }
 
 .court-hero {
+  position: relative;
   display: grid;
   min-height: clamp(36rem, 78svh, 51rem);
   align-content: end;
@@ -365,6 +421,23 @@ h1 {
     linear-gradient(var(--court-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--court-line) 1px, transparent 1px);
   background-size: clamp(3rem, 8vw, 7rem) clamp(3rem, 8vw, 7rem);
+  isolation: isolate;
+}
+
+.court-hero > :not(.court-hero-graphic) {
+  position: relative;
+  z-index: 1;
+}
+
+.court-hero-graphic {
+  position: absolute;
+  z-index: 0;
+  top: 5%;
+  right: 3%;
+  width: min(42vw, 38rem);
+  height: auto;
+  opacity: 0.9;
+  pointer-events: none;
 }
 
 .court-hero h1 {
@@ -527,6 +600,7 @@ h1 {
   transform: translateY(656px);
   transform-box: fill-box;
   transform-origin: center;
+  will-change: transform;
 }
 
 .participant-token circle {
@@ -583,13 +657,22 @@ h1 {
 
 .stage-state {
   flex: none;
-  padding: 0.45rem 0.65rem;
-  border: 1px solid var(--court-ink);
-  background: var(--court-lime);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--court-blue);
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.11em;
   text-transform: uppercase;
+}
+
+.stage-state::before {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--court-orange);
+  content: "";
 }
 
 .lifecycle-stage > p {
@@ -659,7 +742,7 @@ h1 {
       animation: participant-advance linear both;
       animation-duration: auto;
       animation-timeline: --lifecycle-progress;
-      animation-range: entry 15% exit 80%;
+      animation-range: entry 0% exit 100%;
     }
   }
 }
@@ -847,6 +930,7 @@ h1 {
   transform: translateY(960px);
   transform-box: fill-box;
   transform-origin: center;
+  will-change: transform;
 }
 
 .goal-loop .run-marker circle {
@@ -911,14 +995,22 @@ h1 {
 
 .goal-loop .run-state {
   flex: none;
-  padding: 0.5rem 0.7rem;
-  border: 1px solid var(--run-decision);
-  color: var(--run-ink);
-  background: rgba(255, 104, 70, 0.1);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--run-decision);
   font-size: 0.66rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.goal-loop .run-state::before {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentcolor;
+  content: "";
 }
 
 .goal-loop .run-stage dl {
@@ -1012,12 +1104,20 @@ h1 {
 
 .goal-loop .run-outcome > span {
   display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   margin-bottom: 1.25rem;
-  padding: 0.45rem 0.6rem;
-  border: 1px solid currentcolor;
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.12em;
+}
+
+.goal-loop .run-outcome > span::before {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentcolor;
+  content: "";
 }
 
 .goal-loop .run-outcome-pass > span {
@@ -1094,16 +1194,6 @@ h1 {
   }
 }
 
-@keyframes run-trace-grow {
-  from {
-    stroke-dashoffset: 960;
-  }
-
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
     .goal-loop .run-tape {
@@ -1111,18 +1201,11 @@ h1 {
       view-timeline-axis: block;
     }
 
-    .goal-loop .run-trace-line {
-      animation: run-trace-grow linear both;
-      animation-duration: auto;
-      animation-timeline: --run-progress;
-      animation-range: entry 12% exit 84%;
-    }
-
     .goal-loop .run-marker {
       animation: run-marker-advance linear both;
       animation-duration: auto;
       animation-timeline: --run-progress;
-      animation-range: entry 12% exit 84%;
+      animation-range: entry 0% exit 100%;
     }
   }
 }
@@ -1191,6 +1274,20 @@ footer p {
 
   .hero {
     min-height: 70svh;
+  }
+
+  .hero-graphic {
+    top: 5rem;
+    right: -30%;
+    width: 78vw;
+    opacity: 0.22;
+  }
+
+  .court-hero-graphic {
+    top: 0.25rem;
+    right: 1rem;
+    width: 52vw;
+    opacity: 0.76;
   }
 
   .section-heading,
