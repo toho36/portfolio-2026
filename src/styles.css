@@ -1314,6 +1314,10 @@ h1 {
   background: var(--ink);
 }
 
+html.relay-scroll-owner {
+  scroll-behavior: auto !important;
+}
+
 .relay-choreography {
   position: relative;
   min-width: 0;
@@ -1344,6 +1348,29 @@ h1 {
   color: var(--paper);
   font-size: clamp(1rem, 1.8vw, 1.35rem);
   line-height: 1.5;
+}
+
+.relay-status {
+  min-height: 1.5em;
+  margin-top: 1rem;
+  margin-bottom: 0;
+  color: var(--signal);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.relay-live-region {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .relay-stage {
@@ -1888,6 +1915,12 @@ footer p {
   .goal-loop .run-history-mark {
     opacity: 1;
     transform: none !important;
+  }
+
+  .relay-stage,
+  .relay-beat {
+    opacity: 1;
+    transform: none;
   }
 
 }

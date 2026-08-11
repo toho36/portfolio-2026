@@ -9,14 +9,14 @@ them.
 - `/` — systems-builder overview, flagship work, side projects, contact and CVs
 - `/voleyevents` — operational product case study
 - `/goal-loop` — bounded software-delivery system case study
-- `/playground` — experimental Signal Relay semantic HTML/SVG baseline
+- `/playground` — reversible native-scroll Signal Relay experiment
 
 ## Stack
 
-React 19, TypeScript and Vite, with native CSS and SVG. The current Playground
-baseline has no animation or WebGL runtime. GSAP and Three.js are not installed;
-if later approved, they arrive as route-local lazy runtimes under
-`src/playground/`.
+React 19, TypeScript and Vite, with native CSS and SVG. Playground lazily loads
+GSAP and ScrollTrigger from `src/playground/` when motion is allowed; semantic
+HTML/SVG remains the reduced-motion fallback and Three.js remains gated by the
+separate spatial-value experiment.
 
 ## Commands
 

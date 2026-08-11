@@ -70,6 +70,15 @@ describe('accessible typography-led styles', () => {
 })
 
 describe('Signal Relay baseline styles', () => {
+  it('owns only route scroll behavior and keeps lifecycle content visible', () => {
+    expect(styles).toMatch(
+      /html\.relay-scroll-owner\s*\{[^}]*scroll-behavior:\s*auto\s*!important/,
+    )
+    expect(styles).toMatch(/\.relay-status\s*\{[^}]*min-height:/)
+    expect(styles).toMatch(/\.relay-live-region\s*\{[^}]*position:\s*absolute/)
+    expect(styles).not.toContain('100vw')
+  })
+
   it('keeps one sticky responsive SVG stage inside the choreography', () => {
     expect(styles).toMatch(
       /\.relay-choreography\s*\{[^}]*position:\s*relative[^}]*min-width:\s*0/,
@@ -122,6 +131,19 @@ describe('Signal Relay baseline styles', () => {
       /\.relay-stage\s*\{[^}]*position:\s*sticky[^}]*z-index:\s*0[^}]*top:\s*5\.5rem[^}]*place-items:\s*center/,
     )
     expect(mobile).toMatch(/\.relay-stage\s*\{[^}]*top:\s*10rem/)
+  })
+
+  it('keeps the accepted stage and copy zones intact under reduced motion', () => {
+    const reduced = styles.slice(
+      styles.indexOf('@media (prefers-reduced-motion: reduce)'),
+    )
+
+    expect(reduced).toMatch(
+      /\.relay-stage,[\s\S]*\.relay-beat\s*\{[^}]*opacity:\s*1[^}]*transform:\s*none/,
+    )
+    expect(reduced).not.toMatch(
+      /\.(?:relay-stage|relay-beat)[^{]*\{[^}]*(?:display:\s*none|visibility:\s*hidden|height:\s*0(?:[;\s]))/,
+    )
   })
 })
 

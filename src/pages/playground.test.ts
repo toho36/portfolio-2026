@@ -96,4 +96,28 @@ describe('Signal Relay Playground baseline', () => {
       expect(markup).toContain('Next: Homepage')
     }
   })
+
+  it('exposes one route lifecycle seam without shell reveal ownership', () => {
+    const markup = render()
+
+    expect(markup).toContain('data-relay-root="true"')
+    expect(markup).toContain('data-relay-stage="true"')
+    expect(markup).toContain('data-relay-beats="true"')
+    expect(markup).toContain('data-relay-status="true"')
+    expect(markup).toContain('aria-live="polite"')
+    expect(markup).toContain('aria-atomic="true"')
+    expect(markup).not.toContain('role="alert"')
+    expect(markup).not.toContain('data-reveal')
+  })
+
+  it('labels every real fragment anchor with its discrete action', () => {
+    const markup = render()
+
+    expect(markup.match(/data-relay-action="previous"/g)).toHaveLength(3)
+    expect(markup.match(/data-relay-action="next"/g)).toHaveLength(3)
+    expect(markup.match(/data-relay-action="replay"/g)).toHaveLength(1)
+    expect(markup.match(/class="target-link relay-beat-link"/g)).toHaveLength(
+      7,
+    )
+  })
 })
