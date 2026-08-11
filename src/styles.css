@@ -1803,18 +1803,24 @@ footer p {
     top: 10rem;
     height: calc(100svh - 10rem);
     min-height: 24rem;
+    place-items: end center;
     margin-top: calc(-100svh + 10rem);
   }
 
   .relay-stage svg {
-    min-height: 22rem;
+    width: min(100%, 26rem);
+    height: auto;
+    min-height: 0;
+    max-height: 45%;
   }
 
   .relay-beat {
     width: min(100%, 27rem);
     min-height: 82svh;
+    align-content: start;
+    padding-block: 3rem;
     padding-inline: 1.25rem;
-    background: linear-gradient(90deg, transparent, var(--ink) 12%);
+    background: none;
   }
 
   .relay-navigation {

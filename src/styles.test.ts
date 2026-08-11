@@ -89,6 +89,40 @@ describe('Signal Relay baseline styles', () => {
     expect(styles).toMatch(/\.relay-return\s*\{[^}]*stroke:\s*var\(--focus\)/)
     expect(styles).toMatch(/\.relay-signal\s*\{[^}]*fill:\s*var\(--signal\)/)
   })
+
+  it('reserves separate mobile zones for the relay copy and complete SVG', () => {
+    const mobile = styles.slice(styles.indexOf('@media (max-width: 760px)'))
+
+    expect(mobile).toMatch(/\.relay-stage\s*\{[^}]*place-items:\s*end center/)
+    expect(mobile).toMatch(
+      /\.relay-stage svg\s*\{[^}]*width:\s*min\(100%,\s*26rem\)[^}]*height:\s*auto[^}]*min-height:\s*0[^}]*max-height:\s*45%/,
+    )
+    expect(mobile).toMatch(
+      /\.relay-beat\s*\{[^}]*width:\s*min\(100%,\s*27rem\)[^}]*min-height:\s*82svh[^}]*align-content:\s*start[^}]*padding-block:\s*3rem[^}]*padding-inline:\s*1\.25rem[^}]*background:\s*none/,
+    )
+    expect(mobile).not.toMatch(
+      /\.relay-stage svg\s*\{[^}]*(?:display:\s*none|visibility:\s*hidden|opacity:\s*0(?:[;\s]))/,
+    )
+    expect(mobile).not.toMatch(
+      /\.relay-beat\s*\{[^}]*(?:display:\s*none|visibility:\s*hidden|opacity:\s*0(?:[;\s]))/,
+    )
+    expect(mobile).not.toMatch(/\.relay-stage\s*\{[^}]*(?:position:|z-index:)/)
+    expect(mobile).not.toMatch(/\.relay-beat\s*\{[^}]*linear-gradient/)
+  })
+
+  it('retains the desktop relay gradient and sticky stage contract', () => {
+    const mobileBreakpoint = styles.indexOf('@media (max-width: 760px)')
+    const desktop = styles.slice(0, mobileBreakpoint)
+    const mobile = styles.slice(mobileBreakpoint)
+
+    expect(desktop).toMatch(
+      /\.relay-beat\s*\{[^}]*background:\s*linear-gradient\(90deg,\s*transparent,\s*var\(--ink\)\s*18%\)/,
+    )
+    expect(desktop).toMatch(
+      /\.relay-stage\s*\{[^}]*position:\s*sticky[^}]*z-index:\s*0[^}]*top:\s*5\.5rem[^}]*place-items:\s*center/,
+    )
+    expect(mobile).toMatch(/\.relay-stage\s*\{[^}]*top:\s*10rem/)
+  })
 })
 
 describe('VoleyEvents lifecycle styles', () => {
