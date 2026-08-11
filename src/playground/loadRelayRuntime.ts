@@ -1,8 +1,102 @@
-export const importRelayMotion = () => import('gsap')
+const importMotionCore = () => import('gsap')
+const importScrollTriggerPlugin = () => import('gsap/ScrollTrigger')
 
-export type RelayMotionModule = Awaited<
-  ReturnType<typeof importRelayMotion>
+type MotionCoreModule = Awaited<ReturnType<typeof importMotionCore>>
+type ScrollTriggerModule = Awaited<
+  ReturnType<typeof importScrollTriggerPlugin>
 >
+
+/** The complete motion surface exposed to the route runtime. */
+export interface RelayMotionFacade {
+  readonly gsap: MotionCoreModule['gsap']
+  readonly ScrollTrigger: ScrollTriggerModule['ScrollTrigger']
+}
+
+/** Lazy module-loading seam used by node-environment tests. */
+export interface RelayMotionLoaders {
+  readonly loadMotionCore: () => Promise<unknown>
+  readonly loadScrollTrigger: () => Promise<unknown>
+}
+
+const defaultRelayMotionLoaders: RelayMotionLoaders = {
+  loadMotionCore: importMotionCore,
+  loadScrollTrigger: importScrollTriggerPlugin,
+}
+
+function moduleMember<T>(module: unknown, member: string): T {
+  if (typeof module !== 'object' || module === null) {
+    throw new TypeError(`Motion module does not expose ${member}`)
+  }
+
+  const namespace = module as Record<string, unknown>
+  if (Object.hasOwn(namespace, member)) {
+    const namedMember = namespace[member]
+    if (namedMember !== undefined && namedMember !== null) {
+      return namedMember as T
+    }
+    throw new TypeError(`Motion module does not expose ${member}`)
+  }
+
+  const defaultExport = namespace.default
+  if (typeof defaultExport === 'object' && defaultExport !== null) {
+    const defaultNamespace = defaultExport as Record<string, unknown>
+    if (Object.hasOwn(defaultNamespace, member)) {
+      const nestedMember = defaultNamespace[member]
+      if (nestedMember !== undefined && nestedMember !== null) {
+        return nestedMember as T
+      }
+      throw new TypeError(`Motion module does not expose ${member}`)
+    }
+  }
+  if (defaultExport !== undefined && defaultExport !== null) {
+    return defaultExport as T
+  }
+
+  throw new TypeError(`Motion module does not expose ${member}`)
+}
+
+function normalizeMotionCore(module: unknown): RelayMotionFacade['gsap'] {
+  const gsap = moduleMember<RelayMotionFacade['gsap']>(module, 'gsap')
+  if (
+    (typeof gsap !== 'object' && typeof gsap !== 'function') ||
+    gsap === null ||
+    typeof (gsap as { registerPlugin?: unknown }).registerPlugin !== 'function'
+  ) {
+    throw new TypeError('Motion module does not expose gsap')
+  }
+  return gsap
+}
+
+function normalizeScrollTrigger(
+  module: unknown,
+): RelayMotionFacade['ScrollTrigger'] {
+  const ScrollTrigger = moduleMember<RelayMotionFacade['ScrollTrigger']>(
+    module,
+    'ScrollTrigger',
+  )
+  if (
+    (typeof ScrollTrigger !== 'object' &&
+      typeof ScrollTrigger !== 'function') ||
+    ScrollTrigger === null
+  ) {
+    throw new TypeError('Motion module does not expose ScrollTrigger')
+  }
+  return ScrollTrigger
+}
+
+export async function importRelayMotion(
+  loaders: RelayMotionLoaders = defaultRelayMotionLoaders,
+): Promise<RelayMotionFacade> {
+  const [motionCoreModule, scrollTriggerModule] = await Promise.all([
+    loaders.loadMotionCore(),
+    loaders.loadScrollTrigger(),
+  ])
+
+  return {
+    gsap: normalizeMotionCore(motionCoreModule),
+    ScrollTrigger: normalizeScrollTrigger(scrollTriggerModule),
+  }
+}
 
 export interface RelayRuntimeGate {
   issueGeneration(): number
@@ -23,10 +117,11 @@ export type RelayRuntimeResult<TRuntime> =
   | { readonly status: 'stale' }
 
 type DefaultRelayRuntimeRequest<TRuntime> = Omit<
-  RelayRuntimeRequest<RelayMotionModule, TRuntime>,
+  RelayRuntimeRequest<RelayMotionFacade, TRuntime>,
   'importMotion'
 > & {
   readonly importMotion?: undefined
+  readonly motionLoaders?: RelayMotionLoaders
 }
 
 /**
@@ -71,7 +166,7 @@ async function settleRelayRuntime<TModule, TRuntime>(
   }
 }
 
-/** Uses the route-local GSAP import unless tests or callers inject an importer. */
+/** Uses the route-local motion imports unless tests or callers inject an importer. */
 export function loadRelayRuntime<TRuntime>(
   request: DefaultRelayRuntimeRequest<TRuntime>,
 ): Promise<RelayRuntimeResult<TRuntime>>
@@ -90,9 +185,17 @@ export function loadRelayRuntime<TModule, TRuntime>(
   }
 
   const defaultRequest = request as DefaultRelayRuntimeRequest<TRuntime>
+  const { motionLoaders, createRuntime, ...pendingRequest } = defaultRequest
 
   return settleRelayRuntime({
-    ...defaultRequest,
-    importMotion: importRelayMotion,
+    ...pendingRequest,
+    importMotion: () => importRelayMotion(motionLoaders),
+    createRuntime(motion) {
+      // GSAP's ESM core installs into its module-local scope and this app has no
+      // other GSAP producer, so ScrollTrigger's global auto-discovery is inert.
+      // Explicit registration is deliberately inside the accepted settle path.
+      motion.gsap.registerPlugin(motion.ScrollTrigger)
+      return createRuntime(motion)
+    },
   })
 }
