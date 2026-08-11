@@ -32,13 +32,23 @@ describe('accessible typography-led styles', () => {
     )
   })
 
-  it('contains all four primary links inside a 2×2 mobile header', () => {
+  it('uses the brand as mobile home beside three evenly spaced routes', () => {
     const mobile = styles.slice(styles.indexOf('@media (max-width: 760px)'))
 
     expect(mobile).toMatch(
-      /\.site-nav\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/,
+      /\.site-header\s*\{[^}]*gap:\s*0\.5rem/,
+    )
+    expect(mobile).toMatch(
+      /\.site-nav\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)[^}]*gap:\s*0\.5rem/,
+    )
+    expect(mobile).toMatch(
+      /\.site-nav a\[href=["']\/["']\]\s*\{[^}]*display:\s*none/,
     )
     expect(mobile).toMatch(/\.site-nav a\s*\{[^}]*min-width:\s*0/)
+    expect(mobile).not.toMatch(/\.brand\s*\{[^}]*display:\s*none/)
+    expect(mobile).not.toMatch(
+      /\.site-nav a\[href=["']\/(?:voleyevents|goal-loop|playground)["']\]\s*\{[^}]*display:\s*none/,
+    )
   })
 
   it('keeps VoleyEvents focus and footer hover visible on the light shell', () => {

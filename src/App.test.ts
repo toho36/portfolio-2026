@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import App, { applyRouteMetadata, installRevealMotion } from './App'
 import { readFileSync } from 'node:fs'
-import { ROUTES, routeMetadata } from './content/routes'
+import { ROUTES, resolveRoute, routeMetadata } from './content/routes'
 
 function render(path = '/') {
   return renderToStaticMarkup(createElement(App, { initialPath: path }))
@@ -118,6 +118,34 @@ describe('systems-builder shell', () => {
     expect(unknown).toContain(
       'I turn messy operations into software — and software delivery into a system.',
     )
+  })
+
+  it('keeps every route destination and current-page link truthful', () => {
+    for (const route of ROUTES) {
+      const markup = render(route.path)
+      const currentPath = resolveRoute(route.path).path
+
+      for (const destination of ROUTES) {
+        expect(markup).toContain(`href="${destination.path}"`)
+      }
+
+      const currentAnchors = [...markup.matchAll(/<a\s+([^>]+)>/g)].filter(
+        ([, attributes]) => attributes.includes('aria-current="page"'),
+      )
+      const currentOccurrences = markup.match(/aria-current="page"/g) ?? []
+
+      expect(currentOccurrences).toHaveLength(currentAnchors.length)
+      expect(currentAnchors).toHaveLength(currentPath === '/' ? 2 : 1)
+      for (const [, attributes] of currentAnchors) {
+        expect(attributes).toContain(`href="${currentPath}"`)
+      }
+
+      if (currentPath === '/') {
+        expect(markup).toMatch(
+          /<a(?=[^>]*class="[^"]*\bbrand\b)(?=[^>]*href="\/")(?=[^>]*aria-current="page")[^>]*>/,
+        )
+      }
+    }
   })
 
   it('applies title, description, canonical and og:url for every route', () => {
