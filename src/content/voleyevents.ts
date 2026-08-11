@@ -1,6 +1,6 @@
-import { CARTRIDGE_STORIES } from './cartridges'
+import { PROJECT_STORIES } from './projects'
 
-const SOURCE = CARTRIDGE_STORIES.voleyevents
+const SOURCE = PROJECT_STORIES.voleyevents
 
 export interface VoleyEventsLifecycleStage {
   readonly id:

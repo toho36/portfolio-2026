@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CARTRIDGE_STORIES } from './cartridges'
+import { PROJECT_STORIES } from './projects'
 import {
   ROUTES,
   getRouteNavigationUrl,
@@ -42,9 +42,9 @@ describe('route records', () => {
       /\b(?:TBD|TODO|placeholder|\d+%)\b/i,
     )
     expect(SIDE_QUESTS.map(({ url }) => url)).toEqual([
-      CARTRIDGE_STORIES.gameonvb.verifiedUrl,
-      CARTRIDGE_STORIES['screen-switch'].verifiedUrl,
-      CARTRIDGE_STORIES.suburbs.verifiedUrl,
+      PROJECT_STORIES.gameonvb.verifiedUrl,
+      PROJECT_STORIES['screen-switch'].verifiedUrl,
+      PROJECT_STORIES.suburbs.verifiedUrl,
     ])
   })
 })

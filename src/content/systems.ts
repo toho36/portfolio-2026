@@ -1,4 +1,4 @@
-import { CARTRIDGE_STORIES } from './cartridges'
+import { PROJECT_STORIES } from './projects'
 import type { RoutePath } from './routes'
 
 export const HERO = {
@@ -41,17 +41,17 @@ interface SideQuest {
 export const SIDE_QUESTS: readonly SideQuest[] = [
   {
     name: 'GameOnVB',
-    summary: CARTRIDGE_STORIES.gameonvb.preview,
-    url: CARTRIDGE_STORIES.gameonvb.verifiedUrl,
+    summary: PROJECT_STORIES.gameonvb.preview,
+    url: PROJECT_STORIES.gameonvb.verifiedUrl,
   },
   {
     name: 'Screen Switch',
-    summary: CARTRIDGE_STORIES['screen-switch'].preview,
+    summary: PROJECT_STORIES['screen-switch'].preview,
   },
   {
     name: 'Suburbs',
-    summary: CARTRIDGE_STORIES.suburbs.preview,
-    url: CARTRIDGE_STORIES.suburbs.verifiedUrl,
+    summary: PROJECT_STORIES.suburbs.preview,
+    url: PROJECT_STORIES.suburbs.verifiedUrl,
   },
 ]
 

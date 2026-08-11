@@ -1,64 +1,26 @@
-export const CARTRIDGES = [
-  'GameOnVB',
-  'Suburbs',
-  'Screen Switch',
-  'VoleyEvents',
-] as const
-
-export type Cartridge = (typeof CARTRIDGES)[number]
-
-export const CARTRIDGE_SLUGS = [
+export const PROJECT_SLUGS = [
   'gameonvb',
   'suburbs',
   'screen-switch',
   'voleyevents',
 ] as const
 
-export type CartridgeSlug = (typeof CARTRIDGE_SLUGS)[number]
-export type CartridgeHash = `#project-${CartridgeSlug}`
-export type CartridgeIndex = 0 | 1 | 2 | 3
+export type ProjectSlug = (typeof PROJECT_SLUGS)[number]
 
-export interface CartridgeIdentity {
-  readonly index: CartridgeIndex
-  readonly name: Cartridge
-  readonly slug: CartridgeSlug
-  readonly hash: CartridgeHash
-}
-
-export interface MechanicalDiscovery {
-  readonly label: string
-  readonly immediateReward: string
-  readonly largerPayoff: string
-}
-
-export type VerifiedCartridgeUrl =
+export type VerifiedProjectUrl =
   | 'https://gameonvb.cz/'
   | 'https://suburbs.vercel.app/'
 
-export interface CartridgeStory {
+export interface ProjectStory {
   readonly preview: string
   readonly role: string
   readonly constraint: string
   readonly decision: string
   readonly evidence: string
-  readonly discovery: MechanicalDiscovery
-  readonly verifiedUrl?: VerifiedCartridgeUrl
+  readonly verifiedUrl?: VerifiedProjectUrl
 }
 
-export const CARTRIDGE_IDENTITIES = CARTRIDGES.map((name, index) => {
-  const cartridgeIndex = index as CartridgeIndex
-  const slug = CARTRIDGE_SLUGS[cartridgeIndex]
-  return {
-    index: cartridgeIndex,
-    name,
-    slug,
-    hash: `#project-${slug}` as CartridgeHash,
-  }
-}) as readonly CartridgeIdentity[]
-
-export const CARTRIDGE_STORIES: Readonly<
-  Record<CartridgeSlug, CartridgeStory>
-> = {
+export const PROJECT_STORIES: Readonly<Record<ProjectSlug, ProjectStory>> = {
   gameonvb: {
     preview:
       'A live event-registration front door for recurring recreational volleyball sessions.',
@@ -70,11 +32,6 @@ export const CARTRIDGE_STORIES: Readonly<
     evidence:
       'The current public site exposes upcoming events and community highlights.',
     verifiedUrl: 'https://gameonvb.cz/',
-    discovery: {
-      label: 'event dial',
-      immediateReward: 'reveals the registration route',
-      largerPayoff: 'reveals the sourced story',
-    },
   },
   suburbs: {
     preview:
@@ -87,11 +44,6 @@ export const CARTRIDGE_STORIES: Readonly<
     evidence:
       'The current public demo exposes those sections and remains directly readable.',
     verifiedUrl: 'https://suburbs.vercel.app/',
-    discovery: {
-      label: 'deck flip',
-      immediateReward: 'turns the module surface',
-      largerPayoff: 'reveals the sourced story',
-    },
   },
   'screen-switch': {
     preview:
@@ -103,11 +55,6 @@ export const CARTRIDGE_STORIES: Readonly<
       "Keep the utility menu-bar-only; preserve normalized position and size where possible, then clamp to the destination's visible area.",
     evidence:
       'The owner-maintained screen-switch README documents permissions, display selection, geometry and partial-failure behavior.',
-    discovery: {
-      label: 'display swap',
-      immediateReward: 'exchanges two viewport plates',
-      largerPayoff: 'reveals the sourced story',
-    },
   },
   voleyevents: {
     preview:
@@ -119,19 +66,5 @@ export const CARTRIDGE_STORIES: Readonly<
       'Model money, capacity and audit as part of the registration lifecycle rather than bolted-on admin tasks.',
     evidence:
       'The owner-maintained voleyevents README documents registration, QR-bank payment matching, cancellation credit and admin tooling.',
-    discovery: {
-      label: 'ledger gate',
-      immediateReward:
-        'clears a registration token through the mechanism',
-      largerPayoff: 'reveals the sourced story',
-    },
   },
-}
-
-const CARTRIDGE_BY_HASH = new Map(
-  CARTRIDGE_IDENTITIES.map((identity) => [identity.hash, identity]),
-)
-
-export function cartridgeByHash(hash: string): CartridgeIdentity | undefined {
-  return CARTRIDGE_BY_HASH.get(hash as CartridgeHash)
 }

@@ -1,58 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import sourceTruth from '../../docs/direction/source-truth.md?raw'
-import {
-  CARTRIDGE_IDENTITIES,
-  CARTRIDGE_STORIES,
-  CARTRIDGES,
-  cartridgeByHash,
-} from './cartridges'
+import { PROJECT_SLUGS, PROJECT_STORIES } from './projects'
 
-describe('cartridge identities', () => {
-  it('contains exactly the four approved unique cartridges', () => {
-    expect(CARTRIDGES).toEqual([
-      'GameOnVB',
-      'Suburbs',
-      'Screen Switch',
-      'VoleyEvents',
+describe('project stories', () => {
+  it('provides the exact sourced records in project order', () => {
+    expect(PROJECT_SLUGS).toEqual([
+      'gameonvb',
+      'suburbs',
+      'screen-switch',
+      'voleyevents',
     ])
-    expect(new Set(CARTRIDGES).size).toBe(4)
-  })
-
-  it('provides stable public-safe slugs and project hashes in the same order', () => {
-    expect(CARTRIDGE_IDENTITIES).toEqual([
-      { index: 0, name: 'GameOnVB', slug: 'gameonvb', hash: '#project-gameonvb' },
-      { index: 1, name: 'Suburbs', slug: 'suburbs', hash: '#project-suburbs' },
-      {
-        index: 2,
-        name: 'Screen Switch',
-        slug: 'screen-switch',
-        hash: '#project-screen-switch',
-      },
-      {
-        index: 3,
-        name: 'VoleyEvents',
-        slug: 'voleyevents',
-        hash: '#project-voleyevents',
-      },
-    ])
-    expect(new Set(CARTRIDGE_IDENTITIES.map(({ slug }) => slug)).size).toBe(4)
-    expect(new Set(CARTRIDGE_IDENTITIES.map(({ hash }) => hash)).size).toBe(4)
-  })
-
-  it('looks up each cartridge by hash without accepting unknown fragments', () => {
-    for (const identity of CARTRIDGE_IDENTITIES) {
-      expect(cartridgeByHash(identity.hash)).toBe(identity)
-    }
-    expect(cartridgeByHash('#project-unknown')).toBeUndefined()
-    expect(cartridgeByHash('project-gameonvb')).toBeUndefined()
-  })
-})
-
-describe('cartridge stories', () => {
-  it('provides the exact sourced records in cartridge identity order', () => {
-    expect(
-      CARTRIDGE_IDENTITIES.map(({ slug }) => [slug, CARTRIDGE_STORIES[slug]]),
-    ).toEqual([
+    expect(PROJECT_SLUGS.map((slug) => [slug, PROJECT_STORIES[slug]])).toEqual([
       [
         'gameonvb',
         {
@@ -66,11 +24,6 @@ describe('cartridge stories', () => {
           evidence:
             'The current public site exposes upcoming events and community highlights.',
           verifiedUrl: 'https://gameonvb.cz/',
-          discovery: {
-            label: 'event dial',
-            immediateReward: 'reveals the registration route',
-            largerPayoff: 'reveals the sourced story',
-          },
         },
       ],
       [
@@ -86,11 +39,6 @@ describe('cartridge stories', () => {
           evidence:
             'The current public demo exposes those sections and remains directly readable.',
           verifiedUrl: 'https://suburbs.vercel.app/',
-          discovery: {
-            label: 'deck flip',
-            immediateReward: 'turns the module surface',
-            largerPayoff: 'reveals the sourced story',
-          },
         },
       ],
       [
@@ -105,11 +53,6 @@ describe('cartridge stories', () => {
             "Keep the utility menu-bar-only; preserve normalized position and size where possible, then clamp to the destination's visible area.",
           evidence:
             'The owner-maintained screen-switch README documents permissions, display selection, geometry and partial-failure behavior.',
-          discovery: {
-            label: 'display swap',
-            immediateReward: 'exchanges two viewport plates',
-            largerPayoff: 'reveals the sourced story',
-          },
         },
       ],
       [
@@ -124,74 +67,39 @@ describe('cartridge stories', () => {
             'Model money, capacity and audit as part of the registration lifecycle rather than bolted-on admin tasks.',
           evidence:
             'The owner-maintained voleyevents README documents registration, QR-bank payment matching, cancellation credit and admin tooling.',
-          discovery: {
-            label: 'ledger gate',
-            immediateReward:
-              'clears a registration token through the mechanism',
-            largerPayoff: 'reveals the sourced story',
-          },
         },
       ],
     ])
-    expect(Object.keys(CARTRIDGE_STORIES)).toEqual(
-      CARTRIDGE_IDENTITIES.map(({ slug }) => slug),
-    )
+    expect(Object.keys(PROJECT_STORIES)).toEqual(PROJECT_SLUGS)
   })
 
-  it('locks the mechanical discoveries and verified URL allowlist', () => {
+  it('locks the verified URL allowlist', () => {
     expect(
-      CARTRIDGE_IDENTITIES.map(({ slug }) => CARTRIDGE_STORIES[slug].discovery),
-    ).toEqual([
-      {
-        label: 'event dial',
-        immediateReward: 'reveals the registration route',
-        largerPayoff: 'reveals the sourced story',
-      },
-      {
-        label: 'deck flip',
-        immediateReward: 'turns the module surface',
-        largerPayoff: 'reveals the sourced story',
-      },
-      {
-        label: 'display swap',
-        immediateReward: 'exchanges two viewport plates',
-        largerPayoff: 'reveals the sourced story',
-      },
-      {
-        label: 'ledger gate',
-        immediateReward: 'clears a registration token through the mechanism',
-        largerPayoff: 'reveals the sourced story',
-      },
-    ])
-
-    expect(
-      CARTRIDGE_IDENTITIES.flatMap(({ slug }) => {
-        const { verifiedUrl } = CARTRIDGE_STORIES[slug]
+      PROJECT_SLUGS.flatMap((slug) => {
+        const { verifiedUrl } = PROJECT_STORIES[slug]
         return verifiedUrl === undefined ? [] : [verifiedUrl]
       }),
     ).toEqual(['https://gameonvb.cz/', 'https://suburbs.vercel.app/'])
-    expect(Object.hasOwn(CARTRIDGE_STORIES['screen-switch'], 'verifiedUrl')).toBe(
+    expect(Object.hasOwn(PROJECT_STORIES['screen-switch'], 'verifiedUrl')).toBe(
       false,
     )
-    expect(Object.hasOwn(CARTRIDGE_STORIES.voleyevents, 'verifiedUrl')).toBe(
-      false,
-    )
+    expect(Object.hasOwn(PROJECT_STORIES.voleyevents, 'verifiedUrl')).toBe(false)
   })
 
   it('contains no placeholders in the admitted story records', () => {
-    for (const story of Object.values(CARTRIDGE_STORIES)) {
+    for (const story of Object.values(PROJECT_STORIES)) {
       expect(JSON.stringify(story)).not.toMatch(/\b(?:TBD|TODO|placeholder)\b/i)
     }
   })
 })
 
-describe('cartridge source truth', () => {
-  const cartridgeSection = sourceTruth
+describe('project source truth', () => {
+  const sourceSection = sourceTruth
     .match(/## Cartridge register\n[\s\S]*?(?=\n## )/)?.[0]
     .trim()
 
-  it('records the exact cartridge register and admitted provenance', () => {
-    expect(cartridgeSection).toBe(`## Cartridge register
+  it('records the exact source register and admitted provenance', () => {
+    expect(sourceSection).toBe(`## Cartridge register
 
 There are exactly four cartridges; no additional or substitute projects belong in this direction.
 
