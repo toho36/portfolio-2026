@@ -142,9 +142,10 @@ describe('Goal Loop run-trace styles', () => {
     )
 
     expect(styles).toContain('view-timeline-name: --run-progress')
-    expect(styles).toMatch(
-      /\.run-trace-line\s*\{[^}]*stroke-dasharray:\s*960[^}]*stroke-dashoffset:\s*0/,
-    )
+    const traceLine = styles.match(/\.goal-loop \.run-trace-line\s*\{([^}]+)\}/)?.[1]
+
+    expect(traceLine).toBeDefined()
+    expect(traceLine).not.toMatch(/stroke-dasharray|stroke-dashoffset/)
     expect(styles).not.toContain('@keyframes run-trace-grow')
     expect(
       styles.slice(0, styles.indexOf('@media (prefers-reduced-motion: reduce)')),
@@ -193,8 +194,6 @@ describe('Goal Loop run-trace styles', () => {
     expect(reduced).toMatch(
       /\.run-marker\s*\{[^}]*opacity:\s*1[^}]*transform:\s*translateY\(960px\)\s*!important/,
     )
-    expect(reduced).toMatch(
-      /\.run-trace-line\s*\{[^}]*animation:\s*none\s*!important[^}]*stroke-dashoffset:\s*0/,
-    )
+    expect(reduced).not.toMatch(/\.run-trace-line\s*\{/)
   })
 })

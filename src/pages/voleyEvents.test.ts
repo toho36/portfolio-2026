@@ -1,5 +1,6 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import App from '../App'
 import { ROUTES } from '../content/routes'
@@ -11,6 +12,11 @@ import {
 function render(path = '/voleyevents') {
   return renderToStaticMarkup(createElement(App, { initialPath: path }))
 }
+
+const operationsAsset = readFileSync(
+  new URL('../../public/assets/voleyevents-operations.svg', import.meta.url),
+  'utf8',
+)
 
 describe('VoleyEvents Match Operations case study', () => {
   it('opens with the sourced product identity and a descriptive route title', () => {
@@ -100,6 +106,23 @@ describe('VoleyEvents Match Operations case study', () => {
     expect(lifecycle).toContain('preserveAspectRatio="xMidYMid slice"')
     expect(lifecycle).not.toMatch(/<h3[^>]*aria-hidden|<p[^>]*aria-hidden/)
     expect(markup).toContain('src="/assets/voleyevents-operations.svg"')
+  })
+
+  it('keeps translation on the court lane separate from ball rotation', () => {
+    const rally = operationsAsset.match(/@keyframes rally\s*\{([^@]+)\}/)?.[1]
+    const spin = operationsAsset.match(/@keyframes spin\s*\{([^@]+)\}/)?.[1]
+
+    expect(operationsAsset).toContain('class="ball-position"')
+    expect(operationsAsset).toContain('class="lane" d="M150 490L490 150"')
+    expect(rally).toBeDefined()
+    expect(spin).toBeDefined()
+    expect(rally).not.toContain('rotate(')
+    expect(spin).not.toContain('translate(')
+    expect(rally).toContain('translate(-55px, 55px)')
+    expect(rally).toContain('translate(55px, -55px)')
+    expect(operationsAsset).toContain(
+      '.ball-position { transform: translate(170px, -170px) }',
+    )
   })
 
   it('preserves shared shell navigation on direct and trailing-slash routes', () => {

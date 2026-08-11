@@ -142,6 +142,7 @@ describe('Goal Loop Run Anatomy case study', () => {
     expect(markup.match(/class="run-marker"/g)).toHaveLength(1)
     expect(markup).toMatch(/<div class="run-trace" aria-hidden="true">/)
     expect(markup).toMatch(/<svg[^>]*role="presentation"/)
+    expect(markup).toContain('class="run-trace-line" d="M24 0V1120"')
     expect(markup).not.toMatch(/<h[1-6][^>]*aria-hidden|<p[^>]*aria-hidden/)
     expect(markup).not.toMatch(/<canvas|<video|<img|data:image/i)
     expect(containsSimulatedArtifact(content)).toBe(false)

@@ -86,7 +86,7 @@ export function GoalLoopPage({ onNavigate }: GoalLoopPageProps) {
               preserveAspectRatio="xMidYMid slice"
               role="presentation"
             >
-              <path className="run-trace-line" d="M24 80V1040" />
+              <path className="run-trace-line" d="M24 0V1120" />
               <path
                 className="run-trace-branch"
                 d="M24 1040C28 1040 28 1010 32 1010"
