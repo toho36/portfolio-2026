@@ -36,6 +36,16 @@ const ABSENT_DEPENDENCIES = [
   ...PLAYGROUND_SCOPED_DEPENDENCIES,
 ] as const
 
+const PACKAGE_ABSENT_DEPENDENCIES = [
+  ...GLOBALLY_FORBIDDEN_DEPENDENCIES,
+  'three',
+] as const
+
+const GSAP_VERSION = '3.15.0'
+const GSAP_RESOLVED = 'https://registry.npmjs.org/gsap/-/gsap-3.15.0.tgz'
+const GSAP_INTEGRITY =
+  'sha512-dMW4CWBTUK1AEEDeZc1g4xpPGIrSf9fJF960qbTZmN/QwZIWY5wgliS6JWl9/25fpTGJrMRtSjGtOmPnfjZB+A=='
+
 const packageSource = readFileSync(
   new URL('../package.json', import.meta.url),
   'utf8',
@@ -115,6 +125,21 @@ describe('retired source closure', () => {
     }
   })
 
+  it('exposes gsap through exactly one route-local production module', () => {
+    const importingModules = Object.entries(sourceModules)
+      .filter(
+        ([path]) =>
+          path !== './sourceClosure.test.ts' && !path.endsWith('.test.ts'),
+      )
+      .filter(([, source]) => importsRetiredDependency(source, 'gsap'))
+      .map(([path]) => path)
+      .sort()
+
+    expect(importingModules).toEqual([
+      './playground/loadRelayRuntime.ts',
+    ])
+  })
+
   it('permits gsap and three only below the route-local runtime root', () => {
     for (const dependency of PLAYGROUND_SCOPED_DEPENDENCIES) {
       const source = `import value from '${dependency}/subpath'`
@@ -153,14 +178,22 @@ describe('retired source closure', () => {
     }
   })
 
-  it('removes retired packages while preserving every package script', () => {
+  it('preserves exact package scripts and dependency closure', () => {
     const packageJson = JSON.parse(packageSource) as {
       scripts: Record<string, string>
       dependencies?: Record<string, string>
       devDependencies?: Record<string, string>
     }
     const packageLock = JSON.parse(lockSource) as {
-      packages: Record<string, unknown>
+      packages: Record<
+        string,
+        {
+          dependencies?: Record<string, string>
+          version?: string
+          resolved?: string
+          integrity?: string
+        }
+      >
     }
     const declaredDependencies = {
       ...packageJson.dependencies,
@@ -174,7 +207,16 @@ describe('retired source closure', () => {
       build: 'tsc --noEmit && vite build',
     })
 
-    for (const dependency of ABSENT_DEPENDENCIES) {
+    expect(packageJson.dependencies?.gsap).toBe(GSAP_VERSION)
+    expect(packageJson.devDependencies?.gsap).toBeUndefined()
+    expect(packageLock.packages[''].dependencies?.gsap).toBe(GSAP_VERSION)
+    expect(packageLock.packages['node_modules/gsap']).toMatchObject({
+      version: GSAP_VERSION,
+      resolved: GSAP_RESOLVED,
+      integrity: GSAP_INTEGRITY,
+    })
+
+    for (const dependency of PACKAGE_ABSENT_DEPENDENCIES) {
       expect(declaredDependencies).not.toHaveProperty(dependency)
       expect(packageLock.packages).not.toHaveProperty(
         `node_modules/${dependency}`,
