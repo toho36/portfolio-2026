@@ -120,7 +120,6 @@ footer {
   color: #102044;
 }
 
-.route-voleyevents .brand small,
 .route-voleyevents .site-nav a:not([aria-current="page"]),
 .route-voleyevents footer p {
   color: rgba(16, 32, 68, 0.68);
@@ -148,12 +147,6 @@ footer {
   letter-spacing: 0.08em;
   text-decoration: none;
   text-transform: uppercase;
-}
-
-.brand small {
-  color: var(--muted);
-  font-size: inherit;
-  font-weight: 400;
 }
 
 .site-nav,

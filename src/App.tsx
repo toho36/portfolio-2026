@@ -286,7 +286,6 @@ export default function App({ initialPath }: AppProps) {
           onNavigate={onNavigate}
         >
           <span>Hoang Viet To</span>
-          <small>Systems builder</small>
         </RouteLink>
         <nav aria-label="Primary" className="site-nav">
           {ROUTES.map((item) => (
