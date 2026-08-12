@@ -176,55 +176,77 @@ describe('System Field styles', () => {
   })
 })
 
-describe('VoleyEvents lifecycle styles', () => {
-  it('enhances one settled participant token with a reversible view timeline', () => {
-    const keyframes = styles.slice(
-      styles.indexOf('@keyframes participant-advance'),
-      styles.indexOf(
-        '@media (prefers-reduced-motion: no-preference)',
-        styles.indexOf('@keyframes participant-advance'),
-      ),
-    )
+describe('VoleyEvents rally staircase styles', () => {
+  const mobileBreakpoint = styles.indexOf('@media (max-width: 760px)')
+  const desktop = styles.slice(0, mobileBreakpoint)
+  const mobile = styles.slice(mobileBreakpoint)
 
-    expect(styles).toContain('@supports (animation-timeline: view())')
-    expect(styles).toContain('animation-timeline: --lifecycle-progress')
-    expect(styles).toContain('animation-range: entry 0% exit 100%')
-    expect(styles).toMatch(
-      /\.participant-token\s*\{[^}]*animation:\s*participant-advance linear both[^}]*animation-duration:\s*auto[^}]*animation-timeline:\s*--lifecycle-progress/,
+  it('contains one sticky fallback without masking route overflow', () => {
+    const route = styles.match(/\.voleyevents\s*\{([^}]+)\}/)?.[1]
+
+    expect(route).toBeDefined()
+    expect(route).not.toMatch(/overflow:\s*(?:hidden|clip)/)
+    expect(desktop).toMatch(
+      /\.rally-stage\s*\{[^}]*position:\s*sticky[^}]*z-index:\s*0[^}]*top:\s*5\.5rem[^}]*height:\s*calc\(100svh - 5\.5rem\)[^}]*min-width:\s*0[^}]*margin-top:\s*calc\(-100svh \+ 5\.5rem\)[^}]*overflow:\s*hidden/,
     )
     expect(styles).toMatch(
-      /\.participant-token\s*\{[^}]*transform:\s*translateY\(656px\)/,
-    )
-    expect(keyframes).toMatch(/from\s*\{[^}]*transform:/)
-    expect(keyframes).toMatch(/to\s*\{[^}]*transform:/)
-    expect(keyframes).not.toMatch(/(?:left|top|width|height):/)
-  })
-
-  it('keeps the lifecycle stacked and contained on mobile', () => {
-    const mobile = styles.slice(styles.indexOf('@media (max-width: 760px)'))
-
-    expect(mobile).toMatch(
-      /\.lifecycle-stage\s*\{[^}]*grid-template-columns:\s*1fr/,
-    )
-    expect(mobile).toMatch(
-      /\.lifecycle-layout\s*\{[^}]*grid-template-columns:\s*minmax\(4\.5rem,\s*5\.5rem\)\s+minmax\(0,\s*1fr\)/,
-    )
-    expect(mobile).toMatch(
-      /\.lifecycle-court svg\s*\{[^}]*width:\s*100%[^}]*height:\s*100%/,
-    )
-    expect(styles).toMatch(
-      /\.lifecycle-court svg\s*\{[^}]*min-height:\s*55rem[^}]*overflow:\s*hidden/,
+      /\.rally-fallback\s*\{[^}]*width:\s*100%[^}]*height:\s*auto[^}]*max-height:\s*100%[^}]*overflow:\s*hidden/,
     )
     expect(styles).not.toContain('100vw')
+    expect(desktop).toMatch(
+      /\.court-hero::after\s*\{[^}]*inset:\s*0 34% 0 0[^}]*background:\s*linear-gradient\(90deg,\s*var\(--court-chalk\)\s*82%,\s*transparent\)/,
+    )
+    expect(desktop).toMatch(
+      /\.court-hero > \*\s*\{[^}]*position:\s*relative[^}]*z-index:\s*1/,
+    )
   })
 
-  it('settles the participant token under reduced motion', () => {
+  it('alternates bounded desktop lifecycle reading zones', () => {
+    expect(desktop).toMatch(
+      /\.lifecycle-track\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/,
+    )
+    expect(desktop).toMatch(
+      /\.lifecycle-stage:nth-child\(odd\)\s*\{[^}]*width:\s*min\(72%,\s*52rem\)[^}]*justify-self:\s*start/,
+    )
+    expect(desktop).toMatch(
+      /\.lifecycle-stage:nth-child\(even\)\s*\{[^}]*width:\s*min\(72%,\s*52rem\)[^}]*justify-self:\s*end/,
+    )
+  })
+
+  it('uses a visible 42svh stage band and one content column on mobile', () => {
+    expect(mobile).toMatch(
+      /\.rally-stage\s*\{[^}]*top:\s*10rem[^}]*height:\s*42svh[^}]*min-height:\s*0[^}]*margin-top:\s*0/,
+    )
+    expect(mobile).toMatch(
+      /\.lifecycle-track\s*\{[^}]*grid-template-columns:\s*1fr/,
+    )
+    expect(mobile).toMatch(
+      /\.voleyevents > :not\(\.rally-stage\)\s*\{[^}]*background-color:\s*var\(--court-chalk\)/,
+    )
+    expect(mobile).toMatch(
+      /\.lifecycle-stage,[\s\S]*\.lifecycle-stage:nth-child\(odd\),[\s\S]*\.lifecycle-stage:nth-child\(even\)\s*\{[^}]*width:\s*100%[^}]*grid-template-columns:\s*1fr[^}]*justify-self:\s*stretch/,
+    )
+    expect(mobile).not.toMatch(
+      /\.(?:rally-stage|rally-fallback)[^{]*\{[^}]*(?:display:\s*none|visibility:\s*hidden|opacity:\s*0(?:[;\s]))/,
+    )
+  })
+
+  it('keeps the static stage and fallback settled under reduced motion', () => {
     const reduced = styles.slice(
       styles.indexOf('@media (prefers-reduced-motion: reduce)'),
     )
 
     expect(reduced).toMatch(
-      /\.participant-token\s*\{[^}]*opacity:\s*1[^}]*transform:\s*translateY\(656px\)\s*!important/,
+      /\.rally-stage,[\s\S]*\.rally-fallback\s*\{[^}]*opacity:\s*1[^}]*transform:\s*none/,
+    )
+    expect(reduced).not.toMatch(
+      /\.(?:rally-stage|rally-fallback)[^{]*\{[^}]*(?:display:\s*none|visibility:\s*hidden|height:\s*0(?:[;\s]))/,
+    )
+  })
+
+  it('retires both independent decorative motion owners', () => {
+    expect(styles).not.toMatch(
+      /--lifecycle-progress|participant-advance|\.participant-token|\.lifecycle-court|\.volleyball-/,
     )
   })
 })
@@ -234,19 +256,15 @@ describe('mobile-first case-study hero composition', () => {
   const desktop = styles.slice(0, mobileBreakpoint)
   const mobile = styles.slice(mobileBreakpoint)
 
-  it('starts both case-study heroes promptly and places the court graphic after the CTA', () => {
+  it('starts both case-study heroes promptly and keeps the mobile rally band visible', () => {
     expect(mobile).toMatch(
       /\.court-hero,\s*\.goal-loop \.run-hero\s*\{[^}]*min-height:\s*auto[^}]*align-content:\s*start/,
     )
-    expect(mobile).toMatch(
-      /\.court-hero-graphic\s*\{[^}]*position:\s*static[^}]*grid-row:\s*5[^}]*grid-column:\s*1[^}]*justify-self:\s*end[^}]*width:\s*min\(48vw,\s*11rem\)[^}]*margin-top:\s*1rem[^}]*opacity:\s*0\.76/,
-    )
-    expect(mobile).not.toMatch(
-      /\.court-hero-graphic\s*\{[^}]*display:\s*none/,
-    )
+    expect(mobile).toMatch(/\.rally-stage\s*\{[^}]*height:\s*42svh/)
+    expect(mobile).not.toMatch(/\.rally-fallback\s*\{[^}]*display:\s*none/)
   })
 
-  it('retains the desktop hero clamps and absolute court graphic', () => {
+  it('retains the desktop hero clamps and bounded court stage', () => {
     expect(desktop).toMatch(
       /\.court-hero\s*\{[^}]*min-height:\s*clamp\(36rem,\s*78svh,\s*51rem\)[^}]*align-content:\s*end/,
     )
@@ -254,7 +272,7 @@ describe('mobile-first case-study hero composition', () => {
       /\.goal-loop \.run-hero\s*\{[^}]*min-height:\s*clamp\(36rem,\s*78svh,\s*52rem\)[^}]*align-content:\s*end/,
     )
     expect(desktop).toMatch(
-      /\.court-hero-graphic\s*\{[^}]*position:\s*absolute[^}]*width:\s*min\(42vw,\s*38rem\)/,
+      /\.rally-stage\s*\{[^}]*height:\s*calc\(100svh - 5\.5rem\)[^}]*overflow:\s*hidden/,
     )
   })
 })

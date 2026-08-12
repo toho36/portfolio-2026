@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
@@ -78,7 +79,6 @@ describe('VoleyEvents Match Operations case study', () => {
     expect(lifecycle).toMatch(/attendance/i)
     expect(lifecycle).toMatch(/admin operations/i)
     expect(lifecycle).toMatch(/audit/i)
-    expect(lifecycle.match(/class="participant-token"/g)).toHaveLength(1)
   })
 
   it('retains complete semantic stage content without relying on the illustration', () => {
@@ -96,26 +96,63 @@ describe('VoleyEvents Match Operations case study', () => {
       expect(lifecycle).toContain(stage.body)
       expect(stage.handles).not.toHaveLength(0)
     }
-    expect(lifecycle).toMatch(/<div class="lifecycle-court" aria-hidden="true">/)
-    expect(lifecycle).toContain('preserveAspectRatio="xMidYMid slice"')
     expect(lifecycle).not.toMatch(/<h3[^>]*aria-hidden|<p[^>]*aria-hidden/)
-    expect(markup).toContain('class="court-hero-graphic volleyball-motion"')
   })
 
-  it('keeps the portable SVG flight position separate from ball rotation', () => {
+  it('owns one semantic rally stage and four ordered decorative landings', () => {
     const markup = render()
-    const motion = markup.slice(
-      markup.indexOf('class="court-hero-graphic volleyball-motion"'),
-      markup.indexOf('</figure>'),
+    const heroStart = markup.indexOf('class="court-hero"')
+    const heroEnd = markup.indexOf('</section>', heroStart)
+    const stageStart = markup.indexOf('data-rally-stage="true"')
+    const problemStart = markup.indexOf('class="case-section case-problem"')
+    const fallbackStart = markup.indexOf('data-rally-fallback="true"')
+    const fallbackEnd = markup.indexOf('</svg>', fallbackStart)
+    const fallback = markup.slice(fallbackStart, fallbackEnd)
+    const stageOpen = markup.slice(
+      markup.lastIndexOf('<div', stageStart),
+      markup.indexOf('>', stageStart) + 1,
+    )
+    const fallbackOpen = markup.slice(
+      markup.lastIndexOf('<svg', fallbackStart),
+      markup.indexOf('>', fallbackStart) + 1,
+    )
+    const landings = Array.from(
+      markup.matchAll(/data-rally-landing="([^"]+)"/g),
+      (match) => match[1],
     )
 
-    expect(motion).toContain('class="volleyball-flight-guide"')
-    expect(motion).toContain('class="volleyball-position"')
-    expect(motion).toContain('class="volleyball-spin"')
-    expect(motion.indexOf('class="volleyball-spin"')).toBeGreaterThan(
-      motion.indexOf('class="volleyball-position"'),
+    expect(markup).toMatch(
+      /<article class="voleyevents" data-rally-root="true">/,
     )
-    expect(motion).toContain('class="volleyball-impact"')
+    expect(markup.match(/data-rally-stage="true"/g)).toHaveLength(1)
+    expect(markup.match(/data-rally-fallback="true"/g)).toHaveLength(1)
+    expect(markup.match(/class="rally-plane(?:\s|\")/g)).toHaveLength(5)
+    expect(markup.slice(heroEnd, stageStart)).toBe(
+      '</section><div class="rally-stage" ',
+    )
+    expect(stageStart).toBeGreaterThan(heroEnd)
+    expect(stageStart).toBeLessThan(problemStart)
+    expect(landings).toEqual(
+      VOLEYEVENTS_LIFECYCLE.map(({ id }) => id),
+    )
+    expect(stageOpen).toContain('aria-hidden="true"')
+    expect(fallbackOpen).toContain('aria-hidden="true"')
+    expect(fallback).not.toMatch(/<(?:h[1-6]|p)\b/)
+    expect(markup).not.toMatch(
+      /volleyball-motion|lifecycle-court|lifecycle-layout|participant-token/,
+    )
+  })
+
+  it('keeps the static baseline free of canvas and motion runtime owners', () => {
+    const source = readFileSync(
+      new URL('./VoleyEvents.tsx', import.meta.url),
+      'utf8',
+    )
+
+    expect(source).not.toMatch(
+      /\b(?:gsap|three|canvas|requestAnimationFrame)\b/i,
+    )
+    expect(source).not.toMatch(/src\/playground|\.\.\/playground/)
   })
 
   it('preserves shared shell navigation on direct and trailing-slash routes', () => {

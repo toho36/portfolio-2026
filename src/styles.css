@@ -392,7 +392,6 @@ h1 {
   --court-lime: #bce933;
   --court-line: rgba(16, 32, 68, 0.2);
   min-width: 0;
-  overflow: clip;
   color: var(--court-ink);
   background:
     linear-gradient(90deg, transparent 49.85%, var(--court-line) 50%, transparent 50.15%),
@@ -417,82 +416,86 @@ h1 {
   isolation: isolate;
 }
 
-.court-hero > :not(.court-hero-graphic) {
+.court-hero::after {
+  position: absolute;
+  z-index: 0;
+  inset: 0 34% 0 0;
+  background: linear-gradient(90deg, var(--court-chalk) 82%, transparent);
+  content: '';
+  pointer-events: none;
+}
+
+.court-hero > * {
   position: relative;
   z-index: 1;
 }
 
-.court-hero-graphic {
-  position: absolute;
+.voleyevents > :not(.rally-stage) {
+  position: relative;
+  z-index: 1;
+}
+
+.rally-stage {
+  position: sticky;
   z-index: 0;
-  top: 5%;
-  right: 3%;
-  width: min(42vw, 38rem);
-  height: auto;
-  opacity: 0.9;
+  top: 5.5rem;
+  display: grid;
+  height: calc(100svh - 5.5rem);
+  min-height: 30rem;
+  min-width: 0;
+  place-items: center;
+  margin-top: calc(-100svh + 5.5rem);
+  overflow: hidden;
   pointer-events: none;
 }
 
-.volleyball-motion {
-  margin: 0;
-}
-
-.volleyball-motion svg {
+.rally-fallback {
   display: block;
   width: 100%;
   height: auto;
-  overflow: visible;
+  max-height: 100%;
+  overflow: hidden;
+  opacity: 0.74;
 }
 
-.volleyball-court,
-.volleyball-net path,
-.volleyball-flight-guide,
-.volleyball-seam {
+.rally-plane-surface,
+.rally-plane-lines,
+.rally-net,
+.rally-ball-seam {
   fill: none;
   vector-effect: non-scaling-stroke;
 }
 
-.volleyball-court {
+.rally-plane-surface {
+  fill: color-mix(in srgb, var(--court-chalk) 88%, transparent);
   stroke: var(--court-ink);
-  stroke-width: 3;
+  stroke-width: 2.5;
 }
 
-.volleyball-net path {
-  stroke: var(--court-orange);
-  stroke-width: 3;
-}
-
-.volleyball-flight-guide {
-  opacity: 0.32;
+.rally-plane-lines {
+  opacity: 0.42;
   stroke: var(--court-blue);
-  stroke-dasharray: 7 10;
-  stroke-linecap: round;
-  stroke-width: 3;
+  stroke-width: 2;
 }
 
-.volleyball-ball {
+.rally-net {
+  stroke: var(--court-orange);
+  stroke-linecap: round;
+  stroke-width: 2.5;
+}
+
+.rally-ball,
+.rally-landing-mark {
   fill: var(--court-lime);
   stroke: var(--court-ink);
-  stroke-width: 5;
+  stroke-width: 3;
   vector-effect: non-scaling-stroke;
 }
 
-.volleyball-seam {
+.rally-ball-seam {
   stroke: var(--court-ink);
   stroke-linecap: round;
-  stroke-width: 3;
-}
-
-.volleyball-impact {
-  fill: none;
-  stroke: var(--court-orange);
-  stroke-width: 4;
-  vector-effect: non-scaling-stroke;
-}
-
-.volleyball-position,
-.volleyball-spin {
-  will-change: transform;
+  stroke-width: 2;
 }
 
 .court-hero h1 {
@@ -600,81 +603,14 @@ h1 {
   max-width: 45rem;
 }
 
-.lifecycle-layout {
-  display: grid;
-  grid-template-columns: minmax(6rem, 10rem) minmax(0, 1fr);
-  gap: clamp(1rem, 4vw, 4rem);
-  align-items: stretch;
-  border-top: 2px solid var(--court-ink);
-  border-bottom: 2px solid var(--court-ink);
-}
-
-.lifecycle-court {
-  min-width: 0;
-  border-right: 1px solid var(--court-line);
-  background:
-    linear-gradient(90deg, transparent 49%, var(--court-blue) 49%, var(--court-blue) 51%, transparent 51%),
-    linear-gradient(var(--court-line) 1px, transparent 1px);
-  background-size: auto, 100% 25%;
-}
-
-.lifecycle-court svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  min-height: 55rem;
-  overflow: hidden;
-}
-
-.court-lane,
-.court-net,
-.court-stop,
-.participant-token path {
-  fill: none;
-  vector-effect: non-scaling-stroke;
-}
-
-.court-lane {
-  stroke: var(--court-blue);
-  stroke-width: 4;
-}
-
-.court-net {
-  stroke: var(--court-orange);
-  stroke-width: 6;
-  stroke-dasharray: 8 7;
-}
-
-.court-stop {
-  fill: var(--court-chalk);
-  stroke: var(--court-blue);
-  stroke-width: 3;
-}
-
-.participant-token {
-  transform: translateY(656px);
-  transform-box: fill-box;
-  transform-origin: center;
-  will-change: transform;
-}
-
-.participant-token circle {
-  fill: var(--court-lime);
-  stroke: var(--court-ink);
-  stroke-width: 4;
-  vector-effect: non-scaling-stroke;
-}
-
-.participant-token path {
-  stroke: var(--court-ink);
-  stroke-linecap: round;
-  stroke-width: 3;
-}
-
 .lifecycle-track {
+  display: grid;
   min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
   margin: 0;
   padding: 0;
+  border-top: 2px solid var(--court-ink);
+  border-bottom: 2px solid var(--court-ink);
   list-style: none;
 }
 
@@ -687,6 +623,20 @@ h1 {
   align-content: center;
   padding: clamp(2rem, 4vw, 3.5rem) clamp(0rem, 3vw, 3rem) clamp(2rem, 4vw, 3.5rem) 0;
   border-bottom: 1px solid var(--court-line);
+}
+
+.lifecycle-stage:nth-child(odd) {
+  width: min(72%, 52rem);
+  justify-self: start;
+  padding-right: clamp(1.5rem, 5vw, 5rem);
+  background: linear-gradient(90deg, var(--court-chalk) 76%, transparent);
+}
+
+.lifecycle-stage:nth-child(even) {
+  width: min(72%, 52rem);
+  justify-self: end;
+  padding-left: clamp(1.5rem, 5vw, 5rem);
+  background: linear-gradient(270deg, var(--court-chalk) 76%, transparent);
 }
 
 .lifecycle-stage:last-child {
@@ -774,32 +724,6 @@ h1 {
   letter-spacing: 0.08em;
   text-underline-offset: 0.35em;
   text-transform: uppercase;
-}
-
-@keyframes participant-advance {
-  from {
-    transform: translateY(0);
-  }
-
-  to {
-    transform: translateY(656px);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: view()) {
-    .lifecycle {
-      view-timeline-name: --lifecycle-progress;
-      view-timeline-axis: block;
-    }
-
-    .participant-token {
-      animation: participant-advance linear both;
-      animation-duration: auto;
-      animation-timeline: --lifecycle-progress;
-      animation-range: entry 0% exit 100%;
-    }
-  }
 }
 
 .goal-loop {
@@ -1705,14 +1629,21 @@ footer p {
     align-content: start;
   }
 
-  .court-hero-graphic {
-    position: static;
-    grid-row: 5;
-    grid-column: 1;
-    justify-self: end;
-    width: min(48vw, 11rem);
-    margin-top: 1rem;
-    opacity: 0.76;
+  .rally-stage {
+    top: 10rem;
+    height: 42svh;
+    min-height: 0;
+    margin-top: 0;
+  }
+
+  .rally-fallback {
+    width: 100%;
+    height: auto;
+    max-height: 100%;
+  }
+
+  .voleyevents > :not(.rally-stage) {
+    background-color: var(--court-chalk);
   }
 
   .section-heading,
@@ -1753,8 +1684,7 @@ footer p {
   }
 
   .case-section,
-  .lifecycle-heading,
-  .lifecycle-stage {
+  .lifecycle-heading {
     grid-template-columns: 1fr;
   }
 
@@ -1780,19 +1710,20 @@ footer p {
     grid-row: auto;
   }
 
-  .lifecycle-layout {
-    grid-template-columns: minmax(4.5rem, 5.5rem) minmax(0, 1fr);
-    gap: 1rem;
+  .lifecycle-track {
+    grid-template-columns: 1fr;
   }
 
-  .lifecycle-court svg {
+  .lifecycle-stage,
+  .lifecycle-stage:nth-child(odd),
+  .lifecycle-stage:nth-child(even) {
     width: 100%;
-    height: 100%;
-  }
-
-  .lifecycle-stage {
+    grid-template-columns: 1fr;
+    justify-self: stretch;
     gap: 1rem;
+    padding-left: 0;
     padding-right: 0;
+    background: none;
   }
 
   .stage-heading {
@@ -1988,9 +1919,10 @@ footer p {
     transform: none;
   }
 
-  .participant-token {
+  .rally-stage,
+  .rally-fallback {
     opacity: 1;
-    transform: translateY(656px) !important;
+    transform: none;
   }
 
   .goal-loop .run-marker {
