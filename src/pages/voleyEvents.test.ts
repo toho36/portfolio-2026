@@ -1,6 +1,5 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import App from '../App'
 import { ROUTES } from '../content/routes'
@@ -12,11 +11,6 @@ import {
 function render(path = '/voleyevents') {
   return renderToStaticMarkup(createElement(App, { initialPath: path }))
 }
-
-const operationsAsset = readFileSync(
-  new URL('../../public/assets/voleyevents-operations.svg', import.meta.url),
-  'utf8',
-)
 
 describe('VoleyEvents Match Operations case study', () => {
   it('opens with the sourced product identity and a descriptive route title', () => {
@@ -105,24 +99,23 @@ describe('VoleyEvents Match Operations case study', () => {
     expect(lifecycle).toMatch(/<div class="lifecycle-court" aria-hidden="true">/)
     expect(lifecycle).toContain('preserveAspectRatio="xMidYMid slice"')
     expect(lifecycle).not.toMatch(/<h3[^>]*aria-hidden|<p[^>]*aria-hidden/)
-    expect(markup).toContain('src="/assets/voleyevents-operations.svg"')
+    expect(markup).toContain('class="court-hero-graphic volleyball-motion"')
   })
 
-  it('keeps translation on the court lane separate from ball rotation', () => {
-    const rally = operationsAsset.match(/@keyframes rally\s*\{([^@]+)\}/)?.[1]
-    const spin = operationsAsset.match(/@keyframes spin\s*\{([^@]+)\}/)?.[1]
-
-    expect(operationsAsset).toContain('class="ball-position"')
-    expect(operationsAsset).toContain('class="lane" d="M150 490L490 150"')
-    expect(rally).toBeDefined()
-    expect(spin).toBeDefined()
-    expect(rally).not.toContain('rotate(')
-    expect(spin).not.toContain('translate(')
-    expect(rally).toContain('translate(-55px, 55px)')
-    expect(rally).toContain('translate(55px, -55px)')
-    expect(operationsAsset).toContain(
-      '.ball-position { transform: translate(170px, -170px) }',
+  it('keeps the portable SVG flight position separate from ball rotation', () => {
+    const markup = render()
+    const motion = markup.slice(
+      markup.indexOf('class="court-hero-graphic volleyball-motion"'),
+      markup.indexOf('</figure>'),
     )
+
+    expect(motion).toContain('class="volleyball-flight-guide"')
+    expect(motion).toContain('class="volleyball-position"')
+    expect(motion).toContain('class="volleyball-spin"')
+    expect(motion.indexOf('class="volleyball-spin"')).toBeGreaterThan(
+      motion.indexOf('class="volleyball-position"'),
+    )
+    expect(motion).toContain('class="volleyball-impact"')
   })
 
   it('preserves shared shell navigation on direct and trailing-slash routes', () => {
@@ -153,6 +146,6 @@ describe('VoleyEvents Match Operations case study', () => {
       /customer quote|testimonial|players|payments total/i,
     )
     expect(markup).not.toMatch(/<canvas|<video|data:image|dashboard screenshot/i)
-    expect(markup.match(/<img/g)).toHaveLength(1)
+    expect(markup).not.toMatch(/<img/)
   })
 })

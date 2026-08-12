@@ -1,5 +1,6 @@
 import type { MouseEvent, ReactNode } from 'react'
 import { VOLEYEVENTS } from '../content/voleyevents'
+import { VolleyballMotion } from '../voleyevents/VolleyballMotion'
 
 interface VoleyEventsPageProps {
   readonly onNavigate: (event: MouseEvent<HTMLAnchorElement>) => void
@@ -35,12 +36,7 @@ export function VoleyEventsPage({ onNavigate }: VoleyEventsPageProps) {
         aria-labelledby="voleyevents-title"
         data-reveal
       >
-        <img
-          alt=""
-          aria-hidden="true"
-          className="court-hero-graphic"
-          src="/assets/voleyevents-operations.svg"
-        />
+        <VolleyballMotion />
         <p className="eyebrow">{VOLEYEVENTS.hero.eyebrow}</p>
         <h1 id="voleyevents-title">{VOLEYEVENTS.hero.title}</h1>
         <p className="court-hero-lede">{VOLEYEVENTS.hero.lede}</p>

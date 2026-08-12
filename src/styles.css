@@ -433,6 +433,68 @@ h1 {
   pointer-events: none;
 }
 
+.volleyball-motion {
+  margin: 0;
+}
+
+.volleyball-motion svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.volleyball-court,
+.volleyball-net path,
+.volleyball-flight-guide,
+.volleyball-seam {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.volleyball-court {
+  stroke: var(--court-ink);
+  stroke-width: 3;
+}
+
+.volleyball-net path {
+  stroke: var(--court-orange);
+  stroke-width: 3;
+}
+
+.volleyball-flight-guide {
+  opacity: 0.32;
+  stroke: var(--court-blue);
+  stroke-dasharray: 7 10;
+  stroke-linecap: round;
+  stroke-width: 3;
+}
+
+.volleyball-ball {
+  fill: var(--court-lime);
+  stroke: var(--court-ink);
+  stroke-width: 5;
+  vector-effect: non-scaling-stroke;
+}
+
+.volleyball-seam {
+  stroke: var(--court-ink);
+  stroke-linecap: round;
+  stroke-width: 3;
+}
+
+.volleyball-impact {
+  fill: none;
+  stroke: var(--court-orange);
+  stroke-width: 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.volleyball-position,
+.volleyball-spin {
+  will-change: transform;
+}
+
 .court-hero h1 {
   max-width: 14ch;
   margin-bottom: 1.5rem;
