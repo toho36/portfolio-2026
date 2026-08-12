@@ -1,5 +1,133 @@
-import type { MouseEvent, ReactNode } from 'react'
+import { useEffect, useRef, type MouseEvent, type ReactNode } from 'react'
 import { VOLEYEVENTS } from '../content/voleyevents'
+
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
+
+interface VoleyEventsRuntimeOwner {
+  destroy(): void
+}
+
+interface VoleyEventsRuntimeModule {
+  createRallyRuntimeOwner(options: {
+    readonly elements: {
+      readonly root: HTMLElement
+      readonly stage: HTMLElement
+    }
+    readonly window?: Window
+    readonly media: MediaQueryList
+  }): VoleyEventsRuntimeOwner
+}
+
+interface VoleyEventsRuntimeBoundaryOptions {
+  readonly elements: {
+    readonly root: HTMLElement
+    readonly stage: HTMLElement
+  }
+  readonly window?: Window
+  readonly media: MediaQueryList
+  readonly importRuntime: () => Promise<VoleyEventsRuntimeModule>
+}
+
+/** Page-local eligibility gate; it owns no motion or scene implementation. */
+export function createVoleyEventsRuntimeBoundary(
+  options: VoleyEventsRuntimeBoundaryOptions,
+): VoleyEventsRuntimeOwner {
+  const { elements, media } = options
+  const previousState = elements.root.dataset.rallyRuntime
+  let generation = 0
+  let reduced = media.matches
+  let pending: { canceled: boolean } | null = null
+  let owner: VoleyEventsRuntimeOwner | null = null
+  let destroyed = false
+
+  function invalidateCurrent() {
+    generation += 1
+    if (pending) pending.canceled = true
+    pending = null
+    owner?.destroy()
+    owner = null
+  }
+
+  function requestOwner() {
+    if (destroyed || media.matches || pending || owner) return
+
+    const requestGeneration = ++generation
+    const load = { canceled: false }
+    pending = load
+    const isActive = () =>
+      !destroyed &&
+      pending === load &&
+      !load.canceled &&
+      !media.matches &&
+      requestGeneration === generation
+
+    let modulePromise: Promise<VoleyEventsRuntimeModule>
+    try {
+      modulePromise = options.importRuntime()
+    } catch {
+      pending = null
+      elements.root.dataset.rallyRuntime = 'static'
+      return
+    }
+
+    void modulePromise.then(
+      (module) => {
+        if (!isActive()) return
+        pending = null
+        try {
+          owner = module.createRallyRuntimeOwner({
+            elements,
+            window: options.window,
+            media,
+          })
+        } catch {
+          if (
+            !destroyed &&
+            !load.canceled &&
+            !media.matches &&
+            requestGeneration === generation
+          ) {
+            elements.root.dataset.rallyRuntime = 'static'
+          }
+        }
+      },
+      () => {
+        if (!isActive()) return
+        pending = null
+        elements.root.dataset.rallyRuntime = 'static'
+      },
+    )
+  }
+
+  function applyMotionPreference() {
+    if (destroyed || reduced === media.matches) return
+    reduced = media.matches
+    if (reduced) {
+      invalidateCurrent()
+      elements.root.dataset.rallyRuntime = 'static'
+    } else {
+      requestOwner()
+    }
+  }
+
+  media.addEventListener('change', applyMotionPreference)
+  if (reduced) elements.root.dataset.rallyRuntime = 'static'
+  else requestOwner()
+
+  return Object.freeze({
+    destroy() {
+      if (destroyed) return
+      destroyed = true
+      invalidateCurrent()
+      media.removeEventListener('change', applyMotionPreference)
+      if (previousState === undefined) {
+        delete elements.root.dataset.rallyRuntime
+      } else {
+        elements.root.dataset.rallyRuntime = previousState
+      }
+    },
+  })
+}
 
 interface VoleyEventsPageProps {
   readonly onNavigate: (event: MouseEvent<HTMLAnchorElement>) => void
@@ -28,8 +156,31 @@ function RouteAnchor({
 }
 
 export function VoleyEventsPage({ onNavigate }: VoleyEventsPageProps) {
+  const rootRef = useRef<HTMLElement>(null)
+  const stageRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const root = rootRef.current
+    const stage = stageRef.current
+    if (!root || !stage) return
+
+    const media = window.matchMedia(REDUCED_MOTION_QUERY)
+    const boundary = createVoleyEventsRuntimeBoundary({
+      elements: { root, stage },
+      window,
+      media,
+      importRuntime: () => import('../voleyevents/loadRallyRuntime'),
+    })
+
+    return () => boundary.destroy()
+  }, [])
+
   return (
-    <article className="voleyevents" data-rally-root="true">
+    <article
+      className="voleyevents"
+      data-rally-root="true"
+      ref={rootRef}
+    >
       <section
         className="court-hero"
         aria-labelledby="voleyevents-title"
@@ -47,6 +198,7 @@ export function VoleyEventsPage({ onNavigate }: VoleyEventsPageProps) {
         className="rally-stage"
         data-rally-stage="true"
         aria-hidden="true"
+        ref={stageRef}
       >
         <svg
           className="rally-fallback"

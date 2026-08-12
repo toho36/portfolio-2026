@@ -1,13 +1,14 @@
 import { readFileSync } from 'node:fs'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import App from '../App'
 import { ROUTES } from '../content/routes'
 import {
   VOLEYEVENTS,
   VOLEYEVENTS_LIFECYCLE,
 } from '../content/voleyevents'
+import { createVoleyEventsRuntimeBoundary } from './VoleyEvents'
 
 function render(path = '/voleyevents') {
   return renderToStaticMarkup(createElement(App, { initialPath: path }))
@@ -155,6 +156,33 @@ describe('VoleyEvents Match Operations case study', () => {
     expect(source).not.toMatch(/src\/playground|\.\.\/playground/)
   })
 
+  it('owns exactly one eligible route-local orchestrator import shape', () => {
+    const pageSource = readFileSync(
+      new URL('./VoleyEvents.tsx', import.meta.url),
+      'utf8',
+    )
+    const appSource = readFileSync(
+      new URL('../App.tsx', import.meta.url),
+      'utf8',
+    )
+
+    expect(
+      pageSource.match(/import\('\.\.\/voleyevents\/loadRallyRuntime'\)/g),
+    ).toHaveLength(1)
+    expect(pageSource).not.toMatch(
+      /(?:import|export)[^\n]*from ['"]\.\.\/voleyevents\//,
+    )
+    expect(pageSource).not.toMatch(
+      /from ['"](?:gsap|three)(?:\/[^'"]+)?['"]|\.\.\/playground/,
+    )
+    expect(appSource).not.toMatch(
+      /loadRallyRuntime|(?:from|import\()\s*['"](?:gsap|three)/,
+    )
+    expect(pageSource.indexOf('media.matches')).toBeLessThan(
+      pageSource.indexOf("import('../voleyevents/loadRallyRuntime')"),
+    )
+  })
+
   it('preserves shared shell navigation on direct and trailing-slash routes', () => {
     for (const path of ['/voleyevents', '/voleyevents/']) {
       const markup = render(path)
@@ -171,6 +199,7 @@ describe('VoleyEvents Match Operations case study', () => {
       expect(markup).toContain('href="/goal-loop"')
       expect(markup).toContain('Back to homepage')
       expect(markup).toContain('Next: Goal Loop')
+      expect(markup).not.toMatch(/<canvas|data-rally-runtime/)
     }
   })
 
@@ -184,5 +213,198 @@ describe('VoleyEvents Match Operations case study', () => {
     )
     expect(markup).not.toMatch(/<canvas|<video|data:image|dashboard screenshot/i)
     expect(markup).not.toMatch(/<img/)
+  })
+})
+
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  let reject!: (reason: unknown) => void
+  const promise = new Promise<T>((next, fail) => {
+    resolve = next
+    reject = fail
+  })
+  return { promise, reject, resolve }
+}
+
+function boundaryHarness(initiallyReduced = false) {
+  let reduced = initiallyReduced
+  const listeners = new Set<() => void>()
+  const root = { dataset: {} } as HTMLElement
+  const stage = {} as HTMLElement
+  const media = {
+    get matches() {
+      return reduced
+    },
+    addEventListener(_type: string, listener: () => void) {
+      listeners.add(listener)
+    },
+    removeEventListener(_type: string, listener: () => void) {
+      listeners.delete(listener)
+    },
+  } as MediaQueryList
+
+  return {
+    elements: { root, stage },
+    listeners,
+    media,
+    root,
+    setReduced(value: boolean) {
+      reduced = value
+      listeners.forEach((listener) => listener())
+    },
+  }
+}
+
+async function settleBoundary() {
+  await Promise.resolve()
+  await Promise.resolve()
+  await Promise.resolve()
+}
+
+describe('VoleyEvents page runtime boundary', () => {
+  it('defers importing until eligibility and accepts one fresh preference generation', async () => {
+    const harness = boundaryHarness(true)
+    const destroyOwner = vi.fn()
+    const createOwner = vi.fn(() => {
+      harness.root.dataset.rallyRuntime = 'ready'
+      return { destroy: destroyOwner }
+    })
+    const imports = [
+      deferred<{ createRallyRuntimeOwner: typeof createOwner }>(),
+      deferred<{ createRallyRuntimeOwner: typeof createOwner }>(),
+    ]
+    let importIndex = 0
+    const boundary = createVoleyEventsRuntimeBoundary({
+      ...harness,
+      importRuntime: vi.fn(() => imports[importIndex++].promise),
+    })
+
+    expect(importIndex).toBe(0)
+    expect(harness.root.dataset.rallyRuntime).toBe('static')
+    harness.setReduced(false)
+    harness.setReduced(true)
+    harness.setReduced(false)
+    expect(importIndex).toBe(2)
+
+    imports[1].resolve({ createRallyRuntimeOwner: createOwner })
+    await settleBoundary()
+    expect(createOwner).toHaveBeenCalledOnce()
+    expect(harness.root.dataset.rallyRuntime).toBe('ready')
+
+    imports[0].resolve({ createRallyRuntimeOwner: createOwner })
+    await settleBoundary()
+    expect(createOwner).toHaveBeenCalledOnce()
+    expect(destroyOwner).not.toHaveBeenCalled()
+    boundary.destroy()
+  })
+
+  it('contains current, canceled, and stale import failures', async () => {
+    const currentHarness = boundaryHarness()
+    const currentFailure = deferred<never>()
+    const current = createVoleyEventsRuntimeBoundary({
+      ...currentHarness,
+      importRuntime: () => currentFailure.promise,
+    })
+    currentFailure.reject(new Error('current import failed'))
+    await settleBoundary()
+    expect(currentHarness.root.dataset.rallyRuntime).toBe('static')
+    current.destroy()
+
+    const canceledHarness = boundaryHarness()
+    const canceledFailure = deferred<never>()
+    const canceled = createVoleyEventsRuntimeBoundary({
+      ...canceledHarness,
+      importRuntime: () => canceledFailure.promise,
+    })
+    canceled.destroy()
+    canceledFailure.reject(new Error('canceled import failed'))
+    await settleBoundary()
+    expect(canceledHarness.root.dataset.rallyRuntime).toBeUndefined()
+
+    const staleHarness = boundaryHarness()
+    const createStaleOwner = vi.fn(() => ({ destroy: vi.fn() }))
+    const staleImports = [
+      deferred<{
+        createRallyRuntimeOwner: () => { destroy(): void }
+      }>(),
+      deferred<{
+        createRallyRuntimeOwner: () => { destroy(): void }
+      }>(),
+    ]
+    let importIndex = 0
+    const stale = createVoleyEventsRuntimeBoundary({
+      ...staleHarness,
+      importRuntime: () => staleImports[importIndex++].promise,
+    })
+    staleHarness.setReduced(true)
+    staleHarness.setReduced(false)
+    staleImports[1].resolve({
+      createRallyRuntimeOwner() {
+        staleHarness.root.dataset.rallyRuntime = 'ready'
+        return createStaleOwner()
+      },
+    })
+    await settleBoundary()
+    staleImports[0].reject(new Error('old import failed'))
+    await settleBoundary()
+    expect(staleHarness.root.dataset.rallyRuntime).toBe('ready')
+    stale.destroy()
+  })
+
+  it('contains owner construction failure and destroys a live owner once', async () => {
+    const failedHarness = boundaryHarness()
+    const failed = createVoleyEventsRuntimeBoundary({
+      ...failedHarness,
+      importRuntime: async () => ({
+        createRallyRuntimeOwner() {
+          throw new Error('owner failed')
+        },
+      }),
+    })
+    await settleBoundary()
+    expect(failedHarness.root.dataset.rallyRuntime).toBe('static')
+    failed.destroy()
+
+    const liveHarness = boundaryHarness()
+    const destroyOwner = vi.fn()
+    const live = createVoleyEventsRuntimeBoundary({
+      ...liveHarness,
+      importRuntime: async () => ({
+        createRallyRuntimeOwner() {
+          liveHarness.root.dataset.rallyRuntime = 'ready'
+          return { destroy: destroyOwner }
+        },
+      }),
+    })
+    await settleBoundary()
+    liveHarness.setReduced(true)
+    liveHarness.setReduced(true)
+    live.destroy()
+    expect(destroyOwner).toHaveBeenCalledOnce()
+    expect(liveHarness.listeners.size).toBe(0)
+  })
+
+  it('keeps StrictMode-style stale fulfillment from constructing an owner', async () => {
+    const harness = boundaryHarness()
+    const createOwner = vi.fn(() => ({ destroy: vi.fn() }))
+    const firstImport = deferred<{
+      createRallyRuntimeOwner: typeof createOwner
+    }>()
+    const first = createVoleyEventsRuntimeBoundary({
+      ...harness,
+      importRuntime: () => firstImport.promise,
+    })
+    first.destroy()
+    const second = createVoleyEventsRuntimeBoundary({
+      ...harness,
+      importRuntime: async () => ({ createRallyRuntimeOwner: createOwner }),
+    })
+
+    await settleBoundary()
+    firstImport.resolve({ createRallyRuntimeOwner: createOwner })
+    await settleBoundary()
+    expect(createOwner).toHaveBeenCalledOnce()
+    second.destroy()
+    expect(harness.listeners.size).toBe(0)
   })
 })

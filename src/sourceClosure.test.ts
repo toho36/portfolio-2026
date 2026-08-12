@@ -26,14 +26,16 @@ const GLOBALLY_FORBIDDEN_DEPENDENCIES = [
   '@types/three',
 ] as const
 
-const PLAYGROUND_SCOPED_DEPENDENCIES = [
+const ROUTE_SCOPED_DEPENDENCIES = [
   'gsap',
   'three',
 ] as const
 
+const ROUTE_SCOPED_ROOTS = ['./playground/', './voleyevents/'] as const
+
 const ABSENT_DEPENDENCIES = [
   ...GLOBALLY_FORBIDDEN_DEPENDENCIES,
-  ...PLAYGROUND_SCOPED_DEPENDENCIES,
+  ...ROUTE_SCOPED_DEPENDENCIES,
 ] as const
 
 const PACKAGE_ABSENT_DEPENDENCIES = [
@@ -87,9 +89,12 @@ function importsForbiddenDependency(
   if (!importsRetiredDependency(source, dependency)) return false
 
   const routeScoped = (
-    PLAYGROUND_SCOPED_DEPENDENCIES as readonly string[]
+    ROUTE_SCOPED_DEPENDENCIES as readonly string[]
   ).includes(dependency)
-  return !routeScoped || !modulePath.startsWith('./playground/')
+  return (
+    !routeScoped ||
+    !ROUTE_SCOPED_ROOTS.some((root) => modulePath.startsWith(root))
+  )
 }
 
 describe('retired source closure', () => {
@@ -141,6 +146,7 @@ describe('retired source closure', () => {
 
     expect(importingModules).toEqual([
       './playground/loadRelayRuntime.ts',
+      './voleyevents/loadRallyMotion.ts',
     ])
   })
 
@@ -152,32 +158,40 @@ describe('retired source closure', () => {
       )
       .filter(([, source]) => importsRetiredDependency(source, 'three'))
       .map(([path]) => path)
+      .sort()
 
     expect(importingModules).toEqual([
       './playground/loadSystemFieldRuntime.ts',
+      './voleyevents/loadRallyThree.ts',
     ])
-    expect(sourceModules['./playground/loadSystemFieldRuntime.ts'].match(
-      /import\(['"]three['"]\)/g,
-    )).toHaveLength(1)
-    expect(sourceModules['./playground/loadRelayRuntime.ts']).not.toContain(
-      "import('three')",
-    )
-    expect(sourceModules['./playground/three.d.ts']).toContain(
-      "declare module 'three'",
+    for (const loader of importingModules) {
+      expect(
+        sourceModules[loader].match(/import\(['"]three['"]\)/g),
+      ).toHaveLength(1)
+    }
+    for (const loader of [
+      './playground/loadRelayRuntime.ts',
+      './voleyevents/loadRallyMotion.ts',
+    ]) {
+      expect(sourceModules[loader]).not.toContain("import('three')")
+    }
+    expect(sourceModules).not.toHaveProperty('./playground/three.d.ts')
+    expect(sourceModules['./three.d.ts']).toBe(
+      '// Three intentionally ships without declarations. Keep this route-local\n' +
+        '// dynamic-import seam independent of an undeclared @types/three install.\n' +
+        "declare module 'three'\n",
     )
   })
 
   it('permits gsap and three only below the route-local runtime root', () => {
-    for (const dependency of PLAYGROUND_SCOPED_DEPENDENCIES) {
+    for (const dependency of ROUTE_SCOPED_DEPENDENCIES) {
       const source = `import value from '${dependency}/subpath'`
 
-      expect(
-        importsForbiddenDependency(
-          './playground/runtime.ts',
-          source,
-          dependency,
-        ),
-      ).toBe(false)
+      for (const root of ROUTE_SCOPED_ROOTS) {
+        expect(
+          importsForbiddenDependency(`${root}runtime.ts`, source, dependency),
+        ).toBe(false)
+      }
       expect(
         importsForbiddenDependency(
           './pages/Playground.tsx',
