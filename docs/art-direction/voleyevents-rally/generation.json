@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "ticket": "t_baefbb35",
+  "generatedAt": "2026-08-13",
+  "provider": "openai-codex",
+  "model": "gpt-image-2-high",
+  "paidFallbackUsed": false,
+  "usage": "Concept moodframes only; not final geometry, copy, logos, textures, fallback, or production assets.",
+  "candidates": [
+    {
+      "id": "A",
+      "file": "a-macro-impact-tunnel.png",
+      "sha256": "457d38d947c800bfdd62f4a881124d18a16006e96b5d02b4f5a9b25ceb7df8b9",
+      "width": 1536,
+      "height": 1024,
+      "prompt": "Art-direction moodframe for an authored interactive portfolio case study about recreational volleyball operations. Challenger A: one enormous close-camera volleyball with accurate renderer-native seam language implied but NO readable text or logos, flying into a deep sculptural impact-wave tunnel made from folded court lines and warm off-white court planes. Alternating cobalt blue and vermilion impact energy, navy shadows, editorial brutalist composition, dramatic depth and occlusion, high-end real-time Three.js visual target, clean negative reading zone for future HTML copy, no UI, no lettering, no watermark, no generic cyberpunk, no particles wallpaper."
+    },
+    {
+      "id": "B",
+      "file": "b-impossible-court-staircase.png",
+      "sha256": "82ad6beaedf1a4083e8f1636b4877a5b7ab53c08c2216d127f18101f96eea742",
+      "width": 1024,
+      "height": 1536,
+      "prompt": "Art-direction moodframe for an authored interactive portfolio case study about recreational volleyball operations. Challenger B: an impossible volleyball court staircase folding through deep perspective, each alternating left/right court plane becoming a spatial landing for semantic HTML content later, one volleyball frozen at a decisive impact between planes, cobalt blue court structure, vermilion impact wave, warm chalk/off-white surfaces, deep navy shadows, editorial brutalist typography space but NO text or logos, unmistakable depth payoff, high-end real-time Three.js target, no UI, no lettering, no watermark, no generic cyberpunk, no random wallpaper."
+    },
+    {
+      "id": "C",
+      "file": "c-instanced-rally-field.png",
+      "sha256": "33a75847c77f9fadf36535347b8ce7002c0ae3512f8cd5a786df3be13110adad",
+      "width": 1536,
+      "height": 1024,
+      "prompt": "Art-direction moodframe for an authored interactive portfolio case study about recreational volleyball operations. Challenger C: a disciplined instanced rally field of volleyball-like nodes, one bright ball injects a wave that propagates through a 3D court topology and folds into a corridor, cobalt blue, vermilion, warm chalk and deep navy palette, editorial composition with protected empty zone for future semantic HTML, clear depth and spatial propagation, high-end renderer-native Three.js target, NO text, logos, UI, watermark, generic cyberpunk, or random particle wallpaper."
+    }
+  ]
+}

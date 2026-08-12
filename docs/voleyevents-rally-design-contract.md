@@ -1,0 +1,219 @@
+# `/voleyevents` rally design contract
+
+Status: **APPROVED — independent Opus round 3 and owner approval, 2026-08-13**
+Kanban authority: `t_baefbb35`
+Selected challenger: **B — Impossible Court Staircase**
+
+This contract concerns only the portfolio route `/voleyevents` in this repository. It does not authorize or touch the VoleyEvents product repository. Approval permits serial child-ticket execution; it does not permit MiniMax rendering, push, or deploy.
+
+## Reconciliation
+
+Commit `09eb197` replaced the old hero image with a local SVG volleyball flight. It provides a useful first beat: separate translation/spin transforms, impact response, reduced-motion state, offscreen pause, teardown, semantic route content, and zero canvas. It does not satisfy this ticket because it loops independently inside the hero and does not connect the case-study sections through one native-scroll spatial rally.
+
+Fresh baseline on `09eb197` HEAD:
+
+- `npm run test`: 179/179 pass;
+- `npm run check`: pass;
+- `npm run build`: pass;
+- `git diff --check`: pass;
+- desktop runtime: localized hero SVG, zero canvas, four semantic lifecycle stages, zero horizontal overflow.
+
+The current hero flight is not retained as a second autonomous animation. `VolleyballMotion.tsx`, `ballFlight.ts`, and `ballFlight.test.ts` are retired in child 1; the static fallback uses authored SVG/CSS with no sampled flight loop.
+
+The existing `.lifecycle-court` lane and `.participant-token` view-timeline are also retired in child 1. Their four stops are subsumed by the one staircase fallback/runtime, so the page never has two scroll-driven decorative owners. `voleyEvents.test.ts` replaces all five retired sites: line 81 participant-token count, lines 99–100 lifecycle-court container/aspect ratio, line 102 volleyball-motion class, and the complete position/spin/impact test at lines 105–119. Their replacement proves exactly one static staircase container and four landing markers. `styles.test.ts` replaces the complete current `VoleyEvents lifecycle styles` block at lines 179–230 with static staircase containment, alternating desktop reading zones, one-column mobile reading, and reduced-motion visibility assertions.
+
+## Challenger decision
+
+Three art-direction moodframes were compared as stills, not runtime proof:
+
+| Challenger | Strength | Decisive failure or win | Verdict |
+| --- | --- | --- | --- |
+| A — macro volleyball + impact-wave tunnel | Immediate object identity, dramatic close-camera material | High risk of becoming one sphere following a curve; weak coupling to semantic section structure | Reject |
+| B — impossible court staircase folding in depth | Court planes create unmistakable depth and literal alternating landings for HTML sections | More authored geometry/camera work, but the cost directly buys the route's narrative structure | **Select** |
+| C — instanced ball/node rally field | Efficient propagation and obvious instancing path | Visually and mechanically duplicates `/playground` System Field; risks wallpaper | Reject |
+
+Moodframes are repository-persisted art direction only:
+
+- A: `docs/art-direction/voleyevents-rally/a-macro-impact-tunnel.png`
+- B: `docs/art-direction/voleyevents-rally/b-impossible-court-staircase.png`
+- C: `docs/art-direction/voleyevents-rally/c-instanced-rally-field.png`
+- provenance, prompts, dimensions, model, and SHA-256: `docs/art-direction/voleyevents-rally/generation.json`
+
+They contain no approved copy, logo, final volleyball geometry, texture, or production asset. No generated image is required by the production runtime.
+
+## Three-second mechanic
+
+**Scroll serves one rally: the ball impacts an alternating court landing, the landing folds into depth, and the next semantic case-study block becomes the next reachable step; reverse scroll reconstructs every prior impact and fold exactly.**
+
+Input → response → payoff:
+
+1. Native scroll immediately advances or reverses ball spin, camera parallax, and the active landing.
+2. At each of four deterministic impact stops, one bounded vermilion wave travels across the struck plane while the next court plane unfolds from depth.
+3. The complete payoff is an impossible staircase made from the same four lifecycle states already present in semantic HTML, ending with the full connected operations lifecycle visible as one spatial ascent.
+
+No tutorial, wheel/touch interception, smooth-scroll owner, custom cursor, autoplay sound, direct timeline seek, or independent looping hero. A route-scoped CSS `position: sticky` visual stage is allowed; ScrollTrigger `pin`/`pinSpacing` and any scroll-position rewriting are forbidden.
+
+## Visual direction
+
+Name: **Impossible Match / Operational Ascent**.
+
+Reuse route colors: warm chalk `#f7f3e8`, court ink `#102044`, cobalt `#1557ff`, vermilion `#ff5a36`, acid ball `#c9ff36`. Three owns court planes, ball, light, shadow/occlusion, impact waves, and camera. HTML owns every word, heading, link, status, and control.
+
+Scene grammar:
+
+- one authored volleyball with renderer-native seams;
+- five reusable court-plane meshes: hero serve plus four lifecycle landings;
+- alternating left/right depth, not random positions;
+- one restrained key light, one fill/hemisphere light, contact-shadow strategy only if it stays inside budget;
+- no particles, node field, bloom stack, textures, GLB, physics, video, generic corridor kit, generated text/logo, HUD, or canvas copy.
+
+The desktop reading zone alternates with the landing direction. A route-scoped gradient may protect only the active text zone. Mobile uses one DOM column; the sticky visual stage occupies a bounded upper 42svh zone behind no text, followed by each full-width semantic block in normal flow. Canvas and fallback never cross the text measure.
+
+## Stage topology and DOM seam
+
+Child 1 creates the complete stable markup consumed by later children:
+
+- `<article className="voleyevents" data-rally-root="true">` remains the route root.
+- One `<div className="rally-stage" data-rally-stage="true" aria-hidden="true">` is the first child after the hero section and before the problem section. It is route-level, CSS sticky, and visually spans hero serve through the four later lifecycle landings without reordering DOM content.
+- The stage contains one repository-authored `<svg className="rally-fallback" data-rally-fallback="true">` with exactly five visual planes: hero serve plus four `data-rally-landing` markers.
+- Child 3 appends exactly one `<canvas className="rally-canvas">` inside that same stage; no second mount point exists.
+- `#lifecycle` keeps its heading and `<ol className="lifecycle-track">`, but its old `.lifecycle-layout`/`.lifecycle-court` wrapper is removed. Child 1 owns the alternating desktop `.lifecycle-stage:nth-child(odd/even)` reading-zone layout and the single-column mobile layout, including their `styles.test.ts` assertions.
+- Child 2's page effect receives only refs to `[data-rally-root]` and `[data-rally-stage]`; runtime modules query neither document nor playground markup.
+
+At mobile widths the stage is `position: sticky`, `top` below the shared header, `height: 42svh`, and appears as a separate visual band before the currently reached semantic block. The canvas uses `touch-action: pan-y`. No behind-text or side-by-side mobile variant exists.
+
+## Semantic and interaction contract
+
+The existing source order remains authoritative: hero → problem → constraints → decisions → lifecycle introduction → four ordered lifecycle stages → evidence → status → navigation. The visual staircase may align to these blocks but must not reorder, clone, hide, or move essential text into canvas.
+
+- Canvas is `aria-hidden`, unfocusable, and decorative enhancement.
+- Existing native links, direct fragments, modified clicks, browser Back/Forward, skip link, and route navigation remain ordinary HTML.
+- Keyboard uses native scrolling; no `role=application` and no canvas focus.
+- Pointer/touch may add bounded ball spin/parallax only while the scene is visible. It never captures vertical touch scrolling or changes route state.
+- Any native scroll delta is truth. GSAP derives one playhead from measured document geometry.
+- Forward, reverse, and rapid interruption set the same deterministic scene state for the same normalized progress. No catch-up lag or snap-back.
+- Resize/orientation recomputes measured geometry once after stable layout and reapplies current native progress.
+
+## Motion ownership and lifecycle
+
+GSAP + ScrollTrigger are justified because one progress value must coordinate DOM landing states, camera, court geometry, ball transforms, impact uniforms, explicit interruption, and resize refresh. CSS timelines cannot own the Three scene. Three and GSAP remain separately loaded through route-local modules under `src/voleyevents/`; nothing imports implementation from `src/playground/`.
+
+The route-level code boundary is mandatory: the static `VoleyEventsPage` effect dynamically imports exactly one `../voleyevents/loadRallyRuntime` orchestrator after reduced-motion eligibility. App and the page never statically import the orchestrator, adaptive controller, GSAP, or Three. This keeps those bytes out of the shared initial chunk despite the existing static page imports in `App.tsx`.
+
+Three typing moves from `src/playground/three.d.ts` to shared declaration `src/three.d.ts`; neither runtime imports it. The source-closure assertion changes from `sourceModules['./playground/three.d.ts']` to `sourceModules['./three.d.ts']`. `/voleyevents` defines its own narrow structural `RallyThree` facade and injected `RallyWindow` shape at the runtime seam; no duplicate ambient declaration and no import from a playground module.
+
+Child 2 must change all source-closure owners literally:
+
+1. the scoped-prefix rule accepts only `./playground/` or `./voleyevents/` for GSAP/Three;
+2. the exact GSAP importer list becomes `['./playground/loadRelayRuntime.ts', './voleyevents/loadRallyMotion.ts']`;
+3. the exact Three importer list becomes `['./playground/loadSystemFieldRuntime.ts', './voleyevents/loadRallyThree.ts']`, with `.sort()` added before equality; each named loader contains exactly one literal `import('three')`, and the shared `src/three.d.ts` declaration remains asserted.
+
+One route lifecycle owner:
+
+1. checks reduced motion before requesting GSAP or Three;
+2. creates route-local lazy imports with generation/cancel guards;
+3. creates one renderer, one camera, one GSAP context, and route-owned ScrollTriggers;
+4. renders on scroll, pointer/touch disturbance, resize, visibility return, or bounded settle only—no perpetual idle RAF;
+5. pauses when the route/scene is offscreen or the document is hidden;
+6. on exit kills scheduled frames/tweens/triggers, reverts context, removes listeners/observers, disposes geometry/material/render targets/renderer/context once, removes canvas, and restores only document state it owned.
+
+The owner listens to `prefers-reduced-motion` changes after mount. Switching to reduce invalidates pending generations, destroys a live runtime, removes canvas, and restores the static fallback. Switching back may start one fresh eligible generation from current native scroll.
+
+The source-closure guard changes narrowly: `gsap`, `gsap/*`, `three`, and `three/*` are allowed only below `src/playground/` or `src/voleyevents/`; each route has its own explicit dynamic loaders; shared pages/App/content remain forbidden import sites. Existing `/playground` loader and runtime modules are read-only and never imported by `/voleyevents`.
+
+## Fallback matrix
+
+| Mode | Result |
+| --- | --- |
+| Desktop WebGL | Full alternating court staircase, ball impacts, depth camera, exact reversible scrub |
+| Mobile WebGL | Lower geometry/effect tier, shallower camera travel, one-column HTML, no text/canvas collision |
+| Keyboard | Native page scrolling and existing anchors; same deterministic progress; visible focus |
+| Reduced motion | Do not request GSAP or Three. Static authored SVG/poster plus complete semantic content and anchors |
+| No WebGL/context failure/loss | Static SVG/poster remains; renderer is surrendered for the visit; HTML remains complete |
+| Hidden/offscreen | No RAF or scene work; native content and navigation remain available |
+| JavaScript disabled | Existing SPA limitation remains explicit: no SSR/prerender is added by this route-local work |
+
+The fallback is repository-authored SVG/CSS derived from the selected composition. The generated moodframe is not shipped as the fallback.
+
+## Adaptive quality and measurable budgets
+
+Budgets are hard limits. Every number must be measured on the final candidate, not claimed from source prose.
+
+### Delivery
+
+- Existing `/`, `/goal-loop`, and `/playground`: zero eager VoleyEvents runtime imports or asset requests.
+- Shared initial JS regression: ≤ 8 KiB gzip against `09eb197` build.
+- Total lazy `/voleyevents` runtime including uncached GSAP, ScrollTrigger, Three, and route orchestrator: ≤ 245 KiB gzip attributable on a cold direct visit. The fresh `09eb197` build emits the existing playground vendor precedent at 229.64 kB gzip total (`three` 184.68 + `gsap` 27.42 + `ScrollTrigger` 17.54), leaving 15.36 kB gzip for the route orchestrator/controller.
+- New route visual assets: ≤ 120 KiB transferred; target is zero bitmap assets.
+- Fallback and HTML paint before runtime readiness; no decorative loader.
+
+Instrument: child 4 enables Vite `build.manifest` and a directly invoked Node script uses `zlib.gzipSync` over manifest-owned chunks plus a CDP request log. It does not add an npm script, so the exact four-script assertion in `sourceClosure.test.ts` stays unchanged. Persist exact chunk/asset bytes, baseline SHA, Vite/Node versions, and cold-request attribution under `docs/evidence/voleyevents-rally/bundle-budget.json`.
+
+### Renderer
+
+| Tier | DPR cap | Court radial/segment equivalent | Draw calls | Triangles | Impact waves |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| High | 1.5 | full | ≤ 18 | ≤ 30k | 2 |
+| Medium (default) | 1.25 | medium | ≤ 14 | ≤ 20k | 1 |
+| Low | 1.0 | low | ≤ 10 | ≤ 12k | 1 simplified |
+
+Use `renderer.info` for draw calls/triangles and explicit renderer lifecycle counters. No bitmap textures, post-processing composer, real-time shadow map, or model decoder in v1.
+
+### Frame and responsiveness
+
+- Desktop 1440×1000: scrub p95 ≤ 18 ms.
+- Mobile target device class: iPhone 13/A15 Safari or Pixel 6/Tensor Chrome, viewport near 390×844: scrub p95 ≤ 25 ms.
+- Runtime-ready onward: zero long tasks > 50 ms during the scripted traversal.
+- Scripted semantic link/keyboard interaction p98 Event Timing ≤ 200 ms.
+- CLS ≤ 0.05; horizontal overflow exactly 0 at 320, 390, 768, 1024, and 1440 CSS px.
+
+Instrument: rAF samples, `PerformanceObserver('longtask')`, Event Timing, layout rect probes, and console/request capture. Desktop emulation is layout proof, not mobile GPU proof.
+
+### Adaptive controller
+
+Initial capability is deterministic and UA-free. Rules are evaluated in this exact order; first match wins:
+
+- no runtime: reduced motion, failed WebGL creation, or context loss;
+- Low ceiling and Low start: coarse pointer, viewport width below 768 CSS px, known `navigator.deviceMemory <= 4`, or `navigator.hardwareConcurrency <= 4`;
+- Medium ceiling and Medium start: any capability input unavailable, no WebGL2, viewport below 1280 CSS px, or known memory/concurrency below the High thresholds;
+- High ceiling but Medium start: fine pointer, viewport at least 1280 CSS px, WebGL2 available, `deviceMemory >= 8`, and `hardwareConcurrency >= 8`.
+
+The pure controller receives these values as injected inputs; tests cover every boundary and unknown value. In non-overlapping two-second windows use platform target `T` and recovery `R`:
+
+- desktop `T=18 ms`, `R=14 ms`;
+- mobile/coarse pointer `T=25 ms`, `R=19 ms`.
+
+Two consecutive p95 windows above `T` downgrade one tier. Five continuous seconds below `R` may upgrade one tier, never above the initial capability ceiling. After a change, upgrades wait five seconds; downgrade evidence remains immediate. Two consecutive Low-tier windows above `T` surrender permanently to the static fallback for the visit; a passing/intermediate window resets that count. Tier changes swap prebuilt geometry/material settings and DPR; they never rebuild during scrub or alter progress/content.
+
+## Browser/runtime acceptance
+
+Required on the exact candidate SHA:
+
+- desktop 1440×1000 and mobile 390×844 screenshots at hero plus every impact stop;
+- direct load, trailing slash, fragments, Back/Forward, route isolation;
+- keyboard tab/focus/native scrolling;
+- reduced motion with zero GSAP/Three request and zero canvas;
+- forced no-WebGL and context loss with usable static fallback;
+- forward, reverse, and rapid alternating interruption with identical state at identical progress;
+- pointer and touch disturbance without captured vertical scroll;
+- resize/orientation and long-copy fit;
+- 10× `/voleyevents` ↔ `/` route cycle: zero retained canvas, trigger, RAF, listener-owned update, or live context after each exit;
+- overflow exactly zero, no console errors, failed requests, or hidden essential content;
+- route request logs prove no VoleyEvents runtime on sibling routes.
+
+## Serial implementation seams
+
+Children must remain unassigned and dependency-ordered until this contract receives explicit owner approval. One writer only.
+
+1. **Semantic staircase baseline and pure progress model** — preserve all current sourced-copy, reading-order, route-title, shell-navigation, claim-safety, direct/trailing-route, four-stage, and native-link assertions. Delete `VolleyballMotion.tsx`, `ballFlight.ts/test.ts`, the lifecycle lane/token SVG, and the five exact test sites listed in Reconciliation. Add the exact Stage topology markup, one static SVG staircase with four landing markers, alternating desktop lifecycle reading zones, single-column mobile layout, and focused progress/landing tests. `styles.test.ts` changes only the complete retired lifecycle block at lines 179–230 and old hero-graphic geometry block; focus, 44px, shared mobile header, Goal Loop, and System Field assertions stay byte-for-byte. No GSAP/Three import.
+2. **Route-local lazy runtime boundary** — keep child 1 semantic assertions. Add the dynamic `loadRallyRuntime` page-effect boundary, independent `loadRallyMotion.ts` and `loadRallyThree.ts` cancellation guards, move the ambient declaration to `src/three.d.ts`, and apply the three literal source-closure changes above. `voleyEvents.test.ts` adds only static-markup/no-canvas/no-eager-runtime assertions; `styles.test.ts` is unchanged. No scene choreography.
+3. **Impossible Court Staircase renderer and reversible playhead** — keep all child 1/2 semantic and closure assertions. Implement authored planes/ball/material/light/camera, native-scroll GSAP ownership, interruption, CSS-sticky stage, offscreen pause, and complete disposal. The runtime accepts injected `RallyThree`, `RallyWindow`, scheduler, observer, and motion facades; node-runnable RED tests prove disposal exactly once, authored-vs-human interruption/no snap-back, visibility/offscreen pause/resume, resize refresh, context loss, and canceled generation before browser proof. `styles.test.ts` adds only route-scoped sticky-stage, touch `pan-y`, text-zone, mobile, and reduced-motion rules. This is the only high-effort motion slice.
+4. **Adaptive tiers and exact runtime evidence** — keep product/semantic assertions unchanged. Add the pure injected capability/window controller using the exact ceiling matrix above, localhost-only diagnostics/evidence seam, enable Vite manifest, add directly invoked measurement scripts without changing package scripts, and execute the full browser/device matrix. `styles.test.ts` changes only if a measured adaptive fallback class needs one route-scoped visibility assertion. No visual redesign.
+
+Every child runs `npm run test`, `npm run check`, `npm run build`, and `git diff --check`; each defines narrower focused RED checks and literal writable paths. Local commit occurs only after full PASS and review. No push/deploy.
+
+## Explicit gates
+
+- Owner must explicitly approve this selected design before any child becomes runnable or any implementation begins.
+- MiniMax remains excluded. A separate explicit approval immediately before queue/submission is mandatory; this contract neither needs nor recommends it for v1.
+- Push and deploy remain separate explicit gates.
