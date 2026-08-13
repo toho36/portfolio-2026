@@ -1629,12 +1629,12 @@ footer p {
   }
 
   .rally-band {
-    height: auto;
+    height: clamp(60rem, 250svh, 105rem);
   }
 
   .rally-stage {
-    position: relative;
-    top: auto;
+    position: sticky;
+    top: 0;
     height: 42svh;
     min-height: 0;
     margin-top: 0;

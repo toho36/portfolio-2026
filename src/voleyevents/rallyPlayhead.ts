@@ -82,21 +82,65 @@ function documentMaximumScroll(doc: RallyPlayheadDocument, viewportHeight: numbe
   )
 }
 
+const RALLY_STOP_IDS = [
+  'event-opens',
+  'player-registers',
+  'payment-matches',
+  'attendance-resolves',
+] as const
+
+function finiteCoordinate(value: number) {
+  return Number.isFinite(value) ? value : 0
+}
+
+function elementRect(element: HTMLElement) {
+  const getRect = element.getBoundingClientRect
+  if (typeof getRect !== 'function') return { top: null, height: null }
+  const rect = getRect.call(element)
+  return {
+    top: Number.isFinite(rect.top) ? rect.top : null,
+    height: Number.isFinite(rect.height) ? rect.height : null,
+  }
+}
+
 function measure(
   root: HTMLElement,
+  stage: HTMLElement,
   win: RallyPlayheadWindow,
 ): RallyStaircase {
-  const landings = Array.from(
-    root.querySelectorAll<HTMLElement>('.lifecycle-stage[id]'),
-  )
+  const band = typeof root.querySelector === 'function'
+    ? root.querySelector<HTMLElement>('.rally-band') ?? root
+    : root
+  const bandRect = elementRect(band)
+  const rootRect = band === root ? bandRect : elementRect(root)
+  const stageRect = elementRect(stage)
+  const bandTop = bandRect.top
+  const bandHeight = bandRect.height
+  const stageHeight = stageRect.height
+  const scrollY = finiteCoordinate(win.scrollY)
+  const viewportHeight = Math.max(0, finiteCoordinate(win.innerHeight))
+  const rootTop = bandTop ?? rootRect.top ?? 0
+  const origin = rootTop + scrollY
+  let measuredEnd = documentMaximumScroll(win.document, viewportHeight)
+  if (bandTop !== null && bandHeight !== null && stageHeight !== null) {
+    measuredEnd = origin + Math.max(0, bandHeight - stageHeight)
+  }
+  const end = Math.max(origin, finiteCoordinate(measuredEnd))
+  const runway = end - origin
+
   return measureRallyStaircase({
-    rootTop: root.getBoundingClientRect().top,
-    viewportHeight: win.innerHeight,
-    documentMaximumScroll: documentMaximumScroll(win.document, win.innerHeight),
-    scrollY: win.scrollY,
-    landings: landings.map((landing) => ({
-      id: landing.id,
-      top: landing.getBoundingClientRect().top,
+    rootTop,
+    viewportHeight,
+    // The band owns the maximum scroll consumed by the staircase. Synthetic
+    // viewport-midpoint crossings preserve the existing history-free model.
+    documentMaximumScroll: end,
+    scrollY,
+    landings: RALLY_STOP_IDS.map((id, index) => ({
+      id,
+      top: origin
+        + (runway * (index + 1)) / RALLY_STOP_IDS.length
+        - scrollY
+        + viewportHeight / 2,
     })),
   })
 }
@@ -185,7 +229,7 @@ export function createRallyPlayhead(options: RallyPlayheadOptions): RallyPlayhea
     resizePending = false
     suppressImpacts = true
     try {
-      geometry = measure(elements.root, win)
+      geometry = measure(elements.root, elements.stage, win)
       runtime.resize()
       motion.ScrollTrigger.refresh()
       lastAppliedScroll = null
@@ -266,7 +310,7 @@ export function createRallyPlayhead(options: RallyPlayheadOptions): RallyPlayhea
   }
 
   try {
-    geometry = measure(elements.root, win)
+    geometry = measure(elements.root, elements.stage, win)
     const initialState = geometry.stateFor(win.scrollY)
     previousIndex = initialState.index
     elements.root.dataset.rallyActive = initialState.id

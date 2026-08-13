@@ -227,10 +227,11 @@ describe('VoleyEvents rally staircase styles', () => {
 
   it('uses a visible 42svh stage band and one content column on mobile', () => {
     expect(mobile).toMatch(
-      /\.rally-band\s*\{[^}]*height:\s*auto/,
+      /\.rally-band\s*\{[^}]*height:\s*clamp\(60rem,\s*250svh,\s*105rem\)/,
     )
+    expect(mobile).not.toMatch(/\.rally-band\s*\{[^}]*height:\s*auto/)
     expect(mobile).toMatch(
-      /\.rally-stage\s*\{[^}]*position:\s*relative[^}]*top:\s*auto[^}]*height:\s*42svh[^}]*min-height:\s*0[^}]*margin-top:\s*0/,
+      /\.rally-stage\s*\{[^}]*position:\s*sticky[^}]*top:\s*0[^}]*height:\s*42svh[^}]*min-height:\s*0[^}]*margin-top:\s*0/,
     )
     expect(mobile).toMatch(
       /\.lifecycle-track\s*\{[^}]*grid-template-columns:\s*1fr/,
@@ -273,7 +274,11 @@ describe('mobile-first case-study hero composition', () => {
       /\.court-hero,\s*\.goal-loop \.run-hero\s*\{[^}]*min-height:\s*auto[^}]*align-content:\s*start/,
     )
     expect(mobile).toMatch(
-      /\.rally-stage\s*\{[^}]*position:\s*relative[^}]*top:\s*auto[^}]*height:\s*42svh/,
+      /\.rally-band\s*\{[^}]*height:\s*clamp\(60rem,\s*250svh,\s*105rem\)/,
+    )
+    expect(mobile).not.toMatch(/\.rally-band\s*\{[^}]*height:\s*auto/)
+    expect(mobile).toMatch(
+      /\.rally-stage\s*\{[^}]*position:\s*sticky[^}]*top:\s*0[^}]*height:\s*42svh/,
     )
     expect(mobile).not.toMatch(/\.rally-fallback\s*\{[^}]*display:\s*none/)
   })
