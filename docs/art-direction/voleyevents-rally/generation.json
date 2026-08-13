@@ -30,6 +30,14 @@
       "width": 1536,
       "height": 1024,
       "prompt": "Art-direction moodframe for an authored interactive portfolio case study about recreational volleyball operations. Challenger C: a disciplined instanced rally field of volleyball-like nodes, one bright ball injects a wave that propagates through a 3D court topology and folds into a corridor, cobalt blue, vermilion, warm chalk and deep navy palette, editorial composition with protected empty zone for future semantic HTML, clear depth and spatial propagation, high-end renderer-native Three.js target, NO text, logos, UI, watermark, generic cyberpunk, or random particle wallpaper."
+    },
+    {
+      "id": "D",
+      "file": "d-obsidian-match-amendment.png",
+      "sha256": "ac23b33168aef928fbdb7af2af718389ea8fe4f7fbac326b961db03c3f32f339",
+      "width": 1672,
+      "height": 941,
+      "prompt": "Corrective art-direction moodframe for Impossible Match / Obsidian Ascent: one unmistakable premium volleyball descending diagonally through five impossible volleyball-court platforms in deep perspective; translucent smoked obsidian mineral bodies, warm brushed aluminium edges and court markings, restrained cobalt and vermilion impact energy, clean warm-chalk reading zone on the left, no text, logos, random balls, particles, bloom, white marble, generic glass cards, corridor, or HUD. Renderer-native Three.js target without bitmap textures."
     }
   ]
 }

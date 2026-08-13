@@ -217,3 +217,51 @@ Every child runs `npm run test`, `npm run check`, `npm run build`, and `git diff
 - Owner must explicitly approve this selected design before any child becomes runnable or any implementation begins.
 - MiniMax remains excluded. A separate explicit approval immediately before queue/submission is mandatory; this contract neither needs nor recommends it for v1.
 - Push and deploy remain separate explicit gates.
+
+## Owner-approved corrective amendment — Obsidian Match / Warm Aluminium
+
+Status: **APPROVED by owner `continue`, 2026-08-13**
+
+Kanban authority: `t_6baa1cb4`
+
+Material reference: `docs/art-direction/voleyevents-rally/d-obsidian-match-amendment.png`
+
+Commit `643abad` satisfies the semantic, lifecycle, adaptive-quality, bundle, and runtime contracts, but its opaque pastel court slabs and acid sphere do not satisfy the intended authored showpiece. This amendment supersedes only the original material/lighting posture. Native scroll, one reversible ball, five court stops, semantic HTML authority, lazy loading, adaptive tiers, disposal, fallbacks, and every delivery/runtime budget remain unchanged.
+
+### Corrected visual stance
+
+- Court bodies use **smoked obsidian**: near-black mineral surfaces with controlled transparency. The page/background must remain visibly present through inactive planes; no plane may read as an opaque pastel card.
+- Court perimeter and markings use **warm aluminium** through unlit `LineBasicMaterial` edge/marking geometry plus a low-metalness warm edge surface under the existing key/fill lights. No environment map or physically reflective metal is implied. The rendered edge/marking luminance must be at least `3:1` against the adjacent obsidian body. Cobalt remains a cool fill/accent and vermilion remains bounded impact energy.
+- Use renderer-native material, geometry, opacity, light, and line work only. No bitmap texture, procedural texture dependency, environment map, GLB, model decoder, bloom, postprocessing, particles, rock supports, or repeated nets.
+- The generated reference owns material, lighting, diagonal descent, and negative-space intent only. Its rocky vertical supports and repeated physical nets are explicitly rejected as image-generation slop. Production keeps five clean levitating court slabs.
+
+### Volleyball identity and motion
+
+- Keep exactly one ball. It must read as a volleyball within three seconds through contrasting curved panel seams, alternating warm-chalk/obsidian panels, a restrained acid-yellow accent, readable scale, and controlled key/rim light.
+- Preserve the existing deterministic progress and impact ownership, but camera framing and ball/camera transforms may be retuned so descent is visible rather than cancelled by camera tracking. At the five exact progress stops (`0`, `.25`, `.5`, `.75`, `1`), the pure frame model must show a monotonic downward ball position relative to the camera target, with at least `0.8` world-unit separation between consecutive stops; forward and reverse still reconstruct identical frames. Do not add random balls, ball rain, physics, independent falling loops, or autoplay motion.
+- Each impact receives one crisp bounded vermilion contact ring and a short local light/material response. No particle burst, bloom cloud, screen shake, or perpetual settle loop.
+
+### Visibility and compositing contract
+
+- Court material opacity stays in the closed range `0.32–0.68` at every pure-frame state; focused tests assert the minimum and maximum over the five exact stops. The renderer canvas remains transparent.
+- Protect only the active HTML reading zone with the existing route-local gradient. Do not globally dim the scene or place an opaque page-sized wash behind the canvas.
+- Every semantic reading state at hero plus the four lifecycle stops must measure at least WCAG `4.5:1` for body text and `3:1` for large headings against its actual rendered canvas/fallback composite. The route-local wash may cover the active reading column only; `problem`, `constraints`, `decisions`, `evidence`, and `status` must also be probed whenever geometry occupies their text rect. `styles.test.ts` may change only the VoleyEvents hero/rally/fallback/active-reading blocks needed to encode this isolation and contrast contract.
+- Desktop geometry remains concentrated away from active copy. Mobile keeps the separate sticky `42svh` visual band; canvas never sits behind semantic text.
+- Static SVG/CSS fallback must adopt obsidian bodies, warm-metal edges/lines, the single panelled volleyball, and one bounded impact accent. Delete every repeated `.rally-net`; neither runtime nor fallback renders a physical net. Court identity comes from boundary, center, and attack-line markings only. Reduced motion, no-WebGL, context loss, and permanent Low-tier surrender may not fall back to the retired pastel appearance.
+
+### Corrective acceptance
+
+1. Desktop hero and all four stops visibly preserve background depth through the court bodies and read as smoked obsidian with warm-metal structure.
+2. One volleyball is identifiable within three seconds, and its descent/impact sequence remains identical for forward, reverse, and rapid interruption.
+3. No opaque pastel slab, generic grey glass card, white marble, repeated net, rock support, random ball, texture, model, particle, or postprocessing effect ships.
+4. Hero copy remains legible; mobile remains a separate visual band; overflow is zero at `320`, `390`, `768`, `1024`, and `1440` CSS px.
+5. Reduced motion, no-WebGL, context loss, and adaptive static surrender show the amended fallback with visual parity.
+6. Existing lazy-route, source-closure, quality-controller, renderer-cap, exact-disposal, bundle-budget, and physical-device gates remain mandatory on the amended candidate.
+
+### Corrective child and evidence boundary
+
+- Implementation ticket: `t_3130fd37`.
+- Writable production files are exactly `src/voleyevents/rallyRuntime.ts`, `src/pages/VoleyEvents.tsx`, and the VoleyEvents rally/hero/fallback/active-reading blocks in `src/styles.css`.
+- Writable oracle files are exactly `src/voleyevents/rallyRuntime.test.ts`, the fallback-only assertions in `src/pages/voleyEvents.test.ts`, and the existing VoleyEvents hero/rally/fallback/active-reading blocks in `src/styles.test.ts`. Adaptive quality, playhead ownership, loader boundaries, source closure, package metadata, and unrelated style tests are read-only.
+- Deterministic proof covers opacity bounds, monotonic camera-relative descent, one ball/five courts/no nets, unchanged reversible frames, fallback parity, lifecycle/disposal, full tests/typecheck/build, exact bundle budget, and `git diff --check`.
+- Controller-owned rendered proof is persisted under `docs/evidence/voleyevents-rally/obsidian-amendment/`: desktop and mobile hero plus four stops, sampled text contrast, reduced/no-WebGL/context-loss/static fallback, rapid reverse, overflow widths, and physical-device adaptive/performance evidence. This evidence-only directory is writable only during `t_dde4338d`, after the source candidate is frozen.
