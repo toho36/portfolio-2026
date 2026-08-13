@@ -265,3 +265,26 @@ Commit `643abad` satisfies the semantic, lifecycle, adaptive-quality, bundle, an
 - Writable oracle files are exactly `src/voleyevents/rallyRuntime.test.ts`, the fallback-only assertions in `src/pages/voleyEvents.test.ts`, and the existing VoleyEvents hero/rally/fallback/active-reading blocks in `src/styles.test.ts`. Adaptive quality, playhead ownership, loader boundaries, source closure, package metadata, and unrelated style tests are read-only.
 - Deterministic proof covers opacity bounds, monotonic camera-relative descent, one ball/five courts/no nets, unchanged reversible frames, fallback parity, lifecycle/disposal, full tests/typecheck/build, exact bundle budget, and `git diff --check`.
 - Controller-owned rendered proof is persisted under `docs/evidence/voleyevents-rally/obsidian-amendment/`: desktop and mobile hero plus four stops, sampled text contrast, reduced/no-WebGL/context-loss/static fallback, rapid reverse, overflow widths, and physical-device adaptive/performance evidence. This evidence-only directory is writable only during `t_dde4338d`, after the source candidate is frozen.
+
+## Owner-approved topology amendment — Dedicated full-width rally band
+
+Status: **APPROVED by owner, 2026-08-13**
+
+Kanban authority: `t_f6cff70f`
+
+This amendment supersedes only the behind-copy/right-reading-zone topology in **Visual direction**, **Stage topology and DOM seam**, the mobile sticky-top rule, and the active-reading wash clauses in **Visibility and compositing contract**. Renderer art, the five authored states, native-scroll ownership, route-local loading, adaptive quality, disposal, budgets, and fallback artwork remain unchanged.
+
+### Corrected topology and dimensions
+
+- The route source order is hero → rally band → problem. One non-semantic `<div className="rally-band">` immediately follows `.court-hero` and ends before `.case-problem`.
+- The band contains the existing single `<div className="rally-stage" data-rally-stage="true" aria-hidden="true">`. That stage still contains the one repository-authored `data-rally-fallback` SVG, and the runtime still appends exactly one decorative `.rally-canvas` as a direct child. No second mount or copied semantic content is introduced.
+- Desktop uses the full existing route column without viewport-width breakout or case-section inline margins. At `1440 × 1000` CSS px, the band must provide at least `1000` CSS px of usable width and the sticky visual stage must provide at least `560` CSS px of height.
+- A tall `.rally-band` supplies reserved scroll runway for the five-state choreography while bounding the sticky stage's lifetime. The stage must leave sticky containment before `.case-problem`; hero copy and every semantic case-study block remain outside the stage rectangle at rest and during stickiness, never beside or behind the canvas.
+- The existing read-only playhead still derives its impacts from lifecycle geometry below the band. Therefore the runway is reserved topology capacity; this amendment does not claim that all five runtime states currently play while the band is visible. Re-anchoring those states is a separate playhead concern outside this layout slice.
+- At widths up to `760px`, `.rally-band` returns to automatic height and `.rally-stage` is a normal-flow, relatively positioned visual band with `top: auto` and height no greater than `42svh`. Semantic content follows below it in one column.
+
+### Compositing and fallback
+
+- The hero wash, route-content backfill, and active-reading lifecycle gradients existed only to protect copy behind the route-level stage and are retired. No global dim or replacement reading wash is allowed.
+- Reduced motion, no WebGL, context loss, and permanent static surrender keep the same visible band and semantic order. The fallback remains fully visible until a ready runtime deliberately reduces its opacity.
+- The band, stage, fallback, and canvas remain width-bounded by their route/container geometry. `100vw` breakout, negative stage overlap, route overflow masking, scroll interception, pinning, and position rewriting remain forbidden. Rendered overflow must remain zero at `320`, `390`, `768`, `1024`, and `1440` CSS px.

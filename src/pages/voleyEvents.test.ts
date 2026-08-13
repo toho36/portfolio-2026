@@ -104,11 +104,15 @@ describe('VoleyEvents Match Operations case study', () => {
     const markup = render()
     const heroStart = markup.indexOf('class="court-hero"')
     const heroEnd = markup.indexOf('</section>', heroStart)
+    const bandStart = markup.indexOf('class="rally-band"')
     const stageStart = markup.indexOf('data-rally-stage="true"')
     const problemStart = markup.indexOf('class="case-section case-problem"')
+    const bandTagStart = markup.lastIndexOf('<div', bandStart)
+    const problemTagStart = markup.lastIndexOf('<section', problemStart)
     const fallbackStart = markup.indexOf('data-rally-fallback="true"')
     const fallbackEnd = markup.indexOf('</svg>', fallbackStart)
     const fallback = markup.slice(fallbackStart, fallbackEnd)
+    const band = markup.slice(bandTagStart, problemTagStart)
     const stageOpen = markup.slice(
       markup.lastIndexOf('<div', stageStart),
       markup.indexOf('>', stageStart) + 1,
@@ -127,10 +131,13 @@ describe('VoleyEvents Match Operations case study', () => {
     )
     expect(markup.match(/data-rally-stage="true"/g)).toHaveLength(1)
     expect(markup.match(/data-rally-fallback="true"/g)).toHaveLength(1)
+    expect(markup.match(/class="rally-band"/g)).toHaveLength(1)
     expect(markup.match(/class="rally-plane(?:\s|\")/g)).toHaveLength(5)
     expect(markup.slice(heroEnd, stageStart)).toBe(
-      '</section><div class="rally-stage" ',
+      '</section><div class="rally-band"><div class="rally-stage" ',
     )
+    expect(bandStart).toBeGreaterThan(heroEnd)
+    expect(bandStart).toBeLessThan(stageStart)
     expect(stageStart).toBeGreaterThan(heroEnd)
     expect(stageStart).toBeLessThan(problemStart)
     expect(landings).toEqual(
@@ -139,6 +146,10 @@ describe('VoleyEvents Match Operations case study', () => {
     expect(stageOpen).toContain('aria-hidden="true"')
     expect(fallbackOpen).toContain('aria-hidden="true"')
     expect(fallback).not.toMatch(/<(?:h[1-6]|p)\b/)
+    expect(band).not.toMatch(/<(?:section|h[1-6]|p|a)\b/)
+    expect(markup).toContain(
+      '</svg></div></div><section class="case-section case-problem"',
+    )
     expect(markup).not.toMatch(
       /volleyball-motion|lifecycle-court|lifecycle-layout|participant-token/,
     )

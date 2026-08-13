@@ -181,24 +181,33 @@ describe('VoleyEvents rally staircase styles', () => {
   const desktop = styles.slice(0, mobileBreakpoint)
   const mobile = styles.slice(mobileBreakpoint)
 
-  it('contains one sticky fallback without masking route overflow', () => {
+  it('contains one full-width sticky band without masking route overflow', () => {
     const route = styles.match(/\.voleyevents\s*\{([^}]+)\}/)?.[1]
+    const band = desktop.match(/\.rally-band\s*\{([^}]+)\}/)?.[1]
 
     expect(route).toBeDefined()
     expect(route).not.toMatch(/overflow:\s*(?:hidden|clip)/)
+    expect(band).toBeDefined()
+    expect(band).not.toMatch(/margin-inline|max-width/)
     expect(desktop).toMatch(
-      /\.rally-stage\s*\{[^}]*position:\s*sticky[^}]*z-index:\s*0[^}]*top:\s*5\.5rem[^}]*height:\s*calc\(100svh - 5\.5rem\)[^}]*min-width:\s*0[^}]*margin-top:\s*calc\(-100svh \+ 5\.5rem\)[^}]*overflow:\s*hidden/,
+      /\.rally-band\s*\{[^}]*position:\s*relative[^}]*min-width:\s*0[^}]*height:\s*clamp\(90rem,\s*230svh,\s*150rem\)/,
+    )
+    expect(desktop).toMatch(
+      /\.rally-stage\s*\{[^}]*position:\s*sticky[^}]*top:\s*5\.5rem[^}]*display:\s*grid[^}]*height:\s*clamp\(35rem,\s*calc\(100svh - 8\.5rem\),\s*46rem\)[^}]*min-width:\s*0[^}]*overflow:\s*hidden/,
     )
     expect(styles).toMatch(
       /\.rally-fallback\s*\{[^}]*width:\s*100%[^}]*height:\s*auto[^}]*max-height:\s*100%[^}]*overflow:\s*hidden/,
     )
+    expect(styles).toMatch(
+      /\.rally-fallback\s*\{[^}]*opacity:\s*1/,
+    )
     expect(styles).not.toContain('100vw')
-    expect(desktop).toMatch(
-      /\.court-hero::after\s*\{[^}]*inset:\s*0 34% 0 0[^}]*background:\s*linear-gradient\(90deg,\s*var\(--court-chalk\)\s*82%,\s*transparent\)/,
+    expect(desktop).not.toMatch(
+      /\.rally-stage\s*\{[^}]*margin-top:\s*calc\(-100svh/,
     )
-    expect(desktop).toMatch(
-      /\.court-hero > \*\s*\{[^}]*position:\s*relative[^}]*z-index:\s*1/,
-    )
+    expect(styles).not.toContain('.court-hero::after')
+    expect(styles).not.toContain('.voleyevents > :not(.rally-stage)')
+    expect(styles).not.toMatch(/\[data-rally-active=[^\]]+\]\s+#[\w-]+/)
   })
 
   it('alternates bounded desktop lifecycle reading zones', () => {
@@ -214,26 +223,20 @@ describe('VoleyEvents rally staircase styles', () => {
     expect(desktop).toMatch(
       /\.rally-canvas\s*\{[^}]*position:\s*absolute[^}]*inset:\s*0[^}]*width:\s*100%[^}]*height:\s*100%[^}]*pointer-events:\s*none[^}]*touch-action:\s*pan-y/,
     )
-    expect(desktop).toMatch(
-      /\[data-rally-runtime='ready'\]\[data-rally-active='event-opens'\]\s+#event-opens/,
-    )
   })
 
   it('uses a visible 42svh stage band and one content column on mobile', () => {
     expect(mobile).toMatch(
-      /\.rally-stage\s*\{[^}]*top:\s*10rem[^}]*height:\s*42svh[^}]*min-height:\s*0[^}]*margin-top:\s*0/,
+      /\.rally-band\s*\{[^}]*height:\s*auto/,
+    )
+    expect(mobile).toMatch(
+      /\.rally-stage\s*\{[^}]*position:\s*relative[^}]*top:\s*auto[^}]*height:\s*42svh[^}]*min-height:\s*0[^}]*margin-top:\s*0/,
     )
     expect(mobile).toMatch(
       /\.lifecycle-track\s*\{[^}]*grid-template-columns:\s*1fr/,
     )
     expect(mobile).toMatch(
-      /\.voleyevents > :not\(\.rally-stage\)\s*\{[^}]*background-color:\s*var\(--court-chalk\)/,
-    )
-    expect(mobile).toMatch(
       /\.lifecycle-stage,[\s\S]*\.lifecycle-stage:nth-child\(odd\),[\s\S]*\.lifecycle-stage:nth-child\(even\)\s*\{[^}]*width:\s*100%[^}]*grid-template-columns:\s*1fr[^}]*justify-self:\s*stretch/,
-    )
-    expect(mobile).toMatch(
-      /\[data-rally-runtime='ready'\]\[data-rally-active='event-opens'\]\s+#event-opens,[\s\S]*#attendance-resolves\s*\{[^}]*background:\s*var\(--court-chalk\)/,
     )
     expect(mobile).not.toMatch(
       /\.(?:rally-stage|rally-fallback)[^{]*\{[^}]*(?:display:\s*none|visibility:\s*hidden|opacity:\s*0(?:[;\s]))/,
@@ -246,10 +249,10 @@ describe('VoleyEvents rally staircase styles', () => {
     )
 
     expect(reduced).toMatch(
-      /\.rally-stage,[\s\S]*\.rally-fallback\s*\{[^}]*opacity:\s*1[^}]*transform:\s*none/,
+      /\.rally-band,[\s\S]*\.rally-stage,[\s\S]*\.rally-fallback\s*\{[^}]*opacity:\s*1[^}]*transform:\s*none/,
     )
     expect(reduced).not.toMatch(
-      /\.(?:rally-stage|rally-fallback)[^{]*\{[^}]*(?:display:\s*none|visibility:\s*hidden|height:\s*0(?:[;\s]))/,
+      /\.(?:rally-band|rally-stage|rally-fallback)[^{]*\{[^}]*(?:display:\s*none|visibility:\s*hidden|height:\s*0(?:[;\s]))/,
     )
   })
 
@@ -269,7 +272,9 @@ describe('mobile-first case-study hero composition', () => {
     expect(mobile).toMatch(
       /\.court-hero,\s*\.goal-loop \.run-hero\s*\{[^}]*min-height:\s*auto[^}]*align-content:\s*start/,
     )
-    expect(mobile).toMatch(/\.rally-stage\s*\{[^}]*height:\s*42svh/)
+    expect(mobile).toMatch(
+      /\.rally-stage\s*\{[^}]*position:\s*relative[^}]*top:\s*auto[^}]*height:\s*42svh/,
+    )
     expect(mobile).not.toMatch(/\.rally-fallback\s*\{[^}]*display:\s*none/)
   })
 
@@ -281,7 +286,10 @@ describe('mobile-first case-study hero composition', () => {
       /\.goal-loop \.run-hero\s*\{[^}]*min-height:\s*clamp\(36rem,\s*78svh,\s*52rem\)[^}]*align-content:\s*end/,
     )
     expect(desktop).toMatch(
-      /\.rally-stage\s*\{[^}]*height:\s*calc\(100svh - 5\.5rem\)[^}]*overflow:\s*hidden/,
+      /\.rally-band\s*\{[^}]*height:\s*clamp\(90rem,\s*230svh,\s*150rem\)/,
+    )
+    expect(desktop).toMatch(
+      /\.rally-stage\s*\{[^}]*height:\s*clamp\(35rem,\s*calc\(100svh - 8\.5rem\),\s*46rem\)[^}]*overflow:\s*hidden/,
     )
   })
 })

@@ -204,71 +204,73 @@ export function VoleyEventsPage({ onNavigate }: VoleyEventsPageProps) {
         </a>
       </section>
 
-      <div
-        className="rally-stage"
-        data-rally-stage="true"
-        aria-hidden="true"
-        ref={stageRef}
-      >
-        <svg
-          className="rally-fallback"
-          data-rally-fallback="true"
-          viewBox="0 0 1200 760"
-          preserveAspectRatio="xMidYMid meet"
-          role="presentation"
+      <div className="rally-band">
+        <div
+          className="rally-stage"
+          data-rally-stage="true"
           aria-hidden="true"
+          ref={stageRef}
         >
-          <g
-            className="rally-plane rally-plane-serve"
-            transform="translate(78 74)"
+          <svg
+            className="rally-fallback"
+            data-rally-fallback="true"
+            viewBox="0 0 1200 760"
+            preserveAspectRatio="xMidYMid meet"
+            role="presentation"
+            aria-hidden="true"
           >
-            <path
-              className="rally-plane-surface"
-              d="M0 78 276 0 438 86 158 166Z"
-            />
-            <path
-              className="rally-plane-lines"
-              d="M79 55 354 137M138 39 295 126M219 16 219 143"
-            />
-            <path
-              className="rally-net"
-              d="M219 20V143M197 27 241 14M197 47 241 34M197 67 241 54M197 87 241 74M197 107 241 94M197 127 241 114"
-            />
-            <circle className="rally-ball" cx="78" cy="72" r="20" />
-            <path
-              className="rally-ball-seam"
-              d="M63 68C73 64 82 69 88 84M77 53C81 63 91 69 98 68"
-            />
-          </g>
-
-          {VOLEYEVENTS.lifecycle.map((stage, index) => (
             <g
-              className={`rally-plane rally-landing rally-landing--${index % 2 === 0 ? 'right' : 'left'}`}
-              data-rally-landing={stage.id}
-              key={stage.id}
-              transform={[
-                'translate(506 170)',
-                'translate(164 302)',
-                'translate(572 424)',
-                'translate(252 556)',
-              ][index]}
+              className="rally-plane rally-plane-serve"
+              transform="translate(78 74)"
             >
               <path
                 className="rally-plane-surface"
-                d="M0 66 246 0 390 73 140 142Z"
+                d="M0 78 276 0 438 86 158 166Z"
               />
               <path
                 className="rally-plane-lines"
-                d="M69 47 315 116M123 33 267 103M195 14 195 121"
+                d="M79 55 354 137M138 39 295 126M219 16 219 143"
               />
               <path
                 className="rally-net"
-                d="M195 18V121M176 24 214 13M176 42 214 31M176 60 214 49M176 78 214 67M176 96 214 85M176 114 214 103"
+                d="M219 20V143M197 27 241 14M197 47 241 34M197 67 241 54M197 87 241 74M197 107 241 94M197 127 241 114"
               />
-              <circle className="rally-landing-mark" cx="70" cy="58" r="12" />
+              <circle className="rally-ball" cx="78" cy="72" r="20" />
+              <path
+                className="rally-ball-seam"
+                d="M63 68C73 64 82 69 88 84M77 53C81 63 91 69 98 68"
+              />
             </g>
-          ))}
-        </svg>
+
+            {VOLEYEVENTS.lifecycle.map((stage, index) => (
+              <g
+                className={`rally-plane rally-landing rally-landing--${index % 2 === 0 ? 'right' : 'left'}`}
+                data-rally-landing={stage.id}
+                key={stage.id}
+                transform={[
+                  'translate(506 170)',
+                  'translate(164 302)',
+                  'translate(572 424)',
+                  'translate(252 556)',
+                ][index]}
+              >
+                <path
+                  className="rally-plane-surface"
+                  d="M0 66 246 0 390 73 140 142Z"
+                />
+                <path
+                  className="rally-plane-lines"
+                  d="M69 47 315 116M123 33 267 103M195 14 195 121"
+                />
+                <path
+                  className="rally-net"
+                  d="M195 18V121M176 24 214 13M176 42 214 31M176 60 214 49M176 78 214 67M176 96 214 85M176 114 214 103"
+                />
+                <circle className="rally-landing-mark" cx="70" cy="58" r="12" />
+              </g>
+            ))}
+          </svg>
+        </div>
       </div>
 
       <section

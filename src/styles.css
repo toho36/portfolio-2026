@@ -413,38 +413,21 @@ h1 {
     linear-gradient(var(--court-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--court-line) 1px, transparent 1px);
   background-size: clamp(3rem, 8vw, 7rem) clamp(3rem, 8vw, 7rem);
-  isolation: isolate;
 }
 
-.court-hero::after {
-  position: absolute;
-  z-index: 0;
-  inset: 0 34% 0 0;
-  background: linear-gradient(90deg, var(--court-chalk) 82%, transparent);
-  content: '';
-  pointer-events: none;
-}
-
-.court-hero > * {
+.rally-band {
   position: relative;
-  z-index: 1;
-}
-
-.voleyevents > :not(.rally-stage) {
-  position: relative;
-  z-index: 1;
+  min-width: 0;
+  height: clamp(90rem, 230svh, 150rem);
 }
 
 .rally-stage {
   position: sticky;
-  z-index: 0;
   top: 5.5rem;
   display: grid;
-  height: calc(100svh - 5.5rem);
-  min-height: 30rem;
+  height: clamp(35rem, calc(100svh - 8.5rem), 46rem);
   min-width: 0;
   place-items: center;
-  margin-top: calc(-100svh + 5.5rem);
   overflow: hidden;
   pointer-events: none;
 }
@@ -455,7 +438,7 @@ h1 {
   height: auto;
   max-height: 100%;
   overflow: hidden;
-  opacity: 0.74;
+  opacity: 1;
   transition: opacity 180ms ease;
 }
 
@@ -472,16 +455,6 @@ h1 {
 
 .voleyevents[data-rally-runtime='ready'] .rally-fallback {
   opacity: 0.08;
-}
-
-.voleyevents[data-rally-runtime='ready'][data-rally-active='event-opens'] #event-opens,
-.voleyevents[data-rally-runtime='ready'][data-rally-active='payment-matches'] #payment-matches {
-  background: linear-gradient(90deg, var(--court-chalk) 76%, transparent);
-}
-
-.voleyevents[data-rally-runtime='ready'][data-rally-active='player-registers'] #player-registers,
-.voleyevents[data-rally-runtime='ready'][data-rally-active='attendance-resolves'] #attendance-resolves {
-  background: linear-gradient(270deg, var(--court-chalk) 76%, transparent);
 }
 
 .rally-plane-surface,
@@ -1655,8 +1628,13 @@ footer p {
     align-content: start;
   }
 
+  .rally-band {
+    height: auto;
+  }
+
   .rally-stage {
-    top: 10rem;
+    position: relative;
+    top: auto;
     height: 42svh;
     min-height: 0;
     margin-top: 0;
@@ -1671,17 +1649,6 @@ footer p {
   .rally-canvas {
     width: 100%;
     height: 100%;
-  }
-
-  .voleyevents[data-rally-runtime='ready'][data-rally-active='event-opens'] #event-opens,
-  .voleyevents[data-rally-runtime='ready'][data-rally-active='player-registers'] #player-registers,
-  .voleyevents[data-rally-runtime='ready'][data-rally-active='payment-matches'] #payment-matches,
-  .voleyevents[data-rally-runtime='ready'][data-rally-active='attendance-resolves'] #attendance-resolves {
-    background: var(--court-chalk);
-  }
-
-  .voleyevents > :not(.rally-stage) {
-    background-color: var(--court-chalk);
   }
 
   .section-heading,
@@ -1957,6 +1924,7 @@ footer p {
     transform: none;
   }
 
+  .rally-band,
   .rally-stage,
   .rally-fallback {
     opacity: 1;
