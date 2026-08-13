@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "ticket": "t_e886e3c3",
+  "status": "PASS",
+  "candidateId": "working-tree:80bf99bba621e3f9c3f203c71306d18f8dbe988327d53dd605e839ab15a0abd8:0fa78dfc18f9ad4546e2ccf5ee131cd401a718223868e00d47432f270ccd94b8",
+  "unforced": {
+    "platform": "desktop",
+    "targetMs": 18,
+    "recoveryMs": 14,
+    "ceiling": "High",
+    "startTier": "Medium",
+    "windows": [
+      { "startedAt": 29445.1, "endedAt": 31445.1, "p95": 9.1, "samples": 239, "tier": "Medium" },
+      { "startedAt": 31445.1, "endedAt": 33445.1, "p95": 9.1, "samples": 240, "tier": "Medium" },
+      { "startedAt": 33445.1, "endedAt": 35445.1, "p95": 9.2, "samples": 240, "tier": "Medium" }
+    ],
+    "transitions": [
+      { "at": 35445.1, "from": "Medium", "to": "High", "reason": "recovery" }
+    ]
+  },
+  "forced": {
+    "platform": "desktop",
+    "targetMs": 18,
+    "recoveryMs": 14,
+    "ceiling": "High",
+    "startTier": "Medium",
+    "windows": [
+      { "startedAt": 0, "endedAt": 2000, "p95": 19, "samples": 120, "tier": "Medium" },
+      { "startedAt": 2000, "endedAt": 4000, "p95": 19, "samples": 120, "tier": "Medium" },
+      { "startedAt": 4000, "endedAt": 6000, "p95": 13, "samples": 120, "tier": "Low" },
+      { "startedAt": 6000, "endedAt": 8000, "p95": 13, "samples": 120, "tier": "Low" },
+      { "startedAt": 8000, "endedAt": 10000, "p95": 13, "samples": 120, "tier": "Low" },
+      { "startedAt": 10000, "endedAt": 12000, "p95": 19, "samples": 120, "tier": "Medium" },
+      { "startedAt": 12000, "endedAt": 14000, "p95": 19, "samples": 120, "tier": "Medium" },
+      { "startedAt": 14000, "endedAt": 16000, "p95": 19, "samples": 120, "tier": "Low" },
+      { "startedAt": 16000, "endedAt": 18000, "p95": 18, "samples": 120, "tier": "Low" },
+      { "startedAt": 18000, "endedAt": 20000, "p95": 19, "samples": 120, "tier": "Low" },
+      { "startedAt": 20000, "endedAt": 22000, "p95": 19, "samples": 120, "tier": "Low" }
+    ],
+    "transitions": [
+      { "at": 4000, "from": "Medium", "to": "Low", "reason": "miss" },
+      { "at": 10000, "from": "Low", "to": "Medium", "reason": "recovery" },
+      { "at": 14000, "from": "Medium", "to": "Low", "reason": "miss" },
+      { "at": 22000, "from": "Low", "to": "Static", "reason": "surrender" }
+    ]
+  },
+  "physicalUnforced": {
+    "device": "Samsung SM-G950F",
+    "platform": "mobile",
+    "targetMs": 25,
+    "ceiling": "Low",
+    "windows": [
+      { "startedAt": 7881.6, "endedAt": 9881.6, "p95": 32, "samples": 110, "tier": "Low" },
+      { "startedAt": 9881.6, "endedAt": 11881.6, "p95": 32, "samples": 111, "tier": "Low" }
+    ],
+    "transitions": [
+      { "at": 11881.6, "from": "Low", "to": "Static", "reason": "surrender" }
+    ],
+    "result": { "runtime": "static", "canvas": 0 }
+  }
+}

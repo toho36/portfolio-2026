@@ -1,10 +1,16 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 import {
+  RALLY_DIAGNOSTICS_REQUEST,
   RALLY_THREE_MEMBERS,
   createRallyStaircaseRuntime,
   rallyStaircaseFrame,
   type RallyStaircaseThree,
 } from './rallyRuntime'
+import type {
+  RallyQualityController,
+  RallyQualityTier,
+} from './rallyQuality'
 
 class Transform {
   x = 0
@@ -31,10 +37,23 @@ class Object3D {
   }
 }
 
+class Attribute {
+  needsUpdate = false
+  readonly array: number[]
+  constructor(array: readonly number[], readonly itemSize: number) {
+    this.array = [...array]
+  }
+  setXYZ(index: number, x: number, y: number, z: number) {
+    this.array.splice(index * 3, 3, x, y, z)
+    return this
+  }
+}
+
 type ConstructionFailure = 'setAttribute' | 'mesh' | 'lineSegments' | 'sceneAdd'
 
 function harness(failAt?: ConstructionFailure) {
   const canvasListeners = new Map<string, Set<EventListener>>()
+  const stageListeners = new Map<string, Set<EventListener>>()
   const canvas = {
     className: '',
     dataset: {},
@@ -55,6 +74,14 @@ function harness(failAt?: ConstructionFailure) {
     append: vi.fn((node: unknown) => {
       ;(node as { parentElement: unknown }).parentElement = stage
     }),
+    addEventListener(type: string, listener: EventListener) {
+      const listeners = stageListeners.get(type) ?? new Set<EventListener>()
+      listeners.add(listener)
+      stageListeners.set(type, listeners)
+    },
+    removeEventListener(type: string, listener: EventListener) {
+      stageListeners.get(type)?.delete(listener)
+    },
   } as unknown as HTMLElement
   const disposables: Array<{ dispose: ReturnType<typeof vi.fn> }> = []
   const groups: Object3D[] = []
@@ -62,13 +89,23 @@ function harness(failAt?: ConstructionFailure) {
   const lines: Object3D[] = []
   const lights: Object3D[] = []
   const cameras: Camera[] = []
+  const rendererInfo = { render: { calls: 0, triangles: 1_000 } }
+  const rendererControl = { forcedCalls: null as number | null }
   const renderer = {
+    capabilities: { isWebGL2: true },
     domElement: canvas,
     dispose: vi.fn(),
     forceContextLoss: vi.fn(),
-    render: vi.fn(),
+    control: rendererControl,
+    render: vi.fn(() => {
+      rendererInfo.render.calls = rendererControl.forcedCalls ?? [
+        ...meshes,
+        ...lines,
+      ].filter(({ visible }) => visible).length
+    }),
     setPixelRatio: vi.fn(),
     setSize: vi.fn(),
+    info: rendererInfo,
   }
   const disposable = <T extends object>(value: T) => {
     const resource = Object.assign(value, { dispose: vi.fn() })
@@ -94,8 +131,10 @@ function harness(failAt?: ConstructionFailure) {
     dispose = vi.fn()
   }
   class Geometry {
-    setAttribute = vi.fn(() => {
+    readonly attributes = new Map<string, unknown>()
+    setAttribute = vi.fn((name: string, attribute: unknown) => {
       if (failAt === 'setAttribute') throw new Error(failAt)
+      this.attributes.set(name, attribute)
     })
     constructor() {
       disposable(this)
@@ -148,7 +187,7 @@ function harness(failAt?: ConstructionFailure) {
     Mesh,
     LineSegments,
     BufferGeometry: Geometry,
-    Float32BufferAttribute: class {},
+    Float32BufferAttribute: Attribute,
     SphereGeometry: Geometry,
     PlaneGeometry: Geometry,
     MeshStandardMaterial: Material,
@@ -172,7 +211,37 @@ function harness(failAt?: ConstructionFailure) {
     meshes,
     renderer,
     stage,
+    stageListeners,
     three,
+  }
+}
+
+const HIGH_CAPABILITY = {
+  reducedMotion: false,
+  webglAvailable: true,
+  webgl2Available: true,
+  contextLost: false,
+  pointerFine: true,
+  viewportWidth: 1440,
+  deviceMemory: 8,
+  hardwareConcurrency: 8,
+} as const
+
+function scriptedQuality(...tiers: RallyQualityTier[]): RallyQualityController {
+  let tier: RallyQualityTier = 'Medium'
+  return {
+    sample() {
+      tier = tiers.shift() ?? tier
+      return { tier, surrender: false, window: null, transition: null }
+    },
+    resetSampling() {},
+    snapshot: () => ({
+      tier,
+      ceiling: 'High',
+      surrendered: false,
+      windows: [],
+      transitions: [],
+    }),
   }
 }
 
@@ -270,7 +339,7 @@ describe('Impossible Court Staircase renderer', () => {
     runtime.destroy()
   })
 
-  it('creates five courts, a seam ball, two lights, one canvas, and disposes once', () => {
+  it('prebuilds tier resources, creates one scene/canvas, and disposes once', () => {
     const view = harness()
     const runtime = createRallyStaircaseRuntime({
       three: view.three as unknown as RallyStaircaseThree,
@@ -285,7 +354,11 @@ describe('Impossible Court Staircase renderer', () => {
     expect(view.canvas.setAttribute).toHaveBeenCalledWith('aria-hidden', 'true')
     expect(view.canvas.setAttribute).toHaveBeenCalledWith('tabindex', '-1')
     expect(view.meshes).toHaveLength(8)
-    expect(view.lines).toHaveLength(6)
+    expect(view.lines).toHaveLength(2)
+    const mergedLines = view.lines[0] as Object3D & {
+      geometry: { attributes: Map<string, Attribute> }
+    }
+    expect(mergedLines.geometry.attributes.get('position')?.array).toHaveLength(210)
     expect(view.lights).toHaveLength(2)
     expect(view.renderer.setPixelRatio).toHaveBeenLastCalledWith(1.25)
     expect(view.renderer.setSize).toHaveBeenLastCalledWith(900, 600, false)
@@ -322,7 +395,29 @@ describe('Impossible Court Staircase renderer', () => {
     expect(view.stage.append).not.toHaveBeenCalled()
   })
 
-  it('bounds impact waves and surrenders exactly once on context loss', () => {
+  it('short-circuits reduced motion before allocating WebGL and keeps inert calls harmless', () => {
+    const view = harness()
+    const surrender = vi.fn()
+    const runtime = createRallyStaircaseRuntime({
+      three: view.three as unknown as RallyStaircaseThree,
+      stage: view.stage,
+      window: { devicePixelRatio: Number.NaN },
+      now: () => 0,
+      onSurrender: surrender,
+      capability: { reducedMotion: true },
+    })
+    runtime.setProgress(1)
+    runtime.impact(4)
+    runtime.resize()
+    runtime.destroy()
+    expect(runtime.render()).toBe(false)
+    expect(runtime.diagnostics!()).toBeNull()
+    expect(surrender).toHaveBeenCalledOnce()
+    expect(view.stage.append).not.toHaveBeenCalled()
+    expect(view.disposables).toHaveLength(0)
+  })
+
+  it('uses the Medium one-wave cap and High two-wave cap without reallocating', () => {
     const view = harness()
     const surrender = vi.fn()
     let now = 0
@@ -332,14 +427,20 @@ describe('Impossible Court Staircase renderer', () => {
       window: { devicePixelRatio: 1 },
       now: () => now,
       onSurrender: surrender,
+      quality: scriptedQuality('Medium', 'Medium', 'High'),
+      capability: HIGH_CAPABILITY,
     })
 
     runtime.impact(1, now)
     runtime.impact(2, now + 1)
     runtime.impact(3, now + 2)
-    expect(runtime.render(now + 20)).toBe(true)
     const visibleWaves = view.meshes.slice(-2).filter(({ visible }) => visible)
-    expect(visibleWaves).toHaveLength(2)
+    expect(visibleWaves).toHaveLength(1)
+    const allocations = view.disposables.length
+    expect(runtime.render(now + 20)).toBe(true)
+    expect(view.meshes.slice(-2).filter(({ visible }) => visible)).toHaveLength(2)
+    expect(view.disposables).toHaveLength(allocations)
+    expect(view.renderer.setPixelRatio).toHaveBeenLastCalledWith(1)
     now = 900
     expect(runtime.render(now)).toBe(false)
     expect(view.meshes.slice(-2).every(({ visible }) => !visible)).toBe(true)
@@ -349,5 +450,99 @@ describe('Impossible Court Staircase renderer', () => {
     view.canvasListeners.get('webglcontextlost')?.forEach((listener) => listener(loss))
     expect(loss.preventDefault).toHaveBeenCalled()
     expect(surrender).toHaveBeenCalledOnce()
+  })
+
+  it('swaps prebuilt tier geometry/DPR and enforces actual renderer caps', () => {
+    const view = harness()
+    const surrender = vi.fn()
+    const runtime = createRallyStaircaseRuntime({
+      three: view.three as unknown as RallyStaircaseThree,
+      stage: view.stage,
+      window: { devicePixelRatio: 4 },
+      now: () => 0,
+      onSurrender: surrender,
+      capability: HIGH_CAPABILITY,
+      quality: scriptedQuality('High', 'Low'),
+    })
+    const allocations = view.disposables.length
+    runtime.render(0)
+    runtime.render(16)
+    expect(view.renderer.setPixelRatio).toHaveBeenLastCalledWith(1.5)
+    runtime.render(32)
+    expect(view.renderer.setPixelRatio).toHaveBeenLastCalledWith(1)
+    expect(view.lines[0].visible).toBe(true)
+    expect(view.disposables).toHaveLength(allocations)
+
+    view.renderer.control.forcedCalls = 11
+    runtime.render(48)
+    expect(surrender).toHaveBeenCalledOnce()
+  })
+
+  it('surrenders after two consecutive measured Low windows without render-duration timing', () => {
+    const view = harness()
+    const surrender = vi.fn()
+    const runtime = createRallyStaircaseRuntime({
+      three: view.three as unknown as RallyStaircaseThree,
+      stage: view.stage,
+      window: { devicePixelRatio: 1 },
+      now: () => 0,
+      onSurrender: surrender,
+      capability: { ...HIGH_CAPABILITY, pointerFine: false },
+    })
+    for (let timestamp = 0; timestamp <= 4_200; timestamp += 100) {
+      runtime.render(timestamp)
+    }
+    expect(surrender).toHaveBeenCalledOnce()
+    expect(view.renderer.dispose).toHaveBeenCalledOnce()
+  })
+
+  it('serves diagnostics through the stage only on loopback and removes the seam', () => {
+    const local = harness()
+    const runtime = createRallyStaircaseRuntime({
+      three: local.three as unknown as RallyStaircaseThree,
+      stage: local.stage,
+      window: { devicePixelRatio: 1, location: { hostname: 'localhost' } },
+      now: () => 0,
+      onSurrender: vi.fn(),
+    })
+    const respond = vi.fn()
+    local.stageListeners.get(RALLY_DIAGNOSTICS_REQUEST)?.forEach((listener) =>
+      listener({ detail: { respond } } as unknown as Event),
+    )
+    expect(respond).toHaveBeenCalledWith(expect.objectContaining({
+      tier: 'Medium',
+      renderer: { calls: 8, triangles: 1_000 },
+    }))
+    expect(runtime.diagnostics!()).not.toBeNull()
+    runtime.destroy()
+    expect(local.stageListeners.get(RALLY_DIAGNOSTICS_REQUEST)?.size).toBe(0)
+
+    const remote = harness()
+    const remoteRuntime = createRallyStaircaseRuntime({
+      three: remote.three as unknown as RallyStaircaseThree,
+      stage: remote.stage,
+      window: { devicePixelRatio: 1, location: { hostname: 'example.com' } },
+      now: () => 0,
+      onSurrender: vi.fn(),
+    })
+    expect(remoteRuntime.diagnostics!()).toBeNull()
+    expect(remote.stageListeners.get(RALLY_DIAGNOSTICS_REQUEST)).toBeUndefined()
+    remoteRuntime.destroy()
+  })
+
+  it('publishes no HUD or global metrics from any rally runtime module', () => {
+    const runtimeSources = [
+      'loadRallyMotion.ts',
+      'loadRallyRuntime.ts',
+      'loadRallyThree.ts',
+      'rallyPlayhead.ts',
+      'rallyQuality.ts',
+      'rallyRuntime.ts',
+    ]
+      .map((name: string) => readFileSync(new URL(name, import.meta.url), 'utf8'))
+      .join('\n')
+    expect(runtimeSources).not.toMatch(/globalThis\s*\[/)
+    expect(runtimeSources).not.toMatch(/window\s*\.\s*(?:rally|metrics|diagnostics)/i)
+    expect(runtimeSources).not.toMatch(/(?:hud|public metrics)/i)
   })
 })

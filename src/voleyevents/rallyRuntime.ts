@@ -1,3 +1,14 @@
+import {
+  RALLY_TIER_PROFILES,
+  createRallyQualityController,
+  resolveRallyCapability,
+  type RallyCapability,
+  type RallyQualityController,
+  type RallyQualityInputs,
+  type RallyQualitySnapshot,
+  type RallyQualityTier,
+} from './rallyQuality'
+
 export const RALLY_THREE_MEMBERS = [
   'WebGLRenderer',
   'Scene',
@@ -22,8 +33,9 @@ export const RALLY_THREE_MEMBERS = [
 const COURT_WIDTH = 5.4
 const COURT_HEIGHT = 2.8
 const CAMERA_FOV = 42
-const WAVE_CAP = 2
 const WAVE_LIFETIME = 720
+const MAX_ACTIVE_FRAME_GAP = 250
+export const RALLY_DIAGNOSTICS_REQUEST = 'voleyevents:rally-diagnostics-request'
 
 interface Disposable {
   dispose(): void
@@ -54,6 +66,15 @@ interface GeometryLike extends Disposable {
   setAttribute?(name: string, attribute: unknown): void
 }
 
+interface AttributeLike {
+  needsUpdate?: boolean
+  setXYZ?(index: number, x: number, y: number, z: number): AttributeLike
+}
+
+interface RenderableLike extends ObjectLike {
+  geometry: unknown
+}
+
 interface CameraLike extends ObjectLike {
   aspect: number
   lookAt(x: number, y: number, z: number): void
@@ -62,6 +83,10 @@ interface CameraLike extends ObjectLike {
 
 interface RendererLike {
   readonly domElement: HTMLCanvasElement
+  readonly capabilities?: { readonly isWebGL2?: boolean }
+  readonly info?: {
+    readonly render?: { readonly calls?: number; readonly triangles?: number }
+  }
   setPixelRatio(value: number): void
   setSize(width: number, height: number, updateStyle?: boolean): void
   render(scene: unknown, camera: unknown): void
@@ -84,9 +109,14 @@ export interface RallyStaircaseThree {
   readonly Mesh: Constructor<ObjectLike, [geometry: unknown, material: unknown]>
   readonly LineSegments: Constructor<ObjectLike, [geometry: unknown, material: unknown]>
   readonly BufferGeometry: Constructor<GeometryLike, []>
-  readonly Float32BufferAttribute: Constructor<unknown, [array: readonly number[], itemSize: number]>
+  readonly Float32BufferAttribute: Constructor<AttributeLike, [array: readonly number[], itemSize: number]>
   readonly SphereGeometry: Constructor<GeometryLike, [radius: number, widthSegments: number, heightSegments: number]>
-  readonly PlaneGeometry: Constructor<GeometryLike, [width: number, height: number]>
+  readonly PlaneGeometry: Constructor<GeometryLike, [
+    width: number,
+    height: number,
+    widthSegments?: number,
+    heightSegments?: number,
+  ]>
   readonly MeshStandardMaterial: Constructor<MaterialLike, [options: object]>
   readonly MeshBasicMaterial: Constructor<MaterialLike, [options: object]>
   readonly LineBasicMaterial: Constructor<MaterialLike, [options: object]>
@@ -99,6 +129,13 @@ export interface RallyStaircaseThree {
 
 export interface RallyRendererWindow {
   readonly devicePixelRatio: number
+  readonly innerWidth?: number
+  readonly location?: { readonly hostname?: string }
+  readonly navigator?: {
+    readonly deviceMemory?: number
+    readonly hardwareConcurrency?: number
+  }
+  matchMedia?(query: string): { readonly matches: boolean }
 }
 
 export interface RallyCourtFrame {
@@ -134,7 +171,15 @@ export interface RallyStaircaseRuntime {
   /** Renders one bounded settle frame and reports whether another is needed. */
   render(now?: number): boolean
   resize(): void
+  diagnostics?(): RallyRuntimeDiagnostics | null
   destroy(): void
+}
+
+export interface RallyRuntimeDiagnostics extends RallyQualitySnapshot {
+  readonly renderer: {
+    readonly calls: number | null
+    readonly triangles: number | null
+  }
 }
 
 export interface RallyStaircaseRuntimeOptions {
@@ -143,6 +188,8 @@ export interface RallyStaircaseRuntimeOptions {
   readonly window: RallyRendererWindow
   readonly now: () => number
   readonly onSurrender: () => void
+  readonly capability?: Partial<RallyQualityInputs>
+  readonly quality?: RallyQualityController
 }
 
 function clamp(value: number) {
@@ -214,19 +261,21 @@ function disposeAll(resources: readonly Disposable[]) {
 function courtLinePositions() {
   const halfWidth = COURT_WIDTH / 2
   const halfHeight = COURT_HEIGHT / 2
-  return [
+  const boundary = [
     -halfWidth, -halfHeight, 0.012, halfWidth, -halfHeight, 0.012,
     halfWidth, -halfHeight, 0.012, halfWidth, halfHeight, 0.012,
     halfWidth, halfHeight, 0.012, -halfWidth, halfHeight, 0.012,
     -halfWidth, halfHeight, 0.012, -halfWidth, -halfHeight, 0.012,
-    0, -halfHeight, 0.012, 0, halfHeight, 0.012,
+  ]
+  const center = [0, -halfHeight, 0.012, 0, halfHeight, 0.012]
+  const attack = [
     -halfWidth, -0.92, 0.012, halfWidth, -0.92, 0.012,
     -halfWidth, 0.92, 0.012, halfWidth, 0.92, 0.012,
   ]
+  return [...boundary, ...center, ...attack]
 }
 
-function seamPositions() {
-  const segments = 18
+function seamPositions(segments: number) {
   const positions: number[] = []
   for (let index = 0; index < segments; index += 1) {
     const from = index / segments * Math.PI * 2
@@ -241,10 +290,37 @@ function seamPositions() {
   return positions
 }
 
+function isLoopback(hostname: string | undefined) {
+  return hostname === 'localhost' || hostname === '127.0.0.1' ||
+    hostname === '::1' || hostname === '[::1]'
+}
+
+function inertRuntime(): RallyStaircaseRuntime {
+  return Object.freeze({
+    setProgress() {},
+    impact() {},
+    render: () => false,
+    resize() {},
+    diagnostics: () => null,
+    destroy() {},
+  })
+}
+
 export function createRallyStaircaseRuntime(
   options: RallyStaircaseRuntimeOptions,
 ): RallyStaircaseRuntime {
   const { three, stage } = options
+  const reducedMotion = options.capability?.reducedMotion ??
+    options.window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  if (
+    reducedMotion === true ||
+    options.capability?.webglAvailable === false ||
+    options.capability?.contextLost === true
+  ) {
+    options.onSurrender()
+    return inertRuntime()
+  }
+
   for (const member of RALLY_THREE_MEMBERS) {
     if (typeof three[member] !== 'function') {
       throw new TypeError(`Rally Three facade does not expose ${member}`)
@@ -255,8 +331,9 @@ export function createRallyStaircaseRuntime(
   const materials: MaterialLike[] = []
   const courtGroups: ObjectLike[] = []
   const courtMaterials: MaterialLike[] = []
+  const courtPlanes: RenderableLike[] = []
   const waves: Array<{
-    readonly mesh: ObjectLike
+    readonly mesh: RenderableLike
     readonly material: MaterialLike
     index: number
     startedAt: number
@@ -266,10 +343,30 @@ export function createRallyStaircaseRuntime(
   let scene: ObjectLike
   let camera: CameraLike
   let ball: ObjectLike
+  let mergedCourtLines: RenderableLike
+  let ballMesh: RenderableLike
+  let ballSeams: RenderableLike
+  let quality: RallyQualityController
+  let capability: RallyCapability
+  let activeTier: RallyQualityTier = 'Medium'
   let destroyed = false
   let surrendered = false
   let progress = 0
-  let liveWaveCap = WAVE_CAP
+  let liveWaveCap: 1 | 2 = RALLY_TIER_PROFILES.Medium.waves
+  let lastActiveFrameAt: number | null = null
+  let diagnosticsListener: EventListener | null = null
+  let rendererCalls: number | null = null
+  let rendererTriangles: number | null = null
+
+  interface TierResources {
+    readonly court: GeometryLike
+    readonly lines: GeometryLike
+    readonly lineAttribute: AttributeLike
+    readonly ball: GeometryLike
+    readonly seams: GeometryLike
+    readonly wave: GeometryLike
+  }
+  const tierResources = {} as Record<RallyQualityTier, TierResources>
 
   const ownGeometry = <T extends GeometryLike>(resource: T) => {
     geometries.push(resource)
@@ -301,6 +398,10 @@ export function createRallyStaircaseRuntime(
     const ownedCanvas = canvas
     renderer = null
     canvas = null
+    if (diagnosticsListener) {
+      stage.removeEventListener(RALLY_DIAGNOSTICS_REQUEST, diagnosticsListener)
+      diagnosticsListener = null
+    }
     ownedCanvas?.removeEventListener('webglcontextlost', handleContextLoss)
     disposeAll(geometries)
     disposeAll(materials)
@@ -308,6 +409,59 @@ export function createRallyStaircaseRuntime(
     ownedRenderer?.forceContextLoss()
     ownedCanvas?.remove()
     waves.length = 0
+  }
+
+  function diagnostics(): RallyRuntimeDiagnostics | null {
+    if (!isLoopback(options.window.location?.hostname)) return null
+    const snapshot = quality.snapshot()
+    return Object.freeze({
+      ...snapshot,
+      renderer: Object.freeze({ calls: rendererCalls, triangles: rendererTriangles }),
+    })
+  }
+
+  function applyTier(nextTier: RallyQualityTier) {
+    activeTier = nextTier
+    const profile = RALLY_TIER_PROFILES[nextTier]
+    const resources = tierResources[nextTier]
+    liveWaveCap = profile.waves
+    courtPlanes.forEach((mesh) => { mesh.geometry = resources.court })
+    mergedCourtLines.geometry = resources.lines
+    ballMesh.geometry = resources.ball
+    ballSeams.geometry = resources.seams
+    for (const [index, wave] of waves.entries()) {
+      wave.mesh.geometry = resources.wave
+      if (index >= liveWaveCap) wave.mesh.visible = false
+    }
+    if (renderer) {
+      const rawDpr = options.window.devicePixelRatio
+      const dpr = Number.isFinite(rawDpr) && rawDpr > 0 ? rawDpr : 1
+      renderer.setPixelRatio(Math.min(Math.max(dpr, 1), profile.dpr))
+    }
+  }
+
+  function updateMergedCourtLines(frame: RallyStaircaseFrame) {
+    const attribute = tierResources[activeTier].lineAttribute
+    if (!attribute.setXYZ) return
+    const local = courtLinePositions()
+    let vertex = 0
+    for (const court of frame.courts) {
+      const cosine = Math.cos(court.rotationX)
+      const sine = Math.sin(court.rotationX)
+      for (let offset = 0; offset < local.length; offset += 3) {
+        const x = local[offset] * court.scale
+        const y = local[offset + 1] * court.scale
+        const z = local[offset + 2] * court.scale
+        attribute.setXYZ(
+          vertex,
+          court.x + x,
+          court.y + y * cosine - z * sine,
+          court.z + y * sine + z * cosine,
+        )
+        vertex += 1
+      }
+    }
+    attribute.needsUpdate = true
   }
 
   function applyFrame(frame: RallyStaircaseFrame) {
@@ -318,6 +472,7 @@ export function createRallyStaircaseRuntime(
       group.scale.set(state.scale, state.scale, state.scale)
       courtMaterials[index].opacity = state.opacity
     })
+    updateMergedCourtLines(frame)
     ball.position.set(frame.ball.x, frame.ball.y, frame.ball.z)
     ball.rotation.set(frame.ball.spin * 0.42, frame.ball.spin, frame.ball.spin * 0.16)
     camera.position.set(frame.camera.x, frame.camera.y, frame.camera.z)
@@ -327,8 +482,11 @@ export function createRallyStaircaseRuntime(
   function applyWaves(now: number) {
     let active = false
     const frame = rallyStaircaseFrame(progress)
-    for (const [slotIndex, wave] of waves.entries()) {
-      if (slotIndex >= liveWaveCap) {
+    const newestWave = waves.reduce((newest, wave) =>
+      wave.startedAt > newest.startedAt ? wave : newest,
+    )
+    for (const wave of waves) {
+      if (liveWaveCap === 1 && wave !== newestWave) {
         wave.mesh.visible = false
         continue
       }
@@ -347,7 +505,43 @@ export function createRallyStaircaseRuntime(
     return active
   }
 
+  function enforceRendererBudget() {
+    if (!renderer) return false
+    const calls = renderer.info?.render?.calls
+    const triangles = renderer.info?.render?.triangles
+    rendererCalls = Number.isFinite(calls) ? calls! : null
+    rendererTriangles = Number.isFinite(triangles) ? triangles! : null
+    const profile = RALLY_TIER_PROFILES[activeTier]
+    return (
+      (rendererCalls !== null && rendererCalls > profile.drawCalls) ||
+      (rendererTriangles !== null && rendererTriangles > profile.triangles)
+    )
+  }
+
+  function sampleActiveFrame(now: number) {
+    if (!Number.isFinite(now)) return
+    if (lastActiveFrameAt === null) {
+      lastActiveFrameAt = now
+      return
+    }
+    const frameMs = now - lastActiveFrameAt
+    lastActiveFrameAt = now
+    if (frameMs <= 0) {
+      if (frameMs < 0) quality.resetSampling(now)
+      return
+    }
+    if (frameMs > MAX_ACTIVE_FRAME_GAP) {
+      quality.resetSampling(now)
+      return
+    }
+    const update = quality.sample(frameMs, now)
+    if (update.surrender) surrender()
+    else if (update.tier !== activeTier) applyTier(update.tier)
+  }
+
   function draw(now: number) {
+    if (destroyed || surrendered || !renderer) return false
+    sampleActiveFrame(now)
     if (destroyed || surrendered || !renderer) return false
     applyFrame(rallyStaircaseFrame(progress))
     const active = applyWaves(now)
@@ -357,7 +551,11 @@ export function createRallyStaircaseRuntime(
       surrender()
       return false
     }
-    return active
+    if (enforceRendererBudget()) {
+      surrender()
+      return false
+    }
+    return !destroyed && active
   }
 
   function resizeRenderer(renderAfter = true) {
@@ -365,11 +563,9 @@ export function createRallyStaircaseRuntime(
     const bounds = canvas.getBoundingClientRect()
     const width = Math.max(1, Math.round(bounds.width))
     const height = Math.max(1, Math.round(bounds.height))
-    const dprCap = width < 768 ? 1 : width < 1280 ? 1.25 : 1.5
-    liveWaveCap = width < 768 ? 1 : WAVE_CAP
     camera.aspect = width / height
     camera.updateProjectionMatrix()
-    renderer.setPixelRatio(Math.min(Math.max(options.window.devicePixelRatio || 1, 1), dprCap))
+    applyTier(activeTier)
     renderer.setSize(width, height, false)
     if (renderAfter) draw(options.now())
   }
@@ -378,14 +574,48 @@ export function createRallyStaircaseRuntime(
     scene = new three.Scene()
     camera = new three.PerspectiveCamera(CAMERA_FOV, 1, 0.1, 80)
 
-    const courtGeometry = ownGeometry(
-      new three.PlaneGeometry(COURT_WIDTH, COURT_HEIGHT),
-    )
-    const lineGeometry = ownGeometry(new three.BufferGeometry())
-    lineGeometry.setAttribute?.(
-      'position',
-      new three.Float32BufferAttribute(courtLinePositions(), 3),
-    )
+    for (const tier of ['Low', 'Medium', 'High'] as const) {
+      const profile = RALLY_TIER_PROFILES[tier]
+      const courtSegments = tier === 'High' ? [4, 2] : tier === 'Medium' ? [2, 1] : [1, 1]
+      const linePositions = courtLinePositions()
+      const lineAttribute = new three.Float32BufferAttribute(
+        Array.from({ length: linePositions.length * COURT_STOPS.length }, () => 0),
+        3,
+      )
+      const lines = ownGeometry(new three.BufferGeometry())
+      lines.setAttribute?.(
+        'position',
+        lineAttribute,
+      )
+      const seams = ownGeometry(new three.BufferGeometry())
+      seams.setAttribute?.(
+        'position',
+        new three.Float32BufferAttribute(seamPositions(profile.ballSegments[0]), 3),
+      )
+      tierResources[tier] = Object.freeze({
+        court: ownGeometry(new three.PlaneGeometry(
+          COURT_WIDTH,
+          COURT_HEIGHT,
+          courtSegments[0],
+          courtSegments[1],
+        )),
+        lines,
+        lineAttribute,
+        ball: ownGeometry(new three.SphereGeometry(
+          0.58,
+          profile.ballSegments[0],
+          profile.ballSegments[1],
+        )),
+        seams,
+        wave: ownGeometry(new three.PlaneGeometry(
+          COURT_WIDTH,
+          COURT_HEIGHT,
+          tier === 'High' ? 2 : 1,
+          tier === 'High' ? 2 : 1,
+        )),
+      })
+    }
+
     const lineMaterial = ownMaterial(
       new three.LineBasicMaterial({
         color: 0x1557ff,
@@ -405,15 +635,23 @@ export function createRallyStaircaseRuntime(
           transparent: true,
         }),
       )
-      const plane = new three.Mesh(courtGeometry, material)
-      const lines = new three.LineSegments(lineGeometry, lineMaterial)
-      group.add(plane, lines)
+      const plane = new three.Mesh(
+        tierResources.Medium.court,
+        material,
+      ) as RenderableLike
+      group.add(plane)
       scene.add(group)
       courtGroups.push(group)
       courtMaterials.push(material)
+      courtPlanes.push(plane)
     }
 
-    const ballGeometry = ownGeometry(new three.SphereGeometry(0.58, 24, 16))
+    mergedCourtLines = new three.LineSegments(
+      tierResources.Medium.lines,
+      lineMaterial,
+    ) as RenderableLike
+    scene.add(mergedCourtLines)
+
     const ballMaterial = ownMaterial(
       new three.MeshStandardMaterial({
         color: 0xc9ff36,
@@ -421,25 +659,22 @@ export function createRallyStaircaseRuntime(
         roughness: 0.52,
       }),
     )
-    const seamGeometry = ownGeometry(new three.BufferGeometry())
-    seamGeometry.setAttribute?.(
-      'position',
-      new three.Float32BufferAttribute(seamPositions(), 3),
-    )
     const seamMaterial = ownMaterial(
       new three.LineBasicMaterial({ color: 0x102044 }),
     )
     ball = new three.Group()
-    ball.add(
-      new three.Mesh(ballGeometry, ballMaterial),
-      new three.LineSegments(seamGeometry, seamMaterial),
-    )
+    ballMesh = new three.Mesh(
+      tierResources.Medium.ball,
+      ballMaterial,
+    ) as RenderableLike
+    ballSeams = new three.LineSegments(
+      tierResources.Medium.seams,
+      seamMaterial,
+    ) as RenderableLike
+    ball.add(ballMesh, ballSeams)
     scene.add(ball)
 
-    const waveGeometry = ownGeometry(
-      new three.PlaneGeometry(COURT_WIDTH, COURT_HEIGHT),
-    )
-    for (let index = 0; index < WAVE_CAP; index += 1) {
+    for (let index = 0; index < RALLY_TIER_PROFILES.High.waves; index += 1) {
       const material = ownMaterial(
         new three.MeshBasicMaterial({
           color: 0xff5a36,
@@ -447,7 +682,10 @@ export function createRallyStaircaseRuntime(
           transparent: true,
         }),
       )
-      const mesh = new three.Mesh(waveGeometry, material)
+      const mesh = new three.Mesh(
+        tierResources.Medium.wave,
+        material,
+      ) as RenderableLike
       mesh.visible = false
       scene.add(mesh)
       waves.push({ index: 0, material, mesh, startedAt: -Infinity })
@@ -460,14 +698,45 @@ export function createRallyStaircaseRuntime(
 
     renderer = new three.WebGLRenderer({ alpha: true, antialias: true })
     canvas = renderer.domElement
+    const navigator = options.window.navigator
+    const inputs: RallyQualityInputs = {
+      reducedMotion: reducedMotion ?? false,
+      webglAvailable: true,
+      webgl2Available: renderer.capabilities?.isWebGL2,
+      contextLost: false,
+      pointerFine: options.window.matchMedia?.('(pointer: fine)').matches,
+      viewportWidth: options.window.innerWidth ?? canvas.getBoundingClientRect().width,
+      deviceMemory: navigator?.deviceMemory,
+      hardwareConcurrency: navigator?.hardwareConcurrency,
+      ...options.capability,
+    }
+    capability = resolveRallyCapability(inputs)
+    if (!capability.runtime) throw new TypeError('Rally capability denied runtime')
+    quality = options.quality ?? createRallyQualityController({
+      capability,
+      now: options.now,
+    })
+    activeTier = quality.snapshot().tier
     canvas.className = 'rally-canvas'
     canvas.setAttribute('aria-hidden', 'true')
     canvas.setAttribute('tabindex', '-1')
     canvas.addEventListener('webglcontextlost', handleContextLoss)
     stage.append(canvas)
+    if (isLoopback(options.window.location?.hostname)) {
+      diagnosticsListener = ((event: Event) => {
+        const request = event as Event & {
+          readonly detail?: { readonly respond?: (value: RallyRuntimeDiagnostics) => void }
+        }
+        const snapshot = diagnostics()
+        if (snapshot) request.detail?.respond?.(snapshot)
+      }) as EventListener
+      stage.addEventListener(RALLY_DIAGNOSTICS_REQUEST, diagnosticsListener)
+    }
     applyFrame(rallyStaircaseFrame(0))
+    applyTier(activeTier)
     resizeRenderer(false)
     renderer.render(scene, camera)
+    if (enforceRendererBudget()) throw new Error('Rally renderer tier budget exceeded')
   } catch (error) {
     cleanup()
     throw error
@@ -482,7 +751,7 @@ export function createRallyStaircaseRuntime(
     impact(index: number, now = options.now()) {
       if (destroyed || surrendered) return
       const normalizedIndex = Math.min(4, Math.max(0, Math.trunc(index)))
-      const slot = waves.slice(0, liveWaveCap).reduce((oldest, wave) =>
+      const slot = waves.reduce((oldest, wave) =>
         wave.startedAt < oldest.startedAt ? wave : oldest,
       )
       slot.index = normalizedIndex
@@ -493,12 +762,16 @@ export function createRallyStaircaseRuntime(
       return draw(now)
     },
     resize() {
+      if (destroyed || surrendered) return
       try {
+        lastActiveFrameAt = null
+        quality.resetSampling(options.now())
         resizeRenderer()
       } catch {
         surrender()
       }
     },
+    diagnostics,
     destroy: cleanup,
   })
 }

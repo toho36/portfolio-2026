@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "ticket": "t_e886e3c3",
+  "status": "PASS",
+  "runtimeEvidenceStatus": "PASS",
+  "candidate": {
+    "id": "working-tree:80bf99bba621e3f9c3f203c71306d18f8dbe988327d53dd605e839ab15a0abd8:0fa78dfc18f9ad4546e2ccf5ee131cd401a718223868e00d47432f270ccd94b8",
+    "sourceDigest": "80bf99bba621e3f9c3f203c71306d18f8dbe988327d53dd605e839ab15a0abd8",
+    "buildDigest": "0fa78dfc18f9ad4546e2ccf5ee131cd401a718223868e00d47432f270ccd94b8"
+  },
+  "baseline": {
+    "sha": "09eb197",
+    "fullSha": "09eb1977e8e4547618f3509875db819c750d4da0",
+    "sharedInitialBytes": 247555,
+    "sharedInitialGzipBytes": 76237,
+    "viteVersion": "8.2.0",
+    "nodeVersion": "v22.22.2",
+    "zlibVersion": "1.2.12",
+    "gzipLevel": 9
+  },
+  "tools": {
+    "node": "v26.5.0",
+    "zlib": "1.2.12",
+    "vite": "8.2.0",
+    "gzipLevel": 9
+  },
+  "budgets": {
+    "sharedRegressionGzipBytes": 8192,
+    "coldRallyRuntimeGzipBytes": 250880,
+    "visualAssetsBytes": 122880
+  },
+  "totals": {
+    "sharedInitialGzipBytes": 76196,
+    "sharedRegressionGzipBytes": -41,
+    "coldRallyRuntimeGzipBytes": 233366,
+    "visualAssetsBytes": 0
+  },
+  "attribution": {
+    "indexKey": "index.html",
+    "rallyKey": "src/voleyevents/loadRallyRuntime.ts",
+    "sharedEntries": [
+      "index.html"
+    ],
+    "routeEntries": [
+      "index.html",
+      "node_modules/gsap/ScrollTrigger.js",
+      "node_modules/gsap/index.js",
+      "node_modules/three/build/three.module.js",
+      "src/voleyevents/loadRallyRuntime.ts"
+    ],
+    "sharedFiles": [
+      "assets/index-YkElZCTV.js",
+      "assets/index-xT6Vjto1.css"
+    ],
+    "routeFiles": [
+      "assets/ScrollTrigger-l6JEjUcF.js",
+      "assets/gsap-WthEQL9P.js",
+      "assets/loadRallyRuntime-B1mP-kIZ.js",
+      "assets/three.module-DXsC02Ky.js"
+    ]
+  },
+  "files": [
+    {
+      "file": "assets/index-YkElZCTV.js",
+      "bytes": 247190,
+      "gzipBytes": 76196,
+      "sha256": "e4ad9492b721ed38eaa99a5fb547b4b18ca81cda6a5ae86abb568c2ad59c5071"
+    },
+    {
+      "file": "assets/index-xT6Vjto1.css",
+      "bytes": 31109,
+      "gzipBytes": 6332,
+      "sha256": "0a0aad45338490afe9ade80356c5545639e41006bd3070de72e72ddcd280583b"
+    },
+    {
+      "file": "assets/ScrollTrigger-l6JEjUcF.js",
+      "bytes": 42757,
+      "gzipBytes": 17359,
+      "sha256": "e495a8b81968700d85cc976d4c2c5004d1039a71d0feb9a89d444cbab1ce2ae7"
+    },
+    {
+      "file": "assets/gsap-WthEQL9P.js",
+      "bytes": 69967,
+      "gzipBytes": 27045,
+      "sha256": "66e4d095acb47fb3fad6c2fbe0799a748e9eb6b7045f898c0fb7d291ce86f469"
+    },
+    {
+      "file": "assets/loadRallyRuntime-B1mP-kIZ.js",
+      "bytes": 20347,
+      "gzipBytes": 7182,
+      "sha256": "a4e63d11ef861705557c3d62883be31ef02b1575e995f474e06ab1f14677be67"
+    },
+    {
+      "file": "assets/three.module-DXsC02Ky.js",
+      "bytes": 724204,
+      "gzipBytes": 181780,
+      "sha256": "19127ed04bf3f4af0b49fb61478b9a85d4c2f7cc38a3017a6e56c894fce9b570"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "ticket": "t_e886e3c3",
+  "status": "PASS",
+  "candidateId": "working-tree:80bf99bba621e3f9c3f203c71306d18f8dbe988327d53dd605e839ab15a0abd8:0fa78dfc18f9ad4546e2ccf5ee131cd401a718223868e00d47432f270ccd94b8",
+  "desktop": {
+    "viewport": "1440x1000",
+    "measurementStart": "runtime-ready",
+    "p95FrameMs": 9.1,
+    "longTasksOver50Ms": 0,
+    "interactionP98Ms": 0,
+    "cls": 0
+  },
+  "mobile": {
+    "device": "Samsung SM-G950F",
+    "os": "Android 9",
+    "physical": true,
+    "serialRedacted": true,
+    "viewport": "360x701",
+    "measurementStart": "runtime-ready",
+    "p95FrameMs": 16.7,
+    "longTasksOver50Ms": 0,
+    "interactionP98Ms": 0,
+    "cls": 0,
+    "adaptiveOutcome": "Low-to-Static",
+    "preAdaptationP95FrameMs": 32,
+    "preAdaptationRenderer": { "calls": 8, "triangles": 178, "dpr": 1 }
+  },
+  "overflow": {
+    "320": 0,
+    "390": 0,
+    "768": 0,
+    "1024": 0,
+    "1440": 0
+  },
+  "renderer": {
+    "High": { "measured": true, "calls": 8, "triangles": 800, "dpr": 1, "waves": 2 },
+    "Medium": { "measured": true, "calls": 8, "triangles": 416, "dpr": 1, "waves": 1 },
+    "Low": { "measured": true, "calls": 8, "triangles": 178, "dpr": 1, "waves": 1 }
+  },
+  "emulationIsLayoutOnly": true,
+  "notes": [
+    "Physical Chrome content viewport varied from 360x701 to 360x645 as browser chrome changed; the required performance capture began at 360x701.",
+    "The physical SM-G950F could not sustain Low WebGL under the 25ms target, so two consecutive 2s Low misses correctly surrendered to the static fallback. Final delivered-state metrics are reported above."
+  ]
+}
