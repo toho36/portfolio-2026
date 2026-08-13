@@ -8,6 +8,18 @@ import {
   type RallyThree,
   type RallyThreeResult,
 } from './loadRallyThree'
+import {
+  createRallyPlayhead,
+  type RallyFrameScheduler,
+  type RallyPlayheadMotion,
+  type RallyPlayheadWindow,
+  type RallyVisibilityObserver,
+} from './rallyPlayhead'
+import {
+  createRallyStaircaseRuntime,
+  type RallyStaircaseRuntime,
+  type RallyStaircaseThree,
+} from './rallyRuntime'
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
 
@@ -35,8 +47,10 @@ export interface RallyElements {
   readonly stage: HTMLElement
 }
 
-export interface RallyWindow {
+export interface RallyWindow extends RallyPlayheadWindow {
   matchMedia(query: string): MediaQueryList
+  setTimeout(handler: TimerHandler, timeout?: number, ...arguments_: unknown[]): number
+  clearTimeout(handle?: number): void
 }
 
 export interface RallyRuntimeParts {
@@ -44,6 +58,11 @@ export interface RallyRuntimeParts {
   readonly window?: RallyWindow
   readonly motion: RallyMotionFacade
   readonly three: RallyThree
+  readonly scheduler?: RallyFrameScheduler
+  readonly createObserver?: (
+    callback: (entries: readonly { readonly isIntersecting: boolean }[]) => void,
+  ) => RallyVisibilityObserver
+  readonly onSurrender: () => void
 }
 
 export interface RallyRuntimeHandle {
@@ -61,10 +80,38 @@ export interface RallyRuntimeOwnerOptions {
   readonly importMotion?: () => Promise<unknown>
   readonly importThree?: () => Promise<unknown>
   readonly createRuntime?: (parts: RallyRuntimeParts) => RallyRuntimeHandle
+  readonly scheduler?: RallyFrameScheduler
+  readonly createObserver?: RallyRuntimeParts['createObserver']
+  readonly onSurrender?: () => void
 }
 
-function defaultRuntime(): RallyRuntimeHandle {
-  return Object.freeze({ destroy() {} })
+function defaultRuntime(parts: RallyRuntimeParts): RallyRuntimeHandle {
+  const win = parts.window ?? window
+  let scene: RallyStaircaseRuntime | null = null
+
+  try {
+    scene = createRallyStaircaseRuntime({
+      // The loader has already validated this exact 18-member facade.
+      three: parts.three as unknown as RallyStaircaseThree,
+      stage: parts.elements.stage,
+      window: win,
+      now: parts.scheduler
+        ? () => parts.scheduler!.now()
+        : () => win.performance.now(),
+      onSurrender: parts.onSurrender,
+    })
+    return createRallyPlayhead({
+      elements: parts.elements,
+      motion: parts.motion as unknown as RallyPlayheadMotion,
+      runtime: scene,
+      window: win as RallyPlayheadWindow,
+      scheduler: parts.scheduler,
+      createObserver: parts.createObserver,
+    })
+  } catch (error) {
+    scene?.destroy()
+    throw error
+  }
 }
 
 export function createRallyRuntimeOwner(
@@ -83,6 +130,7 @@ export function createRallyRuntimeOwner(
   let reduced = media.matches
   let pending: { canceled: boolean } | null = null
   let runtime: RallyRuntimeHandle | null = null
+  let surrendered = false
   let destroyed = false
 
   const isActive = (
@@ -90,6 +138,7 @@ export function createRallyRuntimeOwner(
     generation: number,
   ) =>
     !destroyed &&
+    !surrendered &&
     pending === load &&
     !load.canceled &&
     !media.matches &&
@@ -107,8 +156,16 @@ export function createRallyRuntimeOwner(
     destroyRuntime()
   }
 
+  function surrenderForVisit() {
+    if (destroyed || surrendered) return
+    surrendered = true
+    invalidateCurrent()
+    elements.root.dataset.rallyRuntime = 'static'
+    options.onSurrender?.()
+  }
+
   function requestRuntime() {
-    if (destroyed || media.matches || pending || runtime) return
+    if (destroyed || surrendered || media.matches || pending || runtime) return
 
     const generation = gate.issueGeneration()
     const load = { canceled: false }
@@ -175,13 +232,22 @@ export function createRallyRuntimeOwner(
         }
 
         try {
-          runtime = (options.createRuntime ?? defaultRuntime)({
+          const created = (options.createRuntime ?? defaultRuntime)({
             elements,
             window: options.window,
             motion: motionSettlement.value.runtime,
             three: threeSettlement.value.runtime,
+            scheduler: options.scheduler,
+            createObserver: options.createObserver,
+            onSurrender: surrenderForVisit,
           })
-          elements.root.dataset.rallyRuntime = 'ready'
+          if (destroyed || surrendered || media.matches) {
+            created.destroy()
+            elements.root.dataset.rallyRuntime = 'static'
+          } else {
+            runtime = created
+            elements.root.dataset.rallyRuntime = 'ready'
+          }
         } catch {
           runtime = null
           elements.root.dataset.rallyRuntime = 'static'

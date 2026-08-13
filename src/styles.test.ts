@@ -211,6 +211,12 @@ describe('VoleyEvents rally staircase styles', () => {
     expect(desktop).toMatch(
       /\.lifecycle-stage:nth-child\(even\)\s*\{[^}]*width:\s*min\(72%,\s*52rem\)[^}]*justify-self:\s*end/,
     )
+    expect(desktop).toMatch(
+      /\.rally-canvas\s*\{[^}]*position:\s*absolute[^}]*inset:\s*0[^}]*width:\s*100%[^}]*height:\s*100%[^}]*pointer-events:\s*none[^}]*touch-action:\s*pan-y/,
+    )
+    expect(desktop).toMatch(
+      /\[data-rally-runtime='ready'\]\[data-rally-active='event-opens'\]\s+#event-opens/,
+    )
   })
 
   it('uses a visible 42svh stage band and one content column on mobile', () => {
@@ -225,6 +231,9 @@ describe('VoleyEvents rally staircase styles', () => {
     )
     expect(mobile).toMatch(
       /\.lifecycle-stage,[\s\S]*\.lifecycle-stage:nth-child\(odd\),[\s\S]*\.lifecycle-stage:nth-child\(even\)\s*\{[^}]*width:\s*100%[^}]*grid-template-columns:\s*1fr[^}]*justify-self:\s*stretch/,
+    )
+    expect(mobile).toMatch(
+      /\[data-rally-runtime='ready'\]\[data-rally-active='event-opens'\]\s+#event-opens,[\s\S]*#attendance-resolves\s*\{[^}]*background:\s*var\(--court-chalk\)/,
     )
     expect(mobile).not.toMatch(
       /\.(?:rally-stage|rally-fallback)[^{]*\{[^}]*(?:display:\s*none|visibility:\s*hidden|opacity:\s*0(?:[;\s]))/,

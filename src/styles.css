@@ -456,6 +456,32 @@ h1 {
   max-height: 100%;
   overflow: hidden;
   opacity: 0.74;
+  transition: opacity 180ms ease;
+}
+
+.rally-canvas {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  touch-action: pan-y;
+}
+
+.voleyevents[data-rally-runtime='ready'] .rally-fallback {
+  opacity: 0.08;
+}
+
+.voleyevents[data-rally-runtime='ready'][data-rally-active='event-opens'] #event-opens,
+.voleyevents[data-rally-runtime='ready'][data-rally-active='payment-matches'] #payment-matches {
+  background: linear-gradient(90deg, var(--court-chalk) 76%, transparent);
+}
+
+.voleyevents[data-rally-runtime='ready'][data-rally-active='player-registers'] #player-registers,
+.voleyevents[data-rally-runtime='ready'][data-rally-active='attendance-resolves'] #attendance-resolves {
+  background: linear-gradient(270deg, var(--court-chalk) 76%, transparent);
 }
 
 .rally-plane-surface,
@@ -1642,6 +1668,18 @@ footer p {
     max-height: 100%;
   }
 
+  .rally-canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  .voleyevents[data-rally-runtime='ready'][data-rally-active='event-opens'] #event-opens,
+  .voleyevents[data-rally-runtime='ready'][data-rally-active='player-registers'] #player-registers,
+  .voleyevents[data-rally-runtime='ready'][data-rally-active='payment-matches'] #payment-matches,
+  .voleyevents[data-rally-runtime='ready'][data-rally-active='attendance-resolves'] #attendance-resolves {
+    background: var(--court-chalk);
+  }
+
   .voleyevents > :not(.rally-stage) {
     background-color: var(--court-chalk);
   }
@@ -1923,6 +1961,10 @@ footer p {
   .rally-fallback {
     opacity: 1;
     transform: none;
+  }
+
+  .voleyevents .rally-fallback {
+    opacity: 1;
   }
 
   .goal-loop .run-marker {

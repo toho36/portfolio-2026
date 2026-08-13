@@ -15,6 +15,7 @@ interface VoleyEventsRuntimeModule {
     }
     readonly window?: Window
     readonly media: MediaQueryList
+    readonly onSurrender?: () => void
   }): VoleyEventsRuntimeOwner
 }
 
@@ -38,6 +39,7 @@ export function createVoleyEventsRuntimeBoundary(
   let reduced = media.matches
   let pending: { canceled: boolean } | null = null
   let owner: VoleyEventsRuntimeOwner | null = null
+  let surrendered = false
   let destroyed = false
 
   function invalidateCurrent() {
@@ -49,7 +51,7 @@ export function createVoleyEventsRuntimeBoundary(
   }
 
   function requestOwner() {
-    if (destroyed || media.matches || pending || owner) return
+    if (destroyed || surrendered || media.matches || pending || owner) return
 
     const requestGeneration = ++generation
     const load = { canceled: false }
@@ -79,6 +81,7 @@ export function createVoleyEventsRuntimeBoundary(
             elements,
             window: options.window,
             media,
+            onSurrender: surrenderForVisit,
           })
         } catch {
           if (
@@ -97,6 +100,13 @@ export function createVoleyEventsRuntimeBoundary(
         elements.root.dataset.rallyRuntime = 'static'
       },
     )
+  }
+
+  function surrenderForVisit() {
+    if (destroyed || surrendered) return
+    surrendered = true
+    invalidateCurrent()
+    elements.root.dataset.rallyRuntime = 'static'
   }
 
   function applyMotionPreference() {

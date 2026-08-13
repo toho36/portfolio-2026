@@ -145,11 +145,16 @@ describe('VoleyEvents Match Operations case study', () => {
   })
 
   it('keeps the static baseline free of canvas and motion runtime owners', () => {
+    const markup = render()
     const source = readFileSync(
       new URL('./VoleyEvents.tsx', import.meta.url),
       'utf8',
     )
 
+    expect(markup.match(/data-rally-stage="true"/g)).toHaveLength(1)
+    expect(markup.match(/data-rally-fallback="true"/g)).toHaveLength(1)
+    expect(markup.match(/class="rally-plane(?:\s|\")/g)).toHaveLength(5)
+    expect(markup).not.toMatch(/<canvas|data-rally-runtime|data-rally-active/)
     expect(source).not.toMatch(
       /\b(?:gsap|three|canvas|requestAnimationFrame)\b/i,
     )
@@ -295,6 +300,32 @@ describe('VoleyEvents page runtime boundary', () => {
     await settleBoundary()
     expect(createOwner).toHaveBeenCalledOnce()
     expect(destroyOwner).not.toHaveBeenCalled()
+    boundary.destroy()
+  })
+
+  it('keeps renderer surrender latched for the complete route visit', async () => {
+    const harness = boundaryHarness()
+    let surrender!: () => void
+    const importRuntime = vi.fn(async () => ({
+      createRallyRuntimeOwner(options: { onSurrender?: () => void }) {
+        surrender = options.onSurrender ?? (() => undefined)
+        harness.root.dataset.rallyRuntime = 'ready'
+        return { destroy: vi.fn() }
+      },
+    }))
+    const boundary = createVoleyEventsRuntimeBoundary({
+      ...harness,
+      importRuntime,
+    })
+
+    await settleBoundary()
+    surrender()
+    expect(harness.root.dataset.rallyRuntime).toBe('static')
+    harness.setReduced(true)
+    harness.setReduced(false)
+    await settleBoundary()
+    expect(importRuntime).toHaveBeenCalledOnce()
+    expect(harness.root.dataset.rallyRuntime).toBe('static')
     boundary.destroy()
   })
 
