@@ -288,3 +288,63 @@ This amendment supersedes only the behind-copy/right-reading-zone topology in **
 - The hero wash, route-content backfill, and active-reading lifecycle gradients existed only to protect copy behind the route-level stage and are retired. No global dim or replacement reading wash is allowed.
 - Reduced motion, no WebGL, context loss, and permanent static surrender keep the same visible band and semantic order. The fallback remains fully visible until a ready runtime deliberately reduces its opacity.
 - The band, stage, fallback, and canvas remain width-bounded by their route/container geometry. `100vw` breakout, negative stage overlap, route overflow masking, scroll interception, pinning, and position rewriting remain forbidden. Rendered overflow must remain zero at `320`, `390`, `768`, `1024`, and `1440` CSS px.
+
+## Owner-approved art reset — Monumental single-side descent
+
+Status: **APPROVED by owner, 2026-08-13**
+
+Material/composition reference: `docs/art-direction/voleyevents-rally/e-monumental-single-side-staircase.png`
+
+This amendment supersedes the five-equal-court overview, alternating left/right staircase, miniature-platform composition, and the frozen uncommitted candidate `c9a21f…`. The full-width band, band-owned native-scroll runway, semantic HTML order, progressive enhancement, adaptive quality, disposal, exact bundle ceiling, and physical-device gate remain authoritative.
+
+Kanban authority: implementation `t_638fb2d7`; recertification `t_4cddcc80`.
+
+This reset also supersedes the Obsidian amendment's `0.32–0.68` all-plane opacity range, five-plane fallback artwork, court-marking-only identity rule, implementation child/boundary, and evidence directory. It **absorbs** that unimplemented material amendment rather than stacking another renderer on top of it. The topology amendment's stale statements that the playhead remains lifecycle-bound and mobile has an automatic-height non-sticky band are superseded by committed band-owned playhead `4b69c45`.
+
+It also supersedes the original round-one “four impact stops”, “alternating left/right depth”, “five reusable court-plane meshes”, and fallback-matrix “Full alternating court staircase” language. The implementation uses five logical monumental tread meshes and one-direction motion. In mixed test blocks, only assertions that inspect fallback object count/classes/artwork are writable; lifecycle ownership assertions remain read-only.
+
+### Primary visual idea
+
+- The camera lives **inside a monumental staircase**, close and low. This is not a diagram or establishing overview.
+- The scene retains exactly five logical treads/contact anchors for the five authored states, but at every frame only `2–3` massive treads may be materially visible. “Materially visible” means opacity `≥0.12` and clipped projected area `≥1%` of stage area. The dominant tread is the materially visible tread with greatest clipped projected area; its clipped horizontal span must occupy at least `85%` of stage width and may leave the frame. The visible staircase union is not an acceptance proxy.
+- Steps descend in **one continuous screen direction**. This does not confine the ball to one half of the stage. Across all exact and between-stop samples, projected ball-centre x must be monotonic; cumulative backward movement may not exceed `3%` of stage width. No alternating left/right or zigzag traversal.
+- Background steps remain secondary: smoked-obsidian opacity `0.18–0.42`, subdued edge energy, no equally weighted floating cards. The active/dominant tread uses opacity `0.28–0.72` for contact/readability.
+- Production uses renderer-native geometry, colors, lights, opacity, roughness, and warm unlit edge strips. The moodframe's marble veins, leather microtexture, photographic reflections, and environment scenery are explicitly rejected unless a later separately approved material ticket proves they earn their bytes.
+
+### Ball scale and choreography
+
+- Exactly one unmistakable panelled volleyball is the hero object. Its **unclipped** projected diameter stays between `38–50%` of stage width on desktop and `32–46%` on mobile at the five exact stops; it never drops below `30%` between stops. Moodframe E owns close-camera scale and lighting posture, but its photographic texture/reflection and exact pixel ratio are non-transferable.
+- From the first to final exact stop, projected ball-centre displacement is at least `45%` of stage width in the one allowed x direction and at least `70%` of stage height downward. The swept silhouette therefore covers at least `83%` of stage width on desktop. Each quarter contributes at least `12%` of stage-height net downward displacement, so camera tracking cannot cancel a drop. This screen-space rule supersedes the earlier `0.8` camera-relative world-unit separation.
+- Each quarter of band progress is one deterministic cycle: **slow roll across tread → short edge hesitation → gravity-like tip/drop → hard contact on next tread**. Rotation direction follows travel and reverses exactly under reverse scroll.
+- Horizontal screen direction may not flip between segments. The ball's screen-space x position follows the monotonic rule above; no zigzag.
+- Contact uses one short bounded vermilion glow/ring. No particles, bounce loop, screen shake, physics engine, autoplay timeline, or independent animation clock.
+
+### Camera and composition
+
+- Projection oracles use the production stage rectangles and existing `42°` perspective FOV: desktop `1338.6×736`, mobile `328×270.9`, and short landscape `844×164` CSS px. Tests may use these exact fixtures; controller proof must additionally read back the live DOM rect.
+- Cinematic cropping is intentional for this macro composition. On desktop/mobile, the projected ball silhouette may extend outside the stage at the first/final exact stops by at most `35%` of its area. At intermediate samples the maximum is `30%` on desktop and `18%` on mobile; diameter is always measured before clipping. Occlusion tests ignore silhouette samples outside the stage, require at least `5` in-stage samples, and require every in-stage sample to be unoccluded.
+- Camera framing follows the descent enough to keep the active ball/tread dominant, but may not cancel the numeric screen-space drop above. At each exact stop, the next contact edge must have opacity `≥0.12`, clipped projected length `≥18%` of stage width, and lie fully below the ball centre.
+- Desktop `1440×1000`: dominant tread clipped width `≥85%`, ball diameter and route coverage use the numeric ranges above.
+- Mobile `360×645` with `42svh` stage: at most two tread tops may each have clipped projected area `≥4%` of stage area; crop stays within the cinematic bounds above and may not remove the next contact edge.
+- Short landscape `844×164` is an eligibility/safety fixture, not the owner art-composition target: ball diameter is `45–70%` of stage height, first-to-final x displacement is `≥35%` of stage width, y displacement is `≥25%` of stage height, silhouette crop is `≤30%`, and all in-stage occlusion/contact/one-direction/runtime-budget rules still apply. Desktop/mobile width-based diameter and `70%` y-displacement rules do not apply to short landscape.
+- No semantic text appears inside or behind the band. Native-scroll states remain `serve → event-opens → player-registers → payment-matches → attendance-resolves` at `0/.25/.5/.75/1` of usable runway.
+
+### Fallback and proof
+
+- Static SVG/CSS fallback shows the same close camera: one enormous foreground tread, one large panelled ball, one descending edge/contact cue. It must not fall back to the five-miniature-court diagram.
+- The fallback intentionally replaces the old exactly-five-plane/four-marker SVG contract. It contains exactly `2` close-up tread groups, `1` panelled ball, and `1` contact cue; no `data-rally-landing`, miniature court group, net, or repeated ball remains. Logical five-state ownership stays in the runtime/playhead, not fallback object count.
+- “Exact contact” means the ball centre is one ball radius from the active tread plane within `0.02` world units at exact stops. “Unoccluded” uses nine projected silhouette samples (centre plus eight cardinal/diagonal points at `0.82×` radius) under the in-stage rule above. Tests sample exact stops plus at least `8` evenly spaced points per quarter.
+- At stops `0/.25/.5/.75`, “next contact edge” means the leading contact edge of the next tread. At final stop `1`, it means the leading drop-off edge of the fifth/final tread; the same opacity, clipped-length, and below-ball-centre thresholds apply.
+- Pure-frame tests must measure materially visible tread count, dominant clipped occupancy, ball diameter, monotonic one-direction path, x/y route coverage, exact contact, forward/reverse identity, opacity bounds, next-edge visibility, and between-stop occlusion on desktop/mobile/short landscape.
+- Controller production-preview proof captures initial, pre-edge, mid-drop, contact, and final states. Visual failure beats tests/reviewer approval.
+- Physical phone proof remains mandatory before local renderer commit. No push, deploy, MiniMax, texture/model download, or new dependency is authorized.
+
+### Renderer budget and ownership boundary
+
+- Each of the five logical treads is one geometry/mesh containing its top and riser, so per-tread opacity remains possible without a custom shader. All warm tread edges are merged into one existing `LineSegments`. Do not allocate separate top/riser/edge meshes per tread.
+- Existing validated 18-member Three facade remains unchanged. No new constructor, loader, shader hook, model, texture, environment map, postprocessing pass, or physics dependency.
+- Low remains `≤10` draw calls including a live contact cue: five tread meshes + one merged edge line + three ball draws + one contact cue. Medium remains `≤14`, High `≤18`; triangle caps and DPR profiles remain unchanged. Flat transparent double-sided tread/contact geometry uses `forceSinglePass` where applicable. Budget limits may not be raised in this ticket.
+- Writable production: `src/voleyevents/rallyRuntime.ts`; fallback SVG only in `src/pages/VoleyEvents.tsx`; VoleyEvents fallback/material blocks only in `src/styles.css`.
+- Writable oracles: `src/voleyevents/rallyRuntime.test.ts`; fallback-only assertions in `src/pages/voleyEvents.test.ts`; matching fallback/material assertions in `src/styles.test.ts`; generated `docs/evidence/voleyevents-rally/bundle-budget.json`.
+- Read-only: `src/voleyevents/rallyQuality.ts`, `src/voleyevents/rallyPlayhead.ts`, `src/voleyevents/rallyProgress.ts`, all loaders/source closure/package metadata and unrelated route/styles/tests.
+- Controller-owned recertification writes only `docs/evidence/voleyevents-rally/monumental-single-side/` plus refreshed existing `performance-matrix.json`, `browser-acceptance.md`, `tier-transitions.json`, and `bundle-budget.json`, all bound to the exact accepted candidate.

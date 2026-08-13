@@ -38,6 +38,14 @@
       "width": 1672,
       "height": 941,
       "prompt": "Corrective art-direction moodframe for Impossible Match / Obsidian Ascent: one unmistakable premium volleyball descending diagonally through five impossible volleyball-court platforms in deep perspective; translucent smoked obsidian mineral bodies, warm brushed aluminium edges and court markings, restrained cobalt and vermilion impact energy, clean warm-chalk reading zone on the left, no text, logos, random balls, particles, bloom, white marble, generic glass cards, corridor, or HUD. Renderer-native Three.js target without bitmap textures."
+    },
+    {
+      "id": "E",
+      "file": "e-monumental-single-side-staircase.png",
+      "sha256": "709378bb526b35bcb800dfb784b87973ea5a8bb2dc26329b256ba03a6f1f3c3d",
+      "width": 864,
+      "height": 1821,
+      "prompt": "Owner-approved corrective target: camera extremely close and low inside a monumental smoked-obsidian staircase; one foreground tread spans more than 85% of frame width; only two or three massive steps visible; one premium panelled volleyball occupies roughly 30% of frame width and rolls down one continuous side before tipping over each edge; its route covers more than 70% of the frame; warm aluminium edge strips, subdued translucent background structure, restrained vermilion contact light; no overview, zigzag, miniature courts, floating cards, diagram, nets, particles, rocks, text, logos, or multiple balls. Generated marble veins and photographic reflections are reference slop, not production requirements."
     }
   ]
 }
