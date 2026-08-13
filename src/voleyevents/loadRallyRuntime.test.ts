@@ -62,6 +62,21 @@ const three = {
   WebGLRenderer: class WebGLRenderer {},
   Scene: class Scene {},
   PerspectiveCamera: class PerspectiveCamera {},
+  Group: class Group {},
+  Mesh: class Mesh {},
+  LineSegments: class LineSegments {},
+  BufferGeometry: class BufferGeometry {},
+  Float32BufferAttribute: class Float32BufferAttribute {},
+  SphereGeometry: class SphereGeometry {},
+  PlaneGeometry: class PlaneGeometry {},
+  MeshStandardMaterial: class MeshStandardMaterial {},
+  MeshBasicMaterial: class MeshBasicMaterial {},
+  LineBasicMaterial: class LineBasicMaterial {},
+  AmbientLight: class AmbientLight {},
+  DirectionalLight: class DirectionalLight {},
+  Color: class Color {},
+  Vector2: class Vector2 {},
+  Vector3: class Vector3 {},
 }
 
 describe('VoleyEvents rally runtime owner', () => {

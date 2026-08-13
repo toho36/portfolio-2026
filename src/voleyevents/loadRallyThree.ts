@@ -8,7 +8,43 @@ export interface RallyThree {
   readonly WebGLRenderer: RallyThreeConstructor
   readonly Scene: RallyThreeConstructor
   readonly PerspectiveCamera: RallyThreeConstructor
+  readonly Group: RallyThreeConstructor
+  readonly Mesh: RallyThreeConstructor
+  readonly LineSegments: RallyThreeConstructor
+  readonly BufferGeometry: RallyThreeConstructor
+  readonly Float32BufferAttribute: RallyThreeConstructor
+  readonly SphereGeometry: RallyThreeConstructor
+  readonly PlaneGeometry: RallyThreeConstructor
+  readonly MeshStandardMaterial: RallyThreeConstructor
+  readonly MeshBasicMaterial: RallyThreeConstructor
+  readonly LineBasicMaterial: RallyThreeConstructor
+  readonly AmbientLight: RallyThreeConstructor
+  readonly DirectionalLight: RallyThreeConstructor
+  readonly Color: RallyThreeConstructor
+  readonly Vector2: RallyThreeConstructor
+  readonly Vector3: RallyThreeConstructor
 }
+
+const rallyThreeMembers = [
+  'WebGLRenderer',
+  'Scene',
+  'PerspectiveCamera',
+  'Group',
+  'Mesh',
+  'LineSegments',
+  'BufferGeometry',
+  'Float32BufferAttribute',
+  'SphereGeometry',
+  'PlaneGeometry',
+  'MeshStandardMaterial',
+  'MeshBasicMaterial',
+  'LineBasicMaterial',
+  'AmbientLight',
+  'DirectionalLight',
+  'Color',
+  'Vector2',
+  'Vector3',
+] as const satisfies readonly (keyof RallyThree)[]
 
 function threeNamespace(module: unknown): Record<string, unknown> {
   if (typeof module !== 'object' || module === null) {
@@ -17,9 +53,9 @@ function threeNamespace(module: unknown): Record<string, unknown> {
 
   const namespace = module as Record<string, unknown>
   if (
-    typeof namespace.WebGLRenderer === 'function' ||
-    typeof namespace.Scene === 'function' ||
-    typeof namespace.PerspectiveCamera === 'function'
+    rallyThreeMembers.some(
+      (member) => typeof namespace[member] === 'function',
+    )
   ) {
     return namespace
   }
@@ -50,6 +86,24 @@ export async function importRallyThree(
     WebGLRenderer: threeConstructor(namespace, 'WebGLRenderer'),
     Scene: threeConstructor(namespace, 'Scene'),
     PerspectiveCamera: threeConstructor(namespace, 'PerspectiveCamera'),
+    Group: threeConstructor(namespace, 'Group'),
+    Mesh: threeConstructor(namespace, 'Mesh'),
+    LineSegments: threeConstructor(namespace, 'LineSegments'),
+    BufferGeometry: threeConstructor(namespace, 'BufferGeometry'),
+    Float32BufferAttribute: threeConstructor(
+      namespace,
+      'Float32BufferAttribute',
+    ),
+    SphereGeometry: threeConstructor(namespace, 'SphereGeometry'),
+    PlaneGeometry: threeConstructor(namespace, 'PlaneGeometry'),
+    MeshStandardMaterial: threeConstructor(namespace, 'MeshStandardMaterial'),
+    MeshBasicMaterial: threeConstructor(namespace, 'MeshBasicMaterial'),
+    LineBasicMaterial: threeConstructor(namespace, 'LineBasicMaterial'),
+    AmbientLight: threeConstructor(namespace, 'AmbientLight'),
+    DirectionalLight: threeConstructor(namespace, 'DirectionalLight'),
+    Color: threeConstructor(namespace, 'Color'),
+    Vector2: threeConstructor(namespace, 'Vector2'),
+    Vector3: threeConstructor(namespace, 'Vector3'),
   }
 }
 
