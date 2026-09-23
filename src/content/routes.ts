@@ -9,9 +9,9 @@ export const ROUTES = [
   },
   {
     id: 'voleyevents',
-    path: '/voleyevents',
-    label: 'VoleyEvents',
-    title: 'VoleyEvents Match Operations — Hoang Viet To',
+    path: '/gameonvb',
+    label: 'GameOnVB',
+    title: 'GameOnVB Match Operations — Hoang Viet To',
     description:
       'An operational product for recurring recreational volleyball events.',
   },
@@ -27,9 +27,9 @@ export const ROUTES = [
     id: 'playground',
     path: '/playground',
     label: 'Playground',
-    title: 'Signal Relay Playground — Hoang Viet To',
+    title: 'System Field Playground — Hoang Viet To',
     description:
-      'An experimental reversible spatial signal relay built with native scroll, GSAP and progressive WebGL.',
+      'An interactive field: send a pulse, fold its surface and rewind it with native scroll.',
   },
 ] as const
 
@@ -54,6 +54,9 @@ export function normalizePathname(pathname: string): string {
 
 export function resolveRoute(pathname: string): Route {
   const normalized = normalizePathname(pathname)
+  if (normalized === '/voleyevents') {
+    return ROUTES.find(({ path }) => path === '/gameonvb') ?? ROUTES[0]
+  }
   return ROUTES.find(({ path }) => path === normalized) ?? ROUTES[0]
 }
 

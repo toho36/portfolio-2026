@@ -50,12 +50,12 @@ export const VOLEYEVENTS_LIFECYCLE: readonly VoleyEventsLifecycleStage[] = [
 ] as const
 
 /**
- * Public-safe case-study copy derived from owner-maintained VoleyEvents material.
+ * Public-safe case-study copy derived from owner-maintained GameOnVB material.
  * It intentionally contains no metrics, currency amounts or attributed quotes.
  */
 export const VOLEYEVENTS = {
   hero: {
-    eyebrow: 'VoleyEvents / Match operations',
+    eyebrow: 'GameOnVB / Match operations',
     title:
       'Registration and operations software for recurring recreational volleyball events.',
     lede: SOURCE.preview,

@@ -20,7 +20,7 @@ function createClassList() {
 }
 
 describe('systems-builder shell', () => {
-  it('leads with the locked identity without the old primary positioning', () => {
+  it('opens a selectable world while preserving the sourced builder identity', () => {
     const markup = render()
 
     expect(markup).toContain(
@@ -31,7 +31,15 @@ describe('systems-builder shell', () => {
       markup.indexOf('id="flagships"'),
     )
     expect(hero).not.toMatch(/frontend|full[-\s]?stack/i)
-    expect(hero).toContain('src="/assets/systems-field.svg"')
+    expect(markup).toContain('I MAKE')
+    expect(markup).toContain('THINGS')
+    expect(markup).toContain('CLICK.')
+    expect(markup).toContain('class="world-portal"')
+    expect(markup).toContain('aria-label="Select Goal Loop"')
+    expect(markup).toContain('aria-pressed="true"')
+    expect(markup).toContain('role="group" aria-label="Choose a world"')
+    expect(markup).not.toContain('id="world-selection"')
+    expect(markup).not.toContain('src="/assets/systems-field.svg"')
     expect(markup).toContain('>Homepage</a>')
   })
 
@@ -42,13 +50,13 @@ describe('systems-builder shell', () => {
       markup.indexOf('<section id="side-quests"'),
     )
 
-    expect(flagships.indexOf('VoleyEvents')).toBeGreaterThan(-1)
-    expect(flagships.indexOf('VoleyEvents')).toBeLessThan(
+    expect(flagships.indexOf('GameOnVB')).toBeGreaterThan(-1)
+    expect(flagships.indexOf('GameOnVB')).toBeLessThan(
       flagships.indexOf('Goal Loop'),
     )
-    expect(flagships).toContain('href="/voleyevents"')
+    expect(flagships).toContain('href="/gameonvb"')
     expect(flagships).toContain('href="/goal-loop"')
-    expect(flagships).not.toMatch(/GameOnVB|Screen Switch|Suburbs/)
+    expect(flagships).not.toMatch(/Screen Switch|Suburbs/)
     expect(markup.indexOf('id="side-quests"')).toBeGreaterThan(
       markup.indexOf('id="flagships"'),
     )
@@ -89,24 +97,24 @@ describe('systems-builder shell', () => {
   })
 
   it('renders all four routes distinctly and falls unknown paths back to home', () => {
-    const voleyEvents = render('/voleyevents/')
+    const gameOnVB = render('/gameonvb/')
     const goalLoop = render('/goal-loop')
     const playground = render('/playground')
     const playgroundSlash = render('/playground/')
     const unknown = render('/not-a-route')
 
-    expect(voleyEvents).toContain(
+    expect(gameOnVB).toContain(
       'Registration and operations software for recurring recreational volleyball events.',
     )
-    expect(voleyEvents).toContain('href="/"')
-    expect(voleyEvents).toContain('href="/goal-loop"')
+    expect(gameOnVB).toContain('href="/"')
+    expect(gameOnVB).toContain('href="/goal-loop"')
     expect(goalLoop).toContain('id="goal-loop-title"')
     expect(goalLoop).toContain('id="run-tape"')
     expect(goalLoop).toContain('href="/"')
-    expect(goalLoop).toContain('href="/voleyevents"')
+    expect(goalLoop).toContain('href="/gameonvb"')
     for (const markup of [playground, playgroundSlash]) {
       expect(markup).toContain('id="relay-title"')
-      expect(markup).toContain('>SYSTEM FIELD</h1>')
+      expect(markup).toContain('DISTURB IT.')
       expect(markup).toContain('id="relay-input"')
       expect(markup).toContain('id="relay-fold"')
       expect(markup).toContain('id="relay-feedback"')

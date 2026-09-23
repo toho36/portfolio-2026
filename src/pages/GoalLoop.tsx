@@ -1,4 +1,5 @@
 import type { CSSProperties, MouseEvent, ReactNode } from 'react'
+import { ShapeAndHole } from '../components/ShapeAndHole'
 import {
   GOAL_LOOP,
   GOAL_LOOP_HISTORY,
@@ -28,7 +29,7 @@ function RouteAnchor({
 }: {
   readonly children: ReactNode
   readonly className: string
-  readonly href: '/' | '/voleyevents'
+  readonly href: '/' | '/gameonvb'
   readonly onNavigate: GoalLoopPageProps['onNavigate']
 }) {
   return (
@@ -45,17 +46,15 @@ function RouteAnchor({
 export function GoalLoopPage({ onNavigate }: GoalLoopPageProps) {
   return (
     <article className="goal-loop">
-      <section
-        className="run-hero"
-        aria-labelledby="goal-loop-title"
-        data-reveal
-      >
-        <p className="eyebrow">{GOAL_LOOP.hero.eyebrow}</p>
-        <h1 id="goal-loop-title">{GOAL_LOOP.hero.title}</h1>
-        <p className="run-hero-lede">{GOAL_LOOP.hero.lede}</p>
-        <a className="target-link hero-jump" href="#run-tape">
-          Read the run trace <span aria-hidden="true">↓</span>
-        </a>
+      <ShapeAndHole />
+      <section className="shape-meaning" aria-labelledby="shape-meaning-title">
+        <h2 id="shape-meaning-title">The same brief.<br />Three different questions.</h2>
+        <div>
+          <p>Critique compares the light plan with the opening. Build makes a solid object. Check drops a weight on it at the table. Review compares the solid object with the opening.</p>
+          <p>A failed plan returns before Build. A cracked object and a wrong shape each return to Build and use one repair piece.</p>
+          <p>{GOAL_LOOP.hero.lede}</p>
+          <a className="target-link" href="#run-tape">Read the full run trace ↓</a>
+        </div>
       </section>
 
       <section
@@ -90,31 +89,6 @@ export function GoalLoopPage({ onNavigate }: GoalLoopPageProps) {
         </div>
 
         <div className="run-tape-layout">
-          <div className="run-trace" aria-hidden="true">
-            <svg
-              viewBox="0 0 48 1120"
-              preserveAspectRatio="xMidYMid slice"
-              role="presentation"
-            >
-              <path className="run-trace-line" d="M24 0V1120" />
-              <path
-                className="run-trace-branch"
-                d="M24 1040C28 1040 28 1010 32 1010"
-              />
-              <circle className="run-trace-stop" cx="24" cy="80" r="3" />
-              <circle className="run-trace-stop" cx="24" cy="272" r="3" />
-              <circle className="run-trace-stop" cx="24" cy="464" r="3" />
-              <circle className="run-trace-stop" cx="24" cy="656" r="3" />
-              <circle className="run-trace-stop" cx="24" cy="848" r="3" />
-              <circle className="run-trace-stop" cx="24" cy="1040" r="3" />
-              <path className="run-block-mark" d="M29 1007l6 6m0-6-6 6" />
-              <g className="run-marker">
-                <circle cx="24" cy="80" r="7" />
-                <path d="M21 80l2 2 4-5" />
-              </g>
-            </svg>
-          </div>
-
           <ol className="run-track">
             {GOAL_LOOP_STAGES.map((stage) => {
               const revisions = GOAL_LOOP_REVISIONS.filter(
@@ -126,15 +100,15 @@ export function GoalLoopPage({ onNavigate }: GoalLoopPageProps) {
                   className="run-stage"
                   id={stage.id}
                   key={stage.id}
-                  data-reveal
                 >
-                  <div className="run-stage-heading">
+                  <details className="run-reference">
+                  <summary className="run-stage-heading">
                     <div>
                       <p className="run-role">{stage.role}</p>
                       <h3>{stage.label}</h3>
                     </div>
                     <span className="run-state">{stage.marker}</span>
-                  </div>
+                  </summary>
                   <dl>
                     <dt>Input</dt>
                     <dd>{stage.input}</dd>
@@ -183,6 +157,7 @@ export function GoalLoopPage({ onNavigate }: GoalLoopPageProps) {
                       </section>
                     </div>
                   ) : null}
+                  </details>
                 </li>
               )
             })}
@@ -270,10 +245,10 @@ export function GoalLoopPage({ onNavigate }: GoalLoopPageProps) {
       <nav className="run-navigation" aria-label="Case study navigation">
         <RouteAnchor
           className="back-link"
-          href="/voleyevents"
+          href="/gameonvb"
           onNavigate={onNavigate}
         >
-          <span aria-hidden="true">←</span> Back: VoleyEvents
+          <span aria-hidden="true">←</span> Back: GameOnVB
         </RouteAnchor>
         <RouteAnchor className="next-link" href="/" onNavigate={onNavigate}>
           Next: Homepage <span aria-hidden="true">→</span>

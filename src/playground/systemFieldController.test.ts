@@ -47,6 +47,25 @@ async function settle() {
 }
 
 describe('System Field controller lifecycle', () => {
+  it('pulses only an adopted live field without changing scroll progress', async () => {
+    const harness = controllerHarness()
+    const runtime = { addWave: vi.fn(), destroy: vi.fn(), resize: vi.fn(), setProgress: vi.fn() }
+    const controller = createSystemFieldController({
+      ...harness, importThree: async () => ({}), createRuntime: () => runtime,
+    })
+    expect(controller.pulse()).toBe(false)
+    await settle()
+    runtime.setProgress.mockClear()
+    expect(controller.pulse()).toBe(true)
+    expect(runtime.addWave).toHaveBeenCalledWith(0, 0)
+    expect(runtime.setProgress).not.toHaveBeenCalled()
+    harness.setReduced(true)
+    expect(controller.pulse()).toBe(false)
+    controller.destroy()
+    expect(controller.pulse()).toBe(false)
+    expect(runtime.addWave).toHaveBeenCalledTimes(1)
+  })
+
   it('skips reduced motion and cancels stale preference generations', async () => {
     const harness = controllerHarness(true)
     const loads: Array<{

@@ -2,8 +2,13 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const styles = readFileSync(new URL('./styles.css', import.meta.url), 'utf8')
+const worlds = readFileSync(new URL('./worlds.css', import.meta.url), 'utf8')
 
 describe('accessible typography-led styles', () => {
+  it('lets the body fit a narrow viewport after scrollbar allocation', () => {
+    expect(styles).toMatch(/body\s*\{[^}]*min-width:\s*0\s*;/)
+  })
+
   it('gives every link target both 44px dimensions and inline padding', () => {
     const targetRule = styles.match(/\.target-link\s*\{([^}]+)\}/)?.[1]
 
@@ -51,13 +56,18 @@ describe('accessible typography-led styles', () => {
     )
   })
 
-  it('keeps VoleyEvents focus and footer hover visible on the light shell', () => {
-    expect(styles).toMatch(
-      /\.route-voleyevents a:focus-visible,[\s\S]*outline-color:\s*#1557ff/,
+  it('uses the live GameOnVB purple and yellow palette', () => {
+    const gameOnTheme = worlds.slice(
+      worlds.indexOf('.route-voleyevents {'),
+      worlds.indexOf('}', worlds.indexOf('.route-voleyevents {')) + 1,
     )
+
     expect(styles).toMatch(
-      /\.route-voleyevents \.contact-nav a:hover\s*\{[^}]*color:\s*#1557ff/,
+      /\.route-voleyevents a:focus-visible,[\s\S]*outline-color:\s*oklch\(87\.7% \.176 92\.7\)/,
     )
+    expect(worlds).toContain('--ink: oklch(16.4% .045 295.7)')
+    expect(worlds).toContain('--signal: oklch(87.7% .176 92.7)')
+    expect(gameOnTheme).not.toMatch(/#1246d3|#0c32a7|#d5f73b/)
   })
 
   it('does not use the Vitest-incompatible CSS raw import', () => {
@@ -176,38 +186,18 @@ describe('System Field styles', () => {
   })
 })
 
-describe('VoleyEvents rally staircase styles', () => {
+describe('VoleyEvents lifecycle styles', () => {
   const mobileBreakpoint = styles.indexOf('@media (max-width: 760px)')
   const desktop = styles.slice(0, mobileBreakpoint)
   const mobile = styles.slice(mobileBreakpoint)
 
-  it('contains one full-width sticky band without masking route overflow', () => {
+  it('retires the rally presentation without masking route overflow', () => {
     const route = styles.match(/\.voleyevents\s*\{([^}]+)\}/)?.[1]
-    const band = desktop.match(/\.rally-band\s*\{([^}]+)\}/)?.[1]
 
     expect(route).toBeDefined()
     expect(route).not.toMatch(/overflow:\s*(?:hidden|clip)/)
-    expect(band).toBeDefined()
-    expect(band).not.toMatch(/margin-inline|max-width/)
-    expect(desktop).toMatch(
-      /\.rally-band\s*\{[^}]*position:\s*relative[^}]*min-width:\s*0[^}]*height:\s*clamp\(90rem,\s*230svh,\s*150rem\)/,
-    )
-    expect(desktop).toMatch(
-      /\.rally-stage\s*\{[^}]*position:\s*sticky[^}]*top:\s*5\.5rem[^}]*display:\s*grid[^}]*height:\s*clamp\(35rem,\s*calc\(100svh - 8\.5rem\),\s*46rem\)[^}]*min-width:\s*0[^}]*overflow:\s*hidden/,
-    )
-    expect(styles).toMatch(
-      /\.rally-fallback\s*\{[^}]*width:\s*100%[^}]*height:\s*auto[^}]*max-height:\s*100%[^}]*overflow:\s*hidden/,
-    )
-    expect(styles).toMatch(
-      /\.rally-fallback\s*\{[^}]*opacity:\s*1/,
-    )
+    expect(styles).not.toMatch(/\.court-hero|\.rally-|data-rally-/)
     expect(styles).not.toContain('100vw')
-    expect(desktop).not.toMatch(
-      /\.rally-stage\s*\{[^}]*margin-top:\s*calc\(-100svh/,
-    )
-    expect(styles).not.toContain('.court-hero::after')
-    expect(styles).not.toContain('.voleyevents > :not(.rally-stage)')
-    expect(styles).not.toMatch(/\[data-rally-active=[^\]]+\]\s+#[\w-]+/)
   })
 
   it('alternates bounded desktop lifecycle reading zones', () => {
@@ -220,19 +210,9 @@ describe('VoleyEvents rally staircase styles', () => {
     expect(desktop).toMatch(
       /\.lifecycle-stage:nth-child\(even\)\s*\{[^}]*width:\s*min\(72%,\s*52rem\)[^}]*justify-self:\s*end/,
     )
-    expect(desktop).toMatch(
-      /\.rally-canvas\s*\{[^}]*position:\s*absolute[^}]*inset:\s*0[^}]*width:\s*100%[^}]*height:\s*100%[^}]*pointer-events:\s*none[^}]*touch-action:\s*pan-y/,
-    )
   })
 
-  it('uses a visible 42svh stage band and one content column on mobile', () => {
-    expect(mobile).toMatch(
-      /\.rally-band\s*\{[^}]*height:\s*clamp\(60rem,\s*250svh,\s*105rem\)/,
-    )
-    expect(mobile).not.toMatch(/\.rally-band\s*\{[^}]*height:\s*auto/)
-    expect(mobile).toMatch(
-      /\.rally-stage\s*\{[^}]*position:\s*sticky[^}]*top:\s*0[^}]*height:\s*42svh[^}]*min-height:\s*0[^}]*margin-top:\s*0/,
-    )
+  it('uses one visible content column on mobile', () => {
     expect(mobile).toMatch(
       /\.lifecycle-track\s*\{[^}]*grid-template-columns:\s*1fr/,
     )
@@ -240,20 +220,7 @@ describe('VoleyEvents rally staircase styles', () => {
       /\.lifecycle-stage,[\s\S]*\.lifecycle-stage:nth-child\(odd\),[\s\S]*\.lifecycle-stage:nth-child\(even\)\s*\{[^}]*width:\s*100%[^}]*grid-template-columns:\s*1fr[^}]*justify-self:\s*stretch/,
     )
     expect(mobile).not.toMatch(
-      /\.(?:rally-stage|rally-fallback)[^{]*\{[^}]*(?:display:\s*none|visibility:\s*hidden|opacity:\s*0(?:[;\s]))/,
-    )
-  })
-
-  it('keeps the static stage and fallback settled under reduced motion', () => {
-    const reduced = styles.slice(
-      styles.indexOf('@media (prefers-reduced-motion: reduce)'),
-    )
-
-    expect(reduced).toMatch(
-      /\.rally-band,[\s\S]*\.rally-stage,[\s\S]*\.rally-fallback\s*\{[^}]*opacity:\s*1[^}]*transform:\s*none/,
-    )
-    expect(reduced).not.toMatch(
-      /\.(?:rally-band|rally-stage|rally-fallback)[^{]*\{[^}]*(?:display:\s*none|visibility:\s*hidden|height:\s*0(?:[;\s]))/,
+      /\.lifecycle-stage[^{]*\{[^}]*(?:display:\s*none|visibility:\s*hidden|opacity:\s*0(?:[;\s]))/,
     )
   })
 
@@ -264,42 +231,15 @@ describe('VoleyEvents rally staircase styles', () => {
   })
 })
 
-describe('mobile-first case-study hero composition', () => {
-  const mobileBreakpoint = styles.indexOf('@media (max-width: 760px)')
-  const desktop = styles.slice(0, mobileBreakpoint)
-  const mobile = styles.slice(mobileBreakpoint)
-
-  it('starts both case-study heroes promptly and keeps the mobile rally band visible', () => {
-    expect(mobile).toMatch(
-      /\.court-hero,\s*\.goal-loop \.run-hero\s*\{[^}]*min-height:\s*auto[^}]*align-content:\s*start/,
-    )
-    expect(mobile).toMatch(
-      /\.rally-band\s*\{[^}]*height:\s*clamp\(60rem,\s*250svh,\s*105rem\)/,
-    )
-    expect(mobile).not.toMatch(/\.rally-band\s*\{[^}]*height:\s*auto/)
-    expect(mobile).toMatch(
-      /\.rally-stage\s*\{[^}]*position:\s*sticky[^}]*top:\s*0[^}]*height:\s*42svh/,
-    )
-    expect(mobile).not.toMatch(/\.rally-fallback\s*\{[^}]*display:\s*none/)
-  })
-
-  it('retains the desktop hero clamps and bounded court stage', () => {
-    expect(desktop).toMatch(
-      /\.court-hero\s*\{[^}]*min-height:\s*clamp\(36rem,\s*78svh,\s*51rem\)[^}]*align-content:\s*end/,
-    )
-    expect(desktop).toMatch(
-      /\.goal-loop \.run-hero\s*\{[^}]*min-height:\s*clamp\(36rem,\s*78svh,\s*52rem\)[^}]*align-content:\s*end/,
-    )
-    expect(desktop).toMatch(
-      /\.rally-band\s*\{[^}]*height:\s*clamp\(90rem,\s*230svh,\s*150rem\)/,
-    )
-    expect(desktop).toMatch(
-      /\.rally-stage\s*\{[^}]*height:\s*clamp\(35rem,\s*calc\(100svh - 8\.5rem\),\s*46rem\)[^}]*overflow:\s*hidden/,
+describe('retired Home presentation', () => {
+  it('removes the old hero and project-card selectors', () => {
+    expect(styles).not.toMatch(
+      /\.hero(?:\s|[>{.:#])|\.hero-(?:graphic|introduction)|\.flagship|\.side-quest|\.system-(?:copy|index|link)|\.(?:section-heading|compact-heading|unlinked-note)/,
     )
   })
 })
 
-describe('Goal Loop run-trace styles', () => {
+describe('Goal Loop reference and history styles', () => {
   it('keeps the graphite vocabulary scoped to Goal Loop', () => {
     const goalLoopRule = styles.match(/\.goal-loop\s*\{([^}]+)\}/)?.[1]
 
@@ -319,34 +259,10 @@ describe('Goal Loop run-trace styles', () => {
     expect(goalLoopRule).not.toMatch(/--court-/)
   })
 
-  it('keeps the trace stable and advances only its marker on a reversible view timeline', () => {
-    const keyframes = styles.slice(
-      styles.indexOf('@keyframes run-marker-advance'),
-      styles.indexOf(
-        '@media (prefers-reduced-motion: no-preference)',
-        styles.indexOf('@keyframes run-marker-advance'),
-      ),
+  it('retires the decorative trace, marker, and progress timeline', () => {
+    expect(styles).not.toMatch(
+      /run-trace|run-marker|run-block-mark|--run-progress/,
     )
-
-    expect(styles).toContain('view-timeline-name: --run-progress')
-    const traceLine = styles.match(/\.goal-loop \.run-trace-line\s*\{([^}]+)\}/)?.[1]
-
-    expect(traceLine).toBeDefined()
-    expect(traceLine).not.toMatch(/stroke-dasharray|stroke-dashoffset/)
-    expect(styles).not.toContain('@keyframes run-trace-grow')
-    expect(
-      styles.slice(0, styles.indexOf('@media (prefers-reduced-motion: reduce)')),
-    ).not.toMatch(/\.run-trace-line\s*\{[^}]*animation:/)
-    expect(styles).toMatch(
-      /\.run-marker\s*\{[^}]*animation:\s*run-marker-advance linear both[^}]*animation-duration:\s*auto[^}]*animation-timeline:\s*--run-progress/,
-    )
-    expect(styles).toContain('animation-range: entry 0% exit 100%')
-    expect(styles).toMatch(
-      /\.run-marker\s*\{[^}]*transform:\s*translateY\(960px\)/,
-    )
-    expect(keyframes).toMatch(/from\s*\{[^}]*transform:/)
-    expect(keyframes).toMatch(/to\s*\{[^}]*transform:/)
-    expect(keyframes).not.toMatch(/(?:left|top|width|height):/)
   })
 
   it('renders status labels as text, not fake buttons', () => {
@@ -359,29 +275,15 @@ describe('Goal Loop run-trace styles', () => {
     expect(runState).not.toMatch(/border:|background:/)
   })
 
-  it('contains the trace and definition copy on mobile', () => {
+  it('contains definition copy on mobile', () => {
     const mobile = styles.slice(styles.indexOf('@media (max-width: 760px)'))
 
-    expect(mobile).toMatch(
-      /\.run-tape-layout\s*\{[^}]*grid-template-columns:\s*minmax\(3\.5rem,\s*4\.5rem\)\s+minmax\(0,\s*1fr\)/,
-    )
     expect(mobile).toMatch(
       /\.run-stage dl\s*\{[^}]*grid-template-columns:\s*1fr/,
     )
     expect(styles).toMatch(/\.run-stage\s*\{[^}]*min-width:\s*0/)
     expect(styles).toMatch(/\.run-stage dd\s*\{[^}]*overflow-wrap:\s*anywhere/)
     expect(styles).not.toContain('100vw')
-  })
-
-  it('settles the final marker under reduced motion', () => {
-    const reduced = styles.slice(
-      styles.indexOf('@media (prefers-reduced-motion: reduce)'),
-    )
-
-    expect(reduced).toMatch(
-      /\.run-marker\s*\{[^}]*opacity:\s*1[^}]*transform:\s*translateY\(960px\)\s*!important/,
-    )
-    expect(reduced).not.toMatch(/\.run-trace-line\s*\{/)
   })
 
   it('keeps audited history geometry static and animates only its marker', () => {

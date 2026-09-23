@@ -1,5 +1,7 @@
 # `/voleyevents` rally design contract
 
+> **Superseded by [Playable worlds](playable-worlds-design-contract.md).** The playable court replaces this staircase presentation; its runtime, loaders, exclusive tests and budget checker are retired. This document and its evidence remain historical, not current implementation authority.
+
 Status: **APPROVED — independent Opus round 3 and owner approval, 2026-08-13**
 Kanban authority: `t_baefbb35`
 Selected challenger: **B — Impossible Court Staircase**

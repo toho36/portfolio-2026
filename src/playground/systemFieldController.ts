@@ -21,6 +21,7 @@ export interface SystemFieldControllerOptions {
 
 export interface SystemFieldController {
   setProgress(progress: number, settling: boolean): void
+  pulse(): boolean
   resize(): void
   destroy(): void
 }
@@ -113,6 +114,11 @@ export function createSystemFieldController(
   else requestRuntime()
 
   return Object.freeze({
+    pulse() {
+      if (destroyed || media.matches || !runtime) return false
+      runtime.addWave(0, 0)
+      return true
+    },
     setProgress(nextProgress: number, nextSettling: boolean) {
       if (destroyed) return
       progress = normalizeSystemFieldProgress(nextProgress)

@@ -78,6 +78,7 @@ export interface RelayPlayheadOptions {
 }
 
 export interface RelayPlayhead {
+  pulse(): boolean
   destroy(): void
 }
 
@@ -644,6 +645,9 @@ export function createRelayPlayhead(
   }
 
   return Object.freeze({
+    pulse() {
+      return !destroyed && (systemField?.pulse() ?? false)
+    },
     destroy() {
       if (destroyed) return
       destroyed = true

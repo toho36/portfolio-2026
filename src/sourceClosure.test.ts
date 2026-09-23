@@ -19,6 +19,15 @@ const retiredModulePaths = [
   '/content/projectDiscovery.test.ts',
   '/content/cartridges.ts',
   '/content/cartridges.test.ts',
+  ...[
+    'loadRallyRuntime',
+    'loadRallyMotion',
+    'loadRallyThree',
+    'rallyRuntime',
+    'rallyPlayhead',
+    'rallyProgress',
+    'rallyQuality',
+  ].flatMap((name) => [`/voleyevents/${name}.ts`, `/voleyevents/${name}.test.ts`]),
 ] as const
 
 const GLOBALLY_FORBIDDEN_DEPENDENCIES = [
@@ -31,7 +40,7 @@ const ROUTE_SCOPED_DEPENDENCIES = [
   'three',
 ] as const
 
-const ROUTE_SCOPED_ROOTS = ['./playground/', './voleyevents/'] as const
+const ROUTE_SCOPED_ROOTS = ['./playground/'] as const
 
 const ABSENT_DEPENDENCIES = [
   ...GLOBALLY_FORBIDDEN_DEPENDENCIES,
@@ -104,6 +113,10 @@ describe('retired source closure', () => {
     for (const retiredPath of retiredModulePaths) {
       expect(modulePaths.some((path) => path.includes(retiredPath))).toBe(false)
     }
+    expect(() => readFileSync(
+      new URL('../scripts/check-voleyevents-rally-budget.mjs', import.meta.url),
+      'utf8',
+    )).toThrow(/ENOENT/)
   })
 
   it('rejects side-effect, from, dynamic, require, bare, and subpath imports', () => {
@@ -146,7 +159,6 @@ describe('retired source closure', () => {
 
     expect(importingModules).toEqual([
       './playground/loadRelayRuntime.ts',
-      './voleyevents/loadRallyMotion.ts',
     ])
   })
 
@@ -162,7 +174,6 @@ describe('retired source closure', () => {
 
     expect(importingModules).toEqual([
       './playground/loadSystemFieldRuntime.ts',
-      './voleyevents/loadRallyThree.ts',
     ])
     for (const loader of importingModules) {
       expect(
@@ -171,7 +182,6 @@ describe('retired source closure', () => {
     }
     for (const loader of [
       './playground/loadRelayRuntime.ts',
-      './voleyevents/loadRallyMotion.ts',
     ]) {
       expect(sourceModules[loader]).not.toContain("import('three')")
     }
@@ -192,6 +202,13 @@ describe('retired source closure', () => {
           importsForbiddenDependency(`${root}runtime.ts`, source, dependency),
         ).toBe(false)
       }
+      expect(
+        importsForbiddenDependency(
+          './voleyevents/runtime.ts',
+          source,
+          dependency,
+        ),
+      ).toBe(true)
       expect(
         importsForbiddenDependency(
           './pages/Playground.tsx',

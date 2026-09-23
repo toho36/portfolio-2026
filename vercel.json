@@ -2,9 +2,13 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "redirects": [
+    { "source": "/voleyevents", "destination": "/gameonvb", "permanent": true },
+    { "source": "/voleyevents/", "destination": "/gameonvb", "permanent": true }
+  ],
   "rewrites": [
-    { "source": "/voleyevents", "destination": "/index.html" },
-    { "source": "/voleyevents/", "destination": "/index.html" },
+    { "source": "/gameonvb", "destination": "/index.html" },
+    { "source": "/gameonvb/", "destination": "/index.html" },
     { "source": "/goal-loop", "destination": "/index.html" },
     { "source": "/goal-loop/", "destination": "/index.html" },
     { "source": "/playground", "destination": "/index.html" },

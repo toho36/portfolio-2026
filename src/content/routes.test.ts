@@ -26,11 +26,12 @@ describe('route records', () => {
   it('admits only the four ordinary routes and resolves safely', () => {
     expect(ROUTES.map(({ path }) => path)).toEqual([
       '/',
-      '/voleyevents',
+      '/gameonvb',
       '/goal-loop',
       '/playground',
     ])
-    expect(resolveRoute('/voleyevents/').path).toBe('/voleyevents')
+    expect(resolveRoute('/gameonvb/').path).toBe('/gameonvb')
+    expect(resolveRoute('/voleyevents/').path).toBe('/gameonvb')
     expect(resolveRoute('/goal-loop///').path).toBe('/goal-loop')
     expect(resolveRoute('/playground/').path).toBe('/playground')
     expect(resolveRoute('/unknown').path).toBe('/')
@@ -45,10 +46,10 @@ describe('route records', () => {
         canonical: 'https://portfolio-pied-eight-38.vercel.app/',
       },
       {
-        title: 'VoleyEvents Match Operations — Hoang Viet To',
+        title: 'GameOnVB Match Operations — Hoang Viet To',
         description:
           'An operational product for recurring recreational volleyball events.',
-        canonical: 'https://portfolio-pied-eight-38.vercel.app/voleyevents',
+        canonical: 'https://portfolio-pied-eight-38.vercel.app/gameonvb',
       },
       {
         title: 'Goal Loop Run Anatomy — Hoang Viet To',
@@ -57,9 +58,9 @@ describe('route records', () => {
         canonical: 'https://portfolio-pied-eight-38.vercel.app/goal-loop',
       },
       {
-        title: 'Signal Relay Playground — Hoang Viet To',
+        title: 'System Field Playground — Hoang Viet To',
         description:
-          'An experimental reversible spatial signal relay built with native scroll, GSAP and progressive WebGL.',
+          'An interactive field: send a pulse, fold its surface and rewind it with native scroll.',
         canonical: 'https://portfolio-pied-eight-38.vercel.app/playground',
       },
     ])
@@ -67,14 +68,13 @@ describe('route records', () => {
 
   it('keeps truthful content and only the verified side-quest URLs', () => {
     expect(FLAGSHIPS.map(({ name }) => name)).toEqual([
-      'VoleyEvents',
+      'GameOnVB',
       'Goal Loop',
     ])
     expect(JSON.stringify([FLAGSHIPS, SIDE_QUESTS])).not.toMatch(
       /\b(?:TBD|TODO|placeholder|\d+%)\b/i,
     )
     expect(SIDE_QUESTS.map(({ url }) => url)).toEqual([
-      PROJECT_STORIES.gameonvb.verifiedUrl,
       PROJECT_STORIES['screen-switch'].verifiedUrl,
       PROJECT_STORIES.suburbs.verifiedUrl,
     ])
@@ -121,7 +121,7 @@ describe('route-link eligibility', () => {
     let listener = () => {}
     let listening = false
     const windowTarget = {
-      location: { pathname: '/voleyevents/' },
+      location: { pathname: '/gameonvb/' },
       addEventListener: (_type: string, next: () => void) => {
         listener = next
         listening = true
@@ -136,7 +136,7 @@ describe('route-link eligibility', () => {
     })
 
     listener()
-    expect(selected).toBe('/voleyevents')
+    expect(selected).toBe('/gameonvb')
     unsubscribe()
     expect(listening).toBe(false)
   })

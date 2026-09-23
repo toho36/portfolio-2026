@@ -19,8 +19,8 @@ interface Flagship {
 export const FLAGSHIPS: readonly Flagship[] = [
   {
     index: '01',
-    name: 'VoleyEvents',
-    path: '/voleyevents',
+    name: 'GameOnVB',
+    path: '/gameonvb',
     summary:
       'An operational product for recurring recreational volleyball events.',
   },
@@ -39,11 +39,6 @@ interface SideQuest {
 }
 
 export const SIDE_QUESTS: readonly SideQuest[] = [
-  {
-    name: 'GameOnVB',
-    summary: PROJECT_STORIES.gameonvb.preview,
-    url: PROJECT_STORIES.gameonvb.verifiedUrl,
-  },
   {
     name: 'Screen Switch',
     summary: PROJECT_STORIES['screen-switch'].preview,

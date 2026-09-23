@@ -1,0 +1,96 @@
+.shape-and-hole {
+  --shape-ink: #20221e;
+  --shape-paper: #eeeae0;
+  --shape-blue: #2438dc;
+  position: relative;
+  height: calc(100svh - 5.5rem);
+  min-height: 760px;
+  max-height: 1000px;
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--shape-ink);
+  background: var(--shape-paper);
+  font-family: Arial, Helvetica, sans-serif;
+}
+.shape-and-hole button { font: inherit; cursor: pointer; min-height: 44px; border-radius: 0; }
+.shape-intro { position: absolute; z-index: 3; top: 5%; left: 5.5%; max-width: 430px; pointer-events: none; }
+.shape-eyebrow { margin: 0 0 22px; font: 10px/1.4 ui-monospace, Menlo, monospace; letter-spacing: .08em; }
+.shape-and-hole .shape-intro h1 { margin: 0; max-width: none; color: var(--shape-ink); font-size: clamp(68px, 7vw, 108px); font-weight: 700; line-height: .84; letter-spacing: -.075em; }
+.shape-intro h1 em { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
+.shape-invitation { margin: 25px 0 0; max-width: 27ch; color: #676b5d; font-size: 14px; line-height: 1.4; }
+.shape-scene { position: absolute; inset: 115px 0 135px; touch-action: pan-y; }
+.shape-and-hole #drawing { display: block; width: 100%; height: 100%; overflow: hidden; }
+.shape-and-hole :is(#wall-board, #wall-front-board) { fill: #222420; }
+.shape-and-hole .wall-glow { fill: #f8e6bb; opacity: 0; }
+.shape-and-hole .hole-rim { fill: none; stroke: #f9f7ee; stroke-width: 3; stroke-linejoin: round; }
+.shape-and-hole #table { fill: #222420; }
+.shape-and-hole .scene-tag { font: 10px ui-monospace, Menlo, monospace; letter-spacing: 1.4px; fill: #686d5f; }
+.shape-and-hole #chips path { fill: url(#object-tone); stroke: #9f311c; stroke-width: 2; }
+.shape-and-hole #chips text { font: bold 11px ui-monospace, Menlo, monospace; fill: #fff9e9; }
+.shape-and-hole #slots path { fill: none; stroke: #777b6d; stroke-width: 2; stroke-dasharray: 4 4; }
+.shape-and-hole #slots text { font: bold 11px ui-monospace, Menlo, monospace; fill: #62695e; }
+.shape-and-hole #weight line { stroke: #252723; stroke-width: 5; stroke-linecap: round; }
+.shape-and-hole #weight rect { fill: #323530; }
+.shape-and-hole #weight text { font: bold 11px ui-monospace, Menlo, monospace; letter-spacing: 1.5px; fill: #eeeae0; }
+.shape-and-hole :is(#outline, #outline-inset) { fill: none; stroke-linejoin: round; }
+.shape-and-hole #outline { stroke: #5d695d; stroke-width: 5; }
+.shape-and-hole #outline-inset { stroke: #899b88; stroke-width: 1.5; stroke-dasharray: 5 6; }
+.shape-and-hole #solid-shadow { fill: #ad9e8c; opacity: .42; transform: translate(9px, 12px); }
+.shape-and-hole #solid { fill: url(#object-tone); stroke: #ba4026; stroke-width: 2; stroke-linejoin: round; }
+.shape-and-hole #crack-gap { fill: none; stroke: #eeeae0; stroke-width: 11; stroke-linejoin: round; }
+.shape-and-hole #crack { fill: none; stroke: #322820; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.shape-and-hole #face { fill: #fff9e9; }
+.shape-and-hole #face path { fill: none; stroke: #fff9e9; stroke-width: 3; stroke-linecap: round; }
+.shape-and-hole #finding { opacity: 0; pointer-events: none; }
+.shape-and-hole #finding circle { fill: #eeeae0; stroke: var(--shape-blue); stroke-width: 2; }
+.shape-and-hole #finding path { fill: none; stroke: var(--shape-blue); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.shape-and-hole #finding text { font: bold 11px ui-monospace, Menlo, monospace; letter-spacing: 1px; fill: #222420; paint-order: stroke; stroke: #eeeae0; stroke-width: 5; }
+.shape-repair { position: absolute; z-index: 4; width: 50px; height: 50px; transform: translate(-50%, -50%); border: 1px solid var(--shape-ink); background: var(--shape-paper); color: var(--shape-ink); }
+.shape-repair[data-kind='check'], .shape-repair[data-kind='review'] { border: 0; clip-path: polygon(15% 12%, 70% 8%, 100% 72%, 60% 94%, 0 78%); background: linear-gradient(#ff7247, #ed4828); color: #fff9e9; font: bold 15px ui-monospace, Menlo, monospace; }
+.shape-control-deck { position: absolute; z-index: 5; bottom: 53px; left: 5.5%; right: 5.5%; display: flex; align-items: end; justify-content: space-between; gap: 24px; }
+.shape-status { max-width: 490px; }
+.shape-state-label { display: block; margin-bottom: 9px; color: #64695d; font: 11px/1.3 ui-monospace, Menlo, monospace; letter-spacing: .08em; }
+.shape-status p { margin: 0; max-width: 34ch; min-height: 1.15em; font-size: clamp(20px, 2.2vw, 31px); line-height: 1.12; letter-spacing: -.045em; }
+.shape-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.shape-actions { display: flex; align-items: center; flex-wrap: wrap; flex-shrink: 0; gap: 14px; }
+.shape-and-hole .shape-send { display: flex; align-items: center; justify-content: space-between; gap: 35px; min-width: 180px; min-height: 58px; padding: 14px 18px; border: 1px solid var(--shape-ink); background: var(--shape-ink); color: var(--shape-paper); font-size: 14px; font-weight: 700; }
+.shape-send > span:last-child { font-size: 25px; font-weight: 400; line-height: 1; }
+.shape-send:hover { background: var(--shape-blue); border-color: var(--shape-blue); }
+.shape-and-hole .shape-quiet { padding: 8px 0; border: 0; border-bottom: 1px solid #979b8b; background: transparent; color: #59604f; font-size: 11px; }
+.shape-quiet:hover { color: var(--shape-ink); border-color: var(--shape-ink); }
+.shape-disclaimer { position: absolute; bottom: 17px; left: 5.5%; margin: 0; max-width: 88%; color: #777b6d; font-size: 10px; line-height: 1.4; }
+.shape-and-hole [hidden] { display: none; }
+.shape-and-hole[data-state='pass-through'] #wall-glow { fill: #ffd277; opacity: 1; }
+.shape-and-hole[data-state='passed'] #wall-glow { fill: #f8e6bb; opacity: .75; }
+.shape-and-hole[data-stage='0'] :is(#solid, #solid-shadow), .shape-and-hole[data-stage='1'] :is(#solid, #solid-shadow) { visibility: hidden; }
+.shape-and-hole[data-state='ready'] :is(#artifact, #face) { visibility: hidden; }
+.shape-and-hole[data-state='returned'] #finding, .shape-and-hole[data-state='review-contact'] #finding, .shape-and-hole[data-state='blocked'] #finding { opacity: 1; }
+.shape-and-hole[data-state='review-contact'] #finding text, .shape-and-hole[data-state='blocked'] #finding text { fill: #fff9e9; stroke: #222420; }
+.shape-and-hole[data-state='passed'] .shape-state-label { color: var(--shape-blue); }
+.shape-and-hole[data-state='blocked'] .shape-state-label { color: #ae391f; }
+@media (max-width: 760px) {
+  .shape-and-hole { height: calc(100svh - 7.75rem); min-height: 680px; max-height: none; }
+  .shape-intro { top: 18px; left: 6%; }
+  .shape-eyebrow { margin-bottom: 11px; font-size: 8px; }
+  .shape-and-hole .shape-intro h1 { font-size: clamp(51px, 14vw, 68px); }
+  .shape-invitation { margin-top: 10px; font-size: 12px; }
+  .shape-scene { inset: 160px 0 174px; }
+  .shape-control-deck { bottom: 44px; left: 6%; right: 6%; display: block; }
+  .shape-status { margin-bottom: 13px; }
+  .shape-status p { font-size: 20px; }
+  .shape-actions { gap: 8px; }
+  .shape-and-hole .shape-send { min-width: 160px; min-height: 50px; gap: 12px; padding: 10px 12px; }
+  .shape-disclaimer { bottom: 12px; }
+  .shape-repair { width: 46px; height: 46px; }
+}
+@media (max-width: 360px) {
+  .shape-and-hole { min-height: 560px; }
+  .shape-invitation { margin-top: 4px; }
+  .shape-scene { inset: 147px 0 235px; }
+  .shape-control-deck { bottom: 48px; }
+  .shape-disclaimer { bottom: 7px; }
+  .shape-status p { font-size: 18px; }
+  .shape-and-hole .shape-send { min-width: 145px; }
+  .shape-and-hole .shape-quiet { font-size: 10px; }
+  .shape-and-hole #reset { position: absolute; top: -30px; right: 0; }
+}

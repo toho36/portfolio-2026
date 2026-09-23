@@ -1,143 +1,6 @@
-import { useEffect, useRef, type MouseEvent, type ReactNode } from 'react'
+import { type MouseEvent, type ReactNode } from 'react'
+import { PlayableCourt } from '../components/PlayableCourt'
 import { VOLEYEVENTS } from '../content/voleyevents'
-
-const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
-
-interface VoleyEventsRuntimeOwner {
-  destroy(): void
-}
-
-interface VoleyEventsRuntimeModule {
-  createRallyRuntimeOwner(options: {
-    readonly elements: {
-      readonly root: HTMLElement
-      readonly stage: HTMLElement
-    }
-    readonly window?: Window
-    readonly media: MediaQueryList
-    readonly onSurrender?: () => void
-  }): VoleyEventsRuntimeOwner
-}
-
-interface VoleyEventsRuntimeBoundaryOptions {
-  readonly elements: {
-    readonly root: HTMLElement
-    readonly stage: HTMLElement
-  }
-  readonly window?: Window
-  readonly media: MediaQueryList
-  readonly importRuntime: () => Promise<VoleyEventsRuntimeModule>
-}
-
-/** Page-local eligibility gate; it owns no motion or scene implementation. */
-export function createVoleyEventsRuntimeBoundary(
-  options: VoleyEventsRuntimeBoundaryOptions,
-): VoleyEventsRuntimeOwner {
-  const { elements, media } = options
-  const previousState = elements.root.dataset.rallyRuntime
-  let generation = 0
-  let reduced = media.matches
-  let pending: { canceled: boolean } | null = null
-  let owner: VoleyEventsRuntimeOwner | null = null
-  let surrendered = false
-  let destroyed = false
-
-  function invalidateCurrent() {
-    generation += 1
-    if (pending) pending.canceled = true
-    pending = null
-    owner?.destroy()
-    owner = null
-  }
-
-  function requestOwner() {
-    if (destroyed || surrendered || media.matches || pending || owner) return
-
-    const requestGeneration = ++generation
-    const load = { canceled: false }
-    pending = load
-    const isActive = () =>
-      !destroyed &&
-      pending === load &&
-      !load.canceled &&
-      !media.matches &&
-      requestGeneration === generation
-
-    let modulePromise: Promise<VoleyEventsRuntimeModule>
-    try {
-      modulePromise = options.importRuntime()
-    } catch {
-      pending = null
-      elements.root.dataset.rallyRuntime = 'static'
-      return
-    }
-
-    void modulePromise.then(
-      (module) => {
-        if (!isActive()) return
-        pending = null
-        try {
-          owner = module.createRallyRuntimeOwner({
-            elements,
-            window: options.window,
-            media,
-            onSurrender: surrenderForVisit,
-          })
-        } catch {
-          if (
-            !destroyed &&
-            !load.canceled &&
-            !media.matches &&
-            requestGeneration === generation
-          ) {
-            elements.root.dataset.rallyRuntime = 'static'
-          }
-        }
-      },
-      () => {
-        if (!isActive()) return
-        pending = null
-        elements.root.dataset.rallyRuntime = 'static'
-      },
-    )
-  }
-
-  function surrenderForVisit() {
-    if (destroyed || surrendered) return
-    surrendered = true
-    invalidateCurrent()
-    elements.root.dataset.rallyRuntime = 'static'
-  }
-
-  function applyMotionPreference() {
-    if (destroyed || reduced === media.matches) return
-    reduced = media.matches
-    if (reduced) {
-      invalidateCurrent()
-      elements.root.dataset.rallyRuntime = 'static'
-    } else {
-      requestOwner()
-    }
-  }
-
-  media.addEventListener('change', applyMotionPreference)
-  if (reduced) elements.root.dataset.rallyRuntime = 'static'
-  else requestOwner()
-
-  return Object.freeze({
-    destroy() {
-      if (destroyed) return
-      destroyed = true
-      invalidateCurrent()
-      media.removeEventListener('change', applyMotionPreference)
-      if (previousState === undefined) {
-        delete elements.root.dataset.rallyRuntime
-      } else {
-        elements.root.dataset.rallyRuntime = previousState
-      }
-    },
-  })
-}
 
 interface VoleyEventsPageProps {
   readonly onNavigate: (event: MouseEvent<HTMLAnchorElement>) => void
@@ -166,112 +29,28 @@ function RouteAnchor({
 }
 
 export function VoleyEventsPage({ onNavigate }: VoleyEventsPageProps) {
-  const rootRef = useRef<HTMLElement>(null)
-  const stageRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const root = rootRef.current
-    const stage = stageRef.current
-    if (!root || !stage) return
-
-    const media = window.matchMedia(REDUCED_MOTION_QUERY)
-    const boundary = createVoleyEventsRuntimeBoundary({
-      elements: { root, stage },
-      window,
-      media,
-      importRuntime: () => import('../voleyevents/loadRallyRuntime'),
-    })
-
-    return () => boundary.destroy()
-  }, [])
-
   return (
-    <article
-      className="voleyevents"
-      data-rally-root="true"
-      ref={rootRef}
-    >
+    <article className="voleyevents">
       <section
-        className="court-hero"
+        className="court-entry"
         aria-labelledby="voleyevents-title"
-        data-reveal
       >
-        <p className="eyebrow">{VOLEYEVENTS.hero.eyebrow}</p>
-        <h1 id="voleyevents-title">{VOLEYEVENTS.hero.title}</h1>
-        <p className="court-hero-lede">{VOLEYEVENTS.hero.lede}</p>
-        <a className="target-link hero-jump" href="#lifecycle">
-          Follow one registration <span aria-hidden="true">↓</span>
-        </a>
-      </section>
-
-      <div className="rally-band">
-        <div
-          className="rally-stage"
-          data-rally-stage="true"
-          aria-hidden="true"
-          ref={stageRef}
-        >
-          <svg
-            className="rally-fallback"
-            data-rally-fallback="true"
-            viewBox="0 0 1200 760"
-            preserveAspectRatio="xMidYMid meet"
-            role="presentation"
-            aria-hidden="true"
-          >
-            <g
-              className="rally-plane rally-plane-serve"
-              transform="translate(78 74)"
-            >
-              <path
-                className="rally-plane-surface"
-                d="M0 78 276 0 438 86 158 166Z"
-              />
-              <path
-                className="rally-plane-lines"
-                d="M79 55 354 137M138 39 295 126M219 16 219 143"
-              />
-              <path
-                className="rally-net"
-                d="M219 20V143M197 27 241 14M197 47 241 34M197 67 241 54M197 87 241 74M197 107 241 94M197 127 241 114"
-              />
-              <circle className="rally-ball" cx="78" cy="72" r="20" />
-              <path
-                className="rally-ball-seam"
-                d="M63 68C73 64 82 69 88 84M77 53C81 63 91 69 98 68"
-              />
-            </g>
-
-            {VOLEYEVENTS.lifecycle.map((stage, index) => (
-              <g
-                className={`rally-plane rally-landing rally-landing--${index % 2 === 0 ? 'right' : 'left'}`}
-                data-rally-landing={stage.id}
-                key={stage.id}
-                transform={[
-                  'translate(506 170)',
-                  'translate(164 302)',
-                  'translate(572 424)',
-                  'translate(252 556)',
-                ][index]}
-              >
-                <path
-                  className="rally-plane-surface"
-                  d="M0 66 246 0 390 73 140 142Z"
-                />
-                <path
-                  className="rally-plane-lines"
-                  d="M69 47 315 116M123 33 267 103M195 14 195 121"
-                />
-                <path
-                  className="rally-net"
-                  d="M195 18V121M176 24 214 13M176 42 214 31M176 60 214 49M176 78 214 67M176 96 214 85M176 114 214 103"
-                />
-                <circle className="rally-landing-mark" cx="70" cy="58" r="12" />
-              </g>
-            ))}
-          </svg>
+        <div className="court-entry-grid">
+          <PlayableCourt />
+          <div className="court-entry-copy">
+            <p className="eyebrow">{VOLEYEVENTS.hero.eyebrow}</p>
+            <h1 id="voleyevents-title">
+              LESS <br />ADMIN. <br /><span className="lime">MORE <br />PLAY.</span>
+            </h1>
+            <p>{VOLEYEVENTS.hero.title}</p>
+            <p className="demo-note">A playable demo, not a live event. The story is below.</p>
+            <a className="target-link hero-jump" href="#lifecycle">
+              Follow one registration <span aria-hidden="true">↓</span>
+            </a>
+          </div>
+          <div className="gameonvb-kinetic-wordmark" aria-hidden="true">GAME<span>ON</span>VB</div>
         </div>
-      </div>
+      </section>
 
       <section
         className="case-section case-problem"
@@ -309,8 +88,8 @@ export function VoleyEventsPage({ onNavigate }: VoleyEventsPageProps) {
             The match operations lifecycle stays connected.
           </h2>
           <p>
-            Scroll follows one participant through the same four states. The
-            ordered stages remain the complete explanation without motion.
+            Follow one participant through four connected states. The complete
+            operational story is here, whether or not you play with the court.
           </p>
         </div>
 

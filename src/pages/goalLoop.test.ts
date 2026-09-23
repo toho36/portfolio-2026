@@ -46,15 +46,25 @@ describe('Goal Loop Run Anatomy case study', () => {
     const markup = render()
     const route = ROUTES.find(({ path }) => path === '/goal-loop')
     const hero = markup.slice(
-      markup.indexOf('class="run-hero"'),
+      markup.indexOf('class="shape-and-hole"'),
       markup.indexOf('class="run-section run-problem"'),
     )
 
-    expect(hero).toContain('Software delivery, run as a bounded system.')
+    expect(hero).toContain('Make it')
+    expect(hero).toContain('fit.')
+    expect(hero).toContain('ONE BRIEF. ONE SHAPE. TWO REPAIRS.')
+    expect(hero).not.toMatch(/MAKE\.|CHECK\.|FINISH\.|REPEAT\./)
+    expect(hero).toContain('class="shape-scene"')
+    expect(hero).toContain('id="drawing"')
+    expect(hero).toContain('Make it fit')
+    expect(hero).toContain('REPAIR PIECES')
+    expect(hero).not.toMatch(/instrument-stepper|instrument-stage-panel|Simulate failed check/)
+    expect(hero).toContain('Interactive metaphor, not a live run')
+    expect(hero).toContain('No agents, project tests or deployments execute')
     expect(hero).toContain(
       'Goal Loop turns a software goal into a bounded delivery run with separated roles, explicit evidence and a stop condition.',
     )
-    expect(hero).not.toMatch(/provider|model|OpenAI|Anthropic|Gemini/i)
+    expect(hero).not.toMatch(/provider|LLM|OpenAI|Anthropic|Gemini/i)
     expect(route?.title).toBe('Goal Loop Run Anatomy — Hoang Viet To')
   })
 
@@ -223,10 +233,8 @@ describe('Goal Loop Run Anatomy case study', () => {
       GOAL_LOOP_OUTCOMES,
     ])
 
-    expect(markup.match(/class="run-marker"/g)).toHaveLength(1)
-    expect(markup).toMatch(/<div class="run-trace" aria-hidden="true">/)
-    expect(markup).toMatch(/<svg[^>]*role="presentation"/)
-    expect(markup).toContain('class="run-trace-line" d="M24 0V1120"')
+    expect(markup.match(/<details class="run-reference"/g)).toHaveLength(6)
+    expect(markup).not.toMatch(/class="run-marker"|class="run-trace"/)
     expect(markup).not.toMatch(/<h[1-6][^>]*aria-hidden|<p[^>]*aria-hidden/)
     expect(markup).not.toMatch(/<canvas|<video|<img|data:image/i)
     expect(containsSimulatedArtifact(content)).toBe(false)
@@ -246,9 +254,9 @@ describe('Goal Loop Run Anatomy case study', () => {
       expect(markup).toContain('href="mailto:tohoangviet1998@gmail.com"')
       expect(markup).toContain('href="/hoang-viet-to-cv-en.docx"')
       expect(markup).toContain('href="/hoang-viet-to-cv-cz.docx"')
-      expect(markup).toContain('href="/voleyevents"')
+      expect(markup).toContain('href="/gameonvb"')
       expect(markup).toContain('href="/"')
-      expect(markup).toContain('Back: VoleyEvents')
+      expect(markup).toContain('Back: GameOnVB')
       expect(markup).toContain('Next: Homepage')
     }
   })

@@ -1,5 +1,7 @@
 # `/playground` design contract
 
+Current presentation authority: `playable-worlds-design-contract.md`. The owner-approved playable-world rebuild supersedes this document's palette, entry composition, copy and direct-control restrictions. Native-scroll ownership, progressive rendering and teardown remain retained constraints. The original decision below is historical.
+
 Status: **APPROVED — independent Opus design review, 2026-08-11**  
 Kanban authority: `t_3c891ac4`  
 Outcome: one isolated technical/UX experiment; not a case study and not a redesign of `/`, `/voleyevents`, or `/goal-loop`.

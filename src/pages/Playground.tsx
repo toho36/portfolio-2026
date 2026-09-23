@@ -1,5 +1,5 @@
-import { useEffect, useRef, type MouseEvent, type ReactNode } from 'react'
-import { createRelayPlayhead } from '../playground/relayPlayhead'
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react'
+import { createRelayPlayhead, type RelayPlayhead } from '../playground/relayPlayhead'
 
 type RelayControlAction = 'previous' | 'next' | 'replay'
 
@@ -55,6 +55,9 @@ export function PlaygroundPage({ onNavigate }: PlaygroundPageProps) {
   const beatsRef = useRef<HTMLDivElement>(null)
   const statusRef = useRef<HTMLParagraphElement>(null)
   const liveRegionRef = useRef<HTMLParagraphElement>(null)
+  const playheadRef = useRef<RelayPlayhead | null>(null)
+  const [pulse, setPulse] = useState(false)
+  const [feedback, setFeedback] = useState('Nothing to solve. Just something to feel.')
 
   useEffect(() => {
     const route = routeRef.current
@@ -67,7 +70,11 @@ export function PlaygroundPage({ onNavigate }: PlaygroundPageProps) {
     const playhead = createRelayPlayhead({
       elements: { route, stage, beats, status, liveRegion },
     })
-    return () => playhead.destroy()
+    playheadRef.current = playhead
+    return () => {
+      playheadRef.current = null
+      playhead.destroy()
+    }
   }, [])
 
   return (
@@ -75,18 +82,31 @@ export function PlaygroundPage({ onNavigate }: PlaygroundPageProps) {
       ref={routeRef}
       className="playground"
       data-relay-root="true"
+      data-pulse={pulse}
     >
       <div className="relay-choreography">
         <section
           className="relay-hero"
           aria-labelledby="relay-title"
         >
-          <p className="eyebrow">Playground / Spatial System</p>
-          <h1 id="relay-title">SYSTEM FIELD</h1>
+          <p className="eyebrow">Playground / System Field</p>
+          <h1 id="relay-title">GO ON.<br />DISTURB IT.</h1>
           <p className="relay-instruction">
             Move across the field to send a wave. Scroll to fold the system; reverse
             to restore it.
           </p>
+          <nav className="field-controls" aria-label="Choose a field shape">
+            <button className="world-button" type="button" onClick={() => {
+              const animated = playheadRef.current?.pulse() ?? false
+              setPulse((value) => !value)
+              setFeedback(animated ? 'A pulse from the centre. Try another.' : 'Centre mark changed. Static field mode.')
+            }}>Send a pulse ↗</button>
+            <BeatLink action="replay" href="#relay-input">Flat</BeatLink>
+            <BeatLink action="next" href="#relay-fold">Fold</BeatLink>
+            <BeatLink action="next" href="#relay-feedback">Tunnel</BeatLink>
+            <BeatLink action="next" href="#relay-closed">Return</BeatLink>
+          </nav>
+          <p className="field-feedback" role="status">{feedback}</p>
           <p
             ref={statusRef}
             className="relay-status"
@@ -149,7 +169,7 @@ export function PlaygroundPage({ onNavigate }: PlaygroundPageProps) {
           >
             <p className="relay-beat-index">01 / Rest state</p>
             <h2 id="relay-input-title">FLAT</h2>
-            <p>A 32 by 32 field waits in a quiet, legible plane.</p>
+            <p>Move across it. Tap it. Even a quiet surface can have a little attitude.</p>
             <nav aria-label="Beat navigation">
               <BeatLink
                 action="next"
@@ -166,7 +186,7 @@ export function PlaygroundPage({ onNavigate }: PlaygroundPageProps) {
             <p className="relay-beat-index">02 / Curvature</p>
             <h2 id="relay-fold-title">FOLD</h2>
             <p>
-              Native scroll bends the outer columns away from the flat plane.
+              Keep scrolling. The edges lift and the surface starts to wrap around you.
             </p>
             <nav aria-label="Beat navigation">
               <BeatLink
@@ -188,7 +208,7 @@ export function PlaygroundPage({ onNavigate }: PlaygroundPageProps) {
             <p className="relay-beat-index">03 / Passage</p>
             <h2 id="relay-feedback-title">TUNNEL</h2>
             <p>
-              The folded field closes around a reversible spatial corridor.
+              A flat surface becomes a place. Reverse your scroll to pull it apart.
             </p>
             <nav aria-label="Beat navigation">
               <BeatLink
@@ -210,7 +230,7 @@ export function PlaygroundPage({ onNavigate }: PlaygroundPageProps) {
             <p className="relay-beat-index">04 / Bright return</p>
             <h2 id="relay-closed-title">FEEDBACK</h2>
             <p>
-              One bright return travels from the tunnel edge back to origin.
+              Everything comes back around. Go again, or rewind it your own way.
             </p>
             <nav aria-label="Beat navigation">
               <BeatLink

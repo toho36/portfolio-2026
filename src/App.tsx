@@ -15,7 +15,8 @@ import {
   type Route,
   type RoutePath,
 } from './content/routes'
-import { CONTACT, FLAGSHIPS, HERO, SIDE_QUESTS } from './content/systems'
+import { CONTACT } from './content/systems'
+import { HomePage } from './pages/Home'
 import { GoalLoopPage } from './pages/GoalLoop'
 import { PlaygroundPage } from './pages/Playground'
 import { VoleyEventsPage } from './pages/VoleyEvents'
@@ -103,80 +104,6 @@ export function applyRouteMetadata(doc: Document, route: Route) {
     ?.setAttribute('content', metadata.canonical)
 }
 
-function HomePage({
-  currentPath,
-  onNavigate,
-}: Pick<RouteLinkProps, 'currentPath' | 'onNavigate'>) {
-  return (
-    <>
-      <section className="hero" aria-labelledby="hero-title" data-reveal>
-        <img
-          alt=""
-          aria-hidden="true"
-          className="hero-graphic"
-          src="/assets/systems-field.svg"
-        />
-        <p className="eyebrow">{HERO.eyebrow}</p>
-        <h1 id="hero-title">{HERO.title}</h1>
-        <p className="hero-introduction">{HERO.introduction}</p>
-        <a className="target-link hero-jump" href="#flagships">
-          Selected systems <span aria-hidden="true">↓</span>
-        </a>
-      </section>
-
-      <section id="flagships" aria-labelledby="flagships-title" data-reveal>
-        <div className="section-heading">
-          <p className="eyebrow">Flagship systems</p>
-          <h2 id="flagships-title">Products and the loops behind them.</h2>
-        </div>
-        <div className="flagship-list">
-          {FLAGSHIPS.map((flagship) => (
-            <article className="flagship" key={flagship.path}>
-              <span className="system-index" aria-hidden="true">
-                {flagship.index}
-              </span>
-              <div className="system-copy">
-                <h3>{flagship.name}</h3>
-                <p>{flagship.summary}</p>
-              </div>
-              <RouteLink
-                className="system-link"
-                currentPath={currentPath}
-                href={flagship.path}
-                onNavigate={onNavigate}
-              >
-                Open entry <span aria-hidden="true">↗</span>
-              </RouteLink>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section id="side-quests" aria-labelledby="side-quests-title" data-reveal>
-        <div className="section-heading compact-heading">
-          <p className="eyebrow">Side quests</p>
-          <h2 id="side-quests-title">Smaller, differently shaped work.</h2>
-        </div>
-        <div className="side-quest-list">
-          {SIDE_QUESTS.map((project) => (
-            <article className="side-quest" key={project.name}>
-              <h3>{project.name}</h3>
-              <p>{project.summary}</p>
-              {project.url ? (
-                <a className="target-link text-link" href={project.url}>
-                  Visit project <span aria-hidden="true">↗</span>
-                </a>
-              ) : (
-                <span className="unlinked-note">No public link listed</span>
-              )}
-            </article>
-          ))}
-        </div>
-      </section>
-    </>
-  )
-}
-
 export default function App({ initialPath }: AppProps) {
   const [route, setRoute] = useState(() =>
     resolveRoute(
@@ -207,7 +134,7 @@ export default function App({ initialPath }: AppProps) {
       pushRouteNavigation(destination, window.location.href, window.history),
     )
     document.getElementById('main-content')?.focus({ preventScroll: true })
-    window.scrollTo({ top: 0, behavior: 'auto' })
+    window.scrollTo({ top: 0, behavior: 'instant' })
   }, [])
 
   useEffect(() => {
@@ -254,10 +181,10 @@ export default function App({ initialPath }: AppProps) {
   switch (route.path) {
     case '/':
       routeContent = (
-        <HomePage currentPath={route.path} onNavigate={onNavigate} />
+        <HomePage onNavigate={onNavigate} />
       )
       break
-    case '/voleyevents':
+    case '/gameonvb':
       routeContent = <VoleyEventsPage onNavigate={onNavigate} />
       break
     case '/goal-loop':

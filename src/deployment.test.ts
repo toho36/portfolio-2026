@@ -23,13 +23,18 @@ describe('static deployment configuration', () => {
   it('narrowly rewrites all three non-root routes and trailing-slash forms', () => {
     const vercel = JSON.parse(vercelSource) as {
       outputDirectory: string
+      redirects: { source: string; destination: string; permanent: boolean }[]
       rewrites: { source: string; destination: string }[]
     }
 
     expect(vercel.outputDirectory).toBe('dist')
+    expect(vercel.redirects).toEqual([
+      { source: '/voleyevents', destination: '/gameonvb', permanent: true },
+      { source: '/voleyevents/', destination: '/gameonvb', permanent: true },
+    ])
     expect(vercel.rewrites).toEqual([
-      { source: '/voleyevents', destination: '/index.html' },
-      { source: '/voleyevents/', destination: '/index.html' },
+      { source: '/gameonvb', destination: '/index.html' },
+      { source: '/gameonvb/', destination: '/index.html' },
       { source: '/goal-loop', destination: '/index.html' },
       { source: '/goal-loop/', destination: '/index.html' },
       { source: '/playground', destination: '/index.html' },
@@ -55,7 +60,7 @@ describe('static deployment configuration', () => {
 
     expect(locations).toEqual([
       'https://portfolio-pied-eight-38.vercel.app/',
-      'https://portfolio-pied-eight-38.vercel.app/voleyevents',
+      'https://portfolio-pied-eight-38.vercel.app/gameonvb',
       'https://portfolio-pied-eight-38.vercel.app/goal-loop',
       'https://portfolio-pied-eight-38.vercel.app/playground',
     ])

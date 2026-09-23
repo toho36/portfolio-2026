@@ -14,26 +14,28 @@ describe('System Field Playground', () => {
       {
         id: 'relay-input',
         title: 'FLAT',
-        body: 'A 32 by 32 field waits in a quiet, legible plane.',
+        body: 'Move across it. Tap it. Even a quiet surface can have a little attitude.',
       },
       {
         id: 'relay-fold',
         title: 'FOLD',
-        body: 'Native scroll bends the outer columns away from the flat plane.',
+        body: 'Keep scrolling. The edges lift and the surface starts to wrap around you.',
       },
       {
         id: 'relay-feedback',
         title: 'TUNNEL',
-        body: 'The folded field closes around a reversible spatial corridor.',
+        body: 'A flat surface becomes a place. Reverse your scroll to pull it apart.',
       },
       {
         id: 'relay-closed',
         title: 'FEEDBACK',
-        body: 'One bright return travels from the tunnel edge back to origin.',
+        body: 'Everything comes back around. Go again, or rewind it your own way.',
       },
     ]
 
-    expect(markup).toContain('<h1 id="relay-title">SYSTEM FIELD</h1>')
+    expect(markup).toContain('GO ON.')
+    expect(markup).toContain('DISTURB IT.')
+    expect(markup).toContain('Send a pulse')
     expect(markup).toContain(
       'Move across the field to send a wave. Scroll to fold the system; reverse to restore it.',
     )
@@ -111,10 +113,10 @@ describe('System Field Playground', () => {
     const markup = render()
 
     expect(markup.match(/data-relay-action="previous"/g)).toHaveLength(3)
-    expect(markup.match(/data-relay-action="next"/g)).toHaveLength(3)
-    expect(markup.match(/data-relay-action="replay"/g)).toHaveLength(1)
+    expect(markup.match(/data-relay-action="next"/g)).toHaveLength(6)
+    expect(markup.match(/data-relay-action="replay"/g)).toHaveLength(2)
     expect(markup.match(/class="target-link relay-beat-link"/g)).toHaveLength(
-      7,
+      11,
     )
   })
 })
