@@ -1,270 +1,108 @@
-import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react'
-import { createRelayPlayhead, type RelayPlayhead } from '../playground/relayPlayhead'
+import { useEffect, useRef, useState, type MouseEvent } from 'react'
+import { loadWireRuntime } from '../playground/loadWireRuntime'
+import { createWireRuntime, type WireRuntime } from '../playground/wireRuntime'
+import { readBest, recordRun, type Best, type Mode } from '../playground/wireScore'
 
-type RelayControlAction = 'previous' | 'next' | 'replay'
-
-interface PlaygroundPageProps {
-  readonly onNavigate: (event: MouseEvent<HTMLAnchorElement>) => void
-}
-
-function RouteAnchor({
-  children,
-  className,
-  href,
-  onNavigate,
-}: {
-  readonly children: ReactNode
-  readonly className: string
-  readonly href: '/' | '/goal-loop'
-  readonly onNavigate: PlaygroundPageProps['onNavigate']
-}) {
-  return (
-    <a
-      className={`target-link ${className}`}
-      href={href}
-      onClick={onNavigate}
-    >
-      {children}
-    </a>
-  )
-}
-
-function BeatLink({
-  action,
-  children,
-  href,
-}: {
-  readonly action: RelayControlAction
-  readonly children: ReactNode
-  readonly href: string
-}) {
-  return (
-    <a
-      className="target-link relay-beat-link"
-      href={href}
-      data-relay-action={action}
-    >
-      {children}
-    </a>
-  )
-}
+interface PlaygroundPageProps { readonly onNavigate: (event: MouseEvent<HTMLAnchorElement>) => void }
+const emptyBest: Best = { bestPercent: 0, bestTimeMs: null }
+const formatTime = (ms: number) => `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, '0')}.${Math.floor(ms % 1000 / 100)}`
 
 export function PlaygroundPage({ onNavigate }: PlaygroundPageProps) {
-  const routeRef = useRef<HTMLElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
-  const beatsRef = useRef<HTMLDivElement>(null)
-  const statusRef = useRef<HTMLParagraphElement>(null)
-  const liveRegionRef = useRef<HTMLParagraphElement>(null)
-  const playheadRef = useRef<RelayPlayhead | null>(null)
-  const [pulse, setPulse] = useState(false)
-  const [feedback, setFeedback] = useState('Nothing to solve. Just something to feel.')
+  const runtimeRef = useRef<WireRuntime | null>(null)
+  const modeRef = useRef<Mode>('easy')
+  const soundRef = useRef(true)
+  const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading')
+  const [percent, setPercent] = useState(0)
+  const [progress, setProgress] = useState(0)
+  const [best, setBest] = useState<Best>(emptyBest)
+  const [mode, setMode] = useState<Mode>('easy')
+  const [sound, setSound] = useState(true)
+  const [coarse, setCoarse] = useState(false)
+  const [holding, setHolding] = useState(false)
+  const [failed, setFailed] = useState(false)
+  const [finishMs, setFinishMs] = useState<number | null>(null)
 
   useEffect(() => {
-    const route = routeRef.current
     const stage = stageRef.current
-    const beats = beatsRef.current
-    const status = statusRef.current
-    const liveRegion = liveRegionRef.current
-    if (!route || !stage || !beats || !status || !liveRegion) return
-
-    const playhead = createRelayPlayhead({
-      elements: { route, stage, beats, status, liveRegion },
-    })
-    playheadRef.current = playhead
-    return () => {
-      playheadRef.current = null
-      playhead.destroy()
-    }
+    if (!stage) return
+    let canceled = false
+    let runtime: WireRuntime | null = null
+    let storage: Storage | null = null
+    try { storage = window.localStorage } catch { /* private browsing */ }
+    setBest(readBest(storage, modeRef.current))
+    try { soundRef.current = storage?.getItem('vitek-wire:sound') !== 'off' } catch { soundRef.current = true }
+    setSound(soundRef.current)
+    setCoarse(window.matchMedia('(pointer: coarse)').matches)
+    const probe = document.createElement('canvas')
+    if (!(probe.getContext('webgl2') ?? probe.getContext('webgl'))) { setState('failed'); return }
+    void loadWireRuntime({
+      isCanceled: () => canceled,
+      onProgress: (p) => { if (!canceled) setPercent(p) },
+      createRuntime: (three) => {
+        runtime = createWireRuntime(three, {
+          host: stage,
+          reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+          hud: {
+            onProgress: (p) => {
+              if (canceled) return
+              setProgress(p)
+              setBest(recordRun(storage, modeRef.current, p, null))
+            },
+            onFail: () => { if (!canceled) { setFailed(true); setHolding(false) } },
+            onFinish: (timeMs) => {
+              if (canceled) return
+              setFinishMs(timeMs); setHolding(false)
+              setBest(recordRun(storage, modeRef.current, 100, timeMs))
+            },
+            onHold: (on) => { if (!canceled) { setHolding(on); if (on) setFailed(false) } },
+          },
+          onFirstFrame: () => { if (!canceled) setState('ready') },
+        })
+        runtimeRef.current = runtime
+        runtime.setMode(modeRef.current)
+        runtime.setSound(soundRef.current)
+        return runtime
+      },
+    }).then((result) => { if (!canceled && result.status === 'failed') setState('failed') })
+    return () => { canceled = true; runtimeRef.current = null; runtime?.destroy() }
   }, [])
 
+  function changeMode(next: Mode) {
+    if (next === modeRef.current) return
+    modeRef.current = next; setMode(next); setProgress(0); setFailed(false); setFinishMs(null); setHolding(false)
+    try { setBest(readBest(window.localStorage, next)) } catch { setBest(emptyBest) }
+    runtimeRef.current?.setMode(next)
+  }
+  function toggleSound() {
+    const next = !sound
+    soundRef.current = next; setSound(next); runtimeRef.current?.setSound(next)
+    try { window.localStorage.setItem('vitek-wire:sound', next ? 'on' : 'off') } catch { /* private browsing */ }
+  }
+  function restart() { setFinishMs(null); setFailed(false); setProgress(0); runtimeRef.current?.restart() }
+  const hint = finishMs !== null ? 'a clean run. go again?'
+    : failed ? 'touch the wire. back to start.'
+      : holding ? (mode === 'hard' ? 'hold tight · release to reset' : 'steady hands')
+        : `${coarse ? 'grab' : 'click'} the handle${mode === 'hard' ? ' · release to reset' : ''}`
+
   return (
-    <article
-      ref={routeRef}
-      className="playground"
-      data-relay-root="true"
-      data-pulse={pulse}
-    >
-      <div className="relay-choreography">
-        <section
-          className="relay-hero"
-          aria-labelledby="relay-title"
-        >
-          <p className="eyebrow">Playground / System Field</p>
-          <h1 id="relay-title">GO ON.<br />DISTURB IT.</h1>
-          <p className="relay-instruction">
-            Move across the field to send a wave. Scroll to fold the system; reverse
-            to restore it.
-          </p>
-          <nav className="field-controls" aria-label="Choose a field shape">
-            <button className="world-button" type="button" onClick={() => {
-              const animated = playheadRef.current?.pulse() ?? false
-              setPulse((value) => !value)
-              setFeedback(animated ? 'A pulse from the centre. Try another.' : 'Centre mark changed. Static field mode.')
-            }}>Send a pulse ↗</button>
-            <BeatLink action="replay" href="#relay-input">Flat</BeatLink>
-            <BeatLink action="next" href="#relay-fold">Fold</BeatLink>
-            <BeatLink action="next" href="#relay-feedback">Tunnel</BeatLink>
-            <BeatLink action="next" href="#relay-closed">Return</BeatLink>
-          </nav>
-          <p className="field-feedback" role="status">{feedback}</p>
-          <p
-            ref={statusRef}
-            className="relay-status"
-            data-relay-status="true"
-          >
-            Current beat: FLAT
-          </p>
-        </section>
-
-        <div
-          ref={stageRef}
-          className="relay-stage"
-          aria-hidden="true"
-          data-relay-stage="true"
-        >
-          <svg
-            className="system-field-fallback"
-            data-system-field-fallback="true"
-            viewBox="0 0 960 720"
-            preserveAspectRatio="xMidYMid meet"
-            role="presentation"
-            aria-hidden="true"
-          >
-            <defs>
-              <pattern
-                id="system-field-grid"
-                width="20"
-                height="20"
-                patternUnits="userSpaceOnUse"
-              >
-                <circle className="system-field-node" cx="10" cy="10" r="2.5" />
-              </pattern>
-            </defs>
-            <rect
-              className="system-field-grid"
-              x="160"
-              y="40"
-              width="640"
-              height="640"
-              fill="url(#system-field-grid)"
-            />
-            <circle
-              className="system-field-origin"
-              cx="480"
-              cy="360"
-              r="8"
-            />
-          </svg>
-        </div>
-
-        <div
-          ref={beatsRef}
-          className="relay-beats"
-          data-relay-beats="true"
-        >
-          <section
-            id="relay-input"
-            className="relay-beat"
-            aria-labelledby="relay-input-title"
-          >
-            <p className="relay-beat-index">01 / Rest state</p>
-            <h2 id="relay-input-title">FLAT</h2>
-            <p>Move across it. Tap it. Even a quiet surface can have a little attitude.</p>
-            <nav aria-label="Beat navigation">
-              <BeatLink
-                action="next"
-                href="#relay-fold"
-              >Next beat</BeatLink>
-            </nav>
-          </section>
-
-          <section
-            id="relay-fold"
-            className="relay-beat"
-            aria-labelledby="relay-fold-title"
-          >
-            <p className="relay-beat-index">02 / Curvature</p>
-            <h2 id="relay-fold-title">FOLD</h2>
-            <p>
-              Keep scrolling. The edges lift and the surface starts to wrap around you.
-            </p>
-            <nav aria-label="Beat navigation">
-              <BeatLink
-                action="previous"
-                href="#relay-input"
-              >Previous beat</BeatLink>
-              <BeatLink
-                action="next"
-                href="#relay-feedback"
-              >Next beat</BeatLink>
-            </nav>
-          </section>
-
-          <section
-            id="relay-feedback"
-            className="relay-beat"
-            aria-labelledby="relay-feedback-title"
-          >
-            <p className="relay-beat-index">03 / Passage</p>
-            <h2 id="relay-feedback-title">TUNNEL</h2>
-            <p>
-              A flat surface becomes a place. Reverse your scroll to pull it apart.
-            </p>
-            <nav aria-label="Beat navigation">
-              <BeatLink
-                action="previous"
-                href="#relay-fold"
-              >Previous beat</BeatLink>
-              <BeatLink
-                action="next"
-                href="#relay-closed"
-              >Next beat</BeatLink>
-            </nav>
-          </section>
-
-          <section
-            id="relay-closed"
-            className="relay-beat"
-            aria-labelledby="relay-closed-title"
-          >
-            <p className="relay-beat-index">04 / Bright return</p>
-            <h2 id="relay-closed-title">FEEDBACK</h2>
-            <p>
-              Everything comes back around. Go again, or rewind it your own way.
-            </p>
-            <nav aria-label="Beat navigation">
-              <BeatLink
-                action="previous"
-                href="#relay-feedback"
-              >Previous beat</BeatLink>
-              <BeatLink
-                action="replay"
-                href="#relay-input"
-              >Replay field</BeatLink>
-            </nav>
-          </section>
-        </div>
+    <article className="playground" data-wire-state={state}>
+      <div className="wire-topline"><span>01 / PLAYGROUND</span><span>HOT WIRE — VITEK</span></div>
+      <div ref={stageRef} className="wire-stage" data-wire-stage />
+      <p className="wire-loader" data-wire-loader aria-live="polite">{percent}<small>LOADING THE WIRE</small></p>
+      <div className="wire-fallback" data-wire-fallback hidden={state !== 'failed'}>
+        <p>The playground needs WebGL.</p>
+        <a className="target-link" href="/" onClick={onNavigate}>Back home</a>
       </div>
-
-      <p
-        ref={liveRegionRef}
-        className="relay-live-region"
-        aria-live="polite"
-        aria-atomic="true"
-      />
-
-      <nav className="relay-navigation" aria-label="Route navigation">
-        <RouteAnchor
-          className="back-link"
-          href="/goal-loop"
-          onNavigate={onNavigate}
-        >
-          <span aria-hidden="true">←</span> Back: Goal Loop
-        </RouteAnchor>
-        <RouteAnchor className="next-link" href="/" onNavigate={onNavigate}>
-          Next: Homepage <span aria-hidden="true">→</span>
-        </RouteAnchor>
-      </nav>
+      <div className="wire-hud">
+        <div className="wire-modes" aria-label="Difficulty">
+          {(['easy', 'hard'] as const).map((m) => <button type="button" key={m} aria-pressed={mode === m} onClick={() => changeMode(m)}>{m === 'easy' ? 'Easy' : 'Hard'}</button>)}
+        </div>
+        <div className="wire-score" aria-live="polite"><strong>{progress} %</strong><span>best {best.bestPercent} %{best.bestTimeMs !== null && ` · ${formatTime(best.bestTimeMs)}`}</span></div>
+        <button className="wire-sound" type="button" aria-pressed={sound} onClick={toggleSound}>Sound {sound ? 'on' : 'off'}</button>
+      </div>
+      <div className="wire-footer"><p className="wire-hint">{hint}</p><div className="wire-minimap" aria-label={`Progress ${progress} percent`}><i style={{ width: `${progress}%` }} /></div></div>
+      {finishMs !== null && <div className="wire-result" role="status"><span>WIRE CLEARED</span><strong>{formatTime(finishMs)}</strong><button type="button" onClick={restart}>Play again <span aria-hidden="true">↗</span></button></div>}
     </article>
   )
 }

@@ -113,13 +113,7 @@ describe('systems-builder shell', () => {
     expect(goalLoop).toContain('href="/"')
     expect(goalLoop).toContain('href="/gameonvb"')
     for (const markup of [playground, playgroundSlash]) {
-      expect(markup).toContain('id="relay-title"')
-      expect(markup).toContain('DISTURB IT.')
-      expect(markup).toContain('id="relay-input"')
-      expect(markup).toContain('id="relay-fold"')
-      expect(markup).toContain('id="relay-feedback"')
-      expect(markup).toContain('id="relay-closed"')
-      expect(markup).toContain('<svg')
+      expect(markup).toContain('data-wire-stage')
       expect(markup).not.toContain('id="goal-loop-title"')
       expect(markup).not.toContain('id="run-tape"')
     }
