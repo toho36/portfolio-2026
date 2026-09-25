@@ -87,3 +87,10 @@ Status: owner-approved direction 2026-09-25. Replaces the System Field playgroun
 ## Out of scope
 
 - Box pile (stashed). Homepage redesign. Online scores.
+
+## Amendment 2026-09-25 (owner review of first build) — overrides sections above where they conflict
+
+- **Loop orientation:** the loop is a round torus whose plane is perpendicular to the wire tangent (torus axis = tangent). Seen from the slightly tilted front camera it reads as a narrow ellipse crossing the wire; the front half renders in front of the wire, the back half behind it, so the wire visibly passes *through* the loop. No face-on oval.
+- **Rotation is always automatic** (both modes): loop axis eases to the nearest wire tangent. Manual rotation (wheel, Q/E, two-finger twist) is removed. `MISALIGN_K` stays in the collision rule for the auto-rotation lag on sharp corners.
+- **Hard mode** = smaller loop inner radius (≈ 70 % of Easy), no pause (releasing the grip = fail), faster rotation lag penalty at corners (tau ≈ 140 ms instead of 80 ms). Separate highscores stay.
+- **Wire path follows the owner sketch** `/private/tmp/pile-run.9X4c/proof/owner-vitek-sketch.png`: ligature VITEK — V's right arm continues down as I; dot above I is a hazard; from I bottom the line runs right and up as the T stem; small curl at top, then the T bar runs right and doubles as E's top; E continues down through its middle bar to the bottom bar; then up into the K stem, K arms from the stem middle up-right and down-right. FINISH at the end of the K lower arm. START at the top of V's left arm. No stray floating dashes other than deliberate hazards.
