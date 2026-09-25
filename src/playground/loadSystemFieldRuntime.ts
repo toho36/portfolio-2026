@@ -1,4 +1,4 @@
-const importThreeModule = (): Promise<unknown> => import('three')
+import { importThreeModule } from './loadWireRuntime'
 
 export interface SystemFieldRuntimeLoaderRequest<TModule, TRuntime> {
   readonly generation: number

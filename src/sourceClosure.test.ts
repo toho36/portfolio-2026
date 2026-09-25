@@ -162,35 +162,15 @@ describe('retired source closure', () => {
     ])
   })
 
-  it('exposes Three through one independent route-local dynamic loader', () => {
+  it('loads Three only through the wire seam and no source imports Rapier', () => {
     const importingModules = Object.entries(sourceModules)
-      .filter(
-        ([path]) =>
-          path !== './sourceClosure.test.ts' && !path.endsWith('.test.ts'),
-      )
+      .filter(([path]) => path !== './sourceClosure.test.ts' && !path.endsWith('.test.ts'))
       .filter(([, source]) => importsRetiredDependency(source, 'three'))
       .map(([path]) => path)
-      .sort()
-
-    expect(importingModules).toEqual([
-      './playground/loadSystemFieldRuntime.ts',
-    ])
-    for (const loader of importingModules) {
-      expect(
-        sourceModules[loader].match(/import\(['"]three['"]\)/g),
-      ).toHaveLength(1)
-    }
-    for (const loader of [
-      './playground/loadRelayRuntime.ts',
-    ]) {
-      expect(sourceModules[loader]).not.toContain("import('three')")
-    }
-    expect(sourceModules).not.toHaveProperty('./playground/three.d.ts')
-    expect(sourceModules['./three.d.ts']).toBe(
-      '// Three intentionally ships without declarations. Keep this route-local\n' +
-        '// dynamic-import seam independent of an undeclared @types/three install.\n' +
-        "declare module 'three'\n",
-    )
+    expect(importingModules).toEqual(['./playground/loadWireRuntime.ts'])
+    expect(sourceModules['./playground/loadWireRuntime.ts'].match(/import\(['"]three['"]\)/g)).toHaveLength(1)
+    for (const [path, source] of Object.entries(sourceModules))
+      if (path !== './sourceClosure.test.ts') expect(importsRetiredDependency(source, '@dimforge/rapier3d-compat')).toBe(false)
   })
 
   it('permits gsap and three only below the route-local runtime root', () => {

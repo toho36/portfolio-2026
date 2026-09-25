@@ -79,110 +79,12 @@ describe('accessible typography-led styles', () => {
   })
 })
 
-describe('System Field styles', () => {
-  it('owns only route scroll behavior and keeps lifecycle content visible', () => {
-    expect(styles).toMatch(
-      /html\.relay-scroll-owner\s*\{[^}]*scroll-behavior:\s*auto\s*!important/,
-    )
-    expect(styles).toMatch(/\.relay-status\s*\{[^}]*min-height:/)
-    expect(styles).toMatch(/\.relay-live-region\s*\{[^}]*position:\s*absolute/)
-    expect(styles).not.toContain('100vw')
-  })
-
-  it('keeps one sticky responsive fallback and canvas stage', () => {
-    expect(styles).toMatch(
-      /\.relay-choreography\s*\{[^}]*position:\s*relative[^}]*min-width:\s*0/,
-    )
-    expect(styles).toMatch(
-      /\.relay-stage\s*\{[^}]*position:\s*sticky[^}]*overflow:\s*hidden/,
-    )
-    expect(styles).toMatch(
-      /\.relay-stage svg\s*\{[^}]*width:\s*100%[^}]*height:\s*auto[^}]*min-height:[^}]*overflow:\s*hidden/,
-    )
-    expect(styles).toMatch(
-      /\.system-field-canvas\s*\{[^}]*position:\s*absolute[^}]*width:\s*100%[^}]*height:\s*100%[^}]*transform:\s*translateX\(-3rem\)[^}]*touch-action:\s*pan-y/,
-    )
-    expect(styles).not.toContain('100vw')
-  })
-
-  it('keeps the fallback visible and uses the approved focus color', () => {
-    expect(styles).toMatch(/\.system-field-fallback\s*\{[^}]*opacity:\s*0\.72/)
-    expect(styles).toMatch(
-      /\.system-field-origin\s*\{[^}]*fill:\s*var\(--focus\)/,
-    )
-    expect(styles).toMatch(
-      /\.playground\[data-system-field='ready'\] \.system-field-fallback\s*\{[^}]*opacity:\s*0/,
-    )
-    expect(styles).toMatch(
-      /\.playground\[data-system-field='ready'\] \.system-field-origin\s*\{[^}]*opacity:\s*0/,
-    )
-  })
-
-  it('reserves separate mobile zones for the relay copy and complete SVG', () => {
+describe('Wire Playground styles', () => {
+  it('keeps touch gestures on the canvas and the hint visible on mobile', () => {
     const mobile = styles.slice(styles.indexOf('@media (max-width: 760px)'))
-
-    expect(mobile).toMatch(/\.relay-stage\s*\{[^}]*place-items:\s*end center/)
-    expect(mobile).toMatch(
-      /\.relay-stage svg\s*\{[^}]*width:\s*min\(100%,\s*26rem\)[^}]*height:\s*auto[^}]*min-height:\s*0[^}]*max-height:\s*45%/,
-    )
-    expect(mobile).toMatch(
-      /\.system-field-canvas\s*\{[^}]*height:\s*52%[^}]*top:\s*auto[^}]*transform:\s*none/,
-    )
-    expect(mobile).toMatch(
-      /\.relay-beat\s*\{[^}]*width:\s*min\(100%,\s*27rem\)[^}]*min-height:\s*82svh[^}]*align-content:\s*start[^}]*padding-block:\s*3rem[^}]*padding-inline:\s*1\.25rem[^}]*background:\s*none/,
-    )
-    expect(mobile).not.toMatch(
-      /\.relay-stage svg\s*\{[^}]*(?:display:\s*none|visibility:\s*hidden|opacity:\s*0(?:[;\s]))/,
-    )
-    expect(mobile).not.toMatch(
-      /\.relay-beat\s*\{[^}]*(?:display:\s*none|visibility:\s*hidden|opacity:\s*0(?:[;\s]))/,
-    )
-    expect(mobile).not.toMatch(/\.relay-stage\s*\{[^}]*(?:position:|z-index:)/)
-    expect(mobile).not.toMatch(/\.relay-beat\s*\{[^}]*linear-gradient/)
-    expect(mobile).toMatch(
-      /\.relay-beat h2\s*\{[^}]*font-size:\s*clamp\(2\.35rem,\s*13vw,\s*4rem\)/,
-    )
-  })
-
-  it('retains the desktop relay gradient and sticky stage contract', () => {
-    const mobileBreakpoint = styles.indexOf('@media (max-width: 760px)')
-    const desktop = styles.slice(0, mobileBreakpoint)
-    const mobile = styles.slice(mobileBreakpoint)
-
-    expect(desktop).toMatch(
-      /\.relay-beat\s*\{[^}]*background:\s*linear-gradient\(90deg,\s*transparent,\s*var\(--ink\)\s*18%\)/,
-    )
-    expect(desktop).toMatch(
-      /\.relay-stage\s*\{[^}]*position:\s*sticky[^}]*z-index:\s*0[^}]*top:\s*5\.5rem[^}]*place-items:\s*center/,
-    )
-    expect(mobile).toMatch(/\.relay-stage\s*\{[^}]*top:\s*10rem/)
-  })
-
-  it('fits System Field and Feedback without heading overflow', () => {
-    const mobile = styles.slice(styles.indexOf('@media (max-width: 760px)'))
-
-    expect(styles).toMatch(/\.relay-hero\s*\{[^}]*min-width:\s*0/)
-    expect(styles).toMatch(/\.relay-beat\s*\{[^}]*min-width:\s*0/)
-    expect(styles).toMatch(/\.relay-beat h2\s*\{[^}]*max-width:\s*100%/)
-    expect(mobile).toMatch(
-      /\.relay-hero h1\s*\{[^}]*max-width:\s*100%[^}]*font-size:\s*clamp\(2\.7rem,\s*14\.5vw,\s*4\.6rem\)/,
-    )
-    expect(mobile).toMatch(
-      /\.relay-beat h2\s*\{[^}]*font-size:\s*clamp\(2\.35rem,\s*13vw,\s*4rem\)/,
-    )
-  })
-
-  it('keeps the accepted stage and copy zones intact under reduced motion', () => {
-    const reduced = styles.slice(
-      styles.indexOf('@media (prefers-reduced-motion: reduce)'),
-    )
-
-    expect(reduced).toMatch(
-      /\.relay-stage,[\s\S]*\.relay-beat\s*\{[^}]*opacity:\s*1[^}]*transform:\s*none/,
-    )
-    expect(reduced).not.toMatch(
-      /\.(?:relay-stage|relay-beat)[^{]*\{[^}]*(?:display:\s*none|visibility:\s*hidden|height:\s*0(?:[;\s]))/,
-    )
+    expect(styles).toMatch(/\.wire-stage canvas\s*\{[^}]*touch-action:\s*none/)
+    expect(mobile).toMatch(/\.wire-hint\s*\{[^}]*font-size:/)
+    expect(styles).not.toMatch(/\.relay-|\.system-field/)
   })
 })
 
