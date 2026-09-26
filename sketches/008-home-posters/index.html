@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Poster runtime study</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: #0b0b0b; color: #f2efe6; font-family: Arial, Helvetica, sans-serif; }
+    #strip { display: flex; width: 100vw; height: 100svh; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; }
+    #strip::-webkit-scrollbar { display: none; }
+    .poster { position: relative; flex: 0 0 100vw; height: 100svh; overflow: hidden; scroll-snap-align: start; background: #0b0b0b; }
+    .poster::before { content: ''; position: absolute; inset: 6vw; border: 1px solid #333; pointer-events: none; }
+    .poster-visual { position: absolute; top: 17%; left: 30%; width: 62%; height: 62%; border: 1px solid color-mix(in srgb, var(--accent), transparent 85%); }
+    .copy { position: absolute; z-index: 2; top: 12%; left: 7%; width: 55%; pointer-events: none; }
+    .index { display: block; color: var(--accent); font: 12px/1.4 monospace; letter-spacing: .12em; }
+    h1 { font-size: clamp(3rem, 8vw, 10rem); font-weight: 600; line-height: .89; letter-spacing: -.06em; max-width: 9ch; margin: 1.25rem 0; }
+    p { color: #9d9b95; font: 12px/1.5 monospace; text-transform: uppercase; letter-spacing: .1em; }
+    #status { position: fixed; z-index: 3; right: 2rem; bottom: 2rem; color: #a7a49a; font: 12px monospace; }
+    @media (max-width: 600px) { .poster-visual { left: 8%; top: 38%; width: 84%; height: 42%; } .copy { width: 86%; } h1 { font-size: 15vw; } }
+  </style>
+</head>
+<body>
+  <main id="strip" aria-label="Poster visual test strip">
+    <article class="poster" style="--accent:#f2efe6"><div class="poster-visual"></div><div class="copy"><span class="index">00 / 05</span><h1>New tools.<br>Old standards.</h1><p>Swipe to inspect the generated posters</p></div></article>
+    <article class="poster" style="--accent:#ff5a24"><div class="poster-visual"></div><div class="copy"><span class="index">01 / 05 · GameOnVB</span><h1>Operations,<br>made quiet.</h1></div></article>
+    <article class="poster" style="--accent:#1557ff"><div class="poster-visual"></div><div class="copy"><span class="index">02 / 05 · SolidPixels</span><h1>Shared<br>standards.</h1></div></article>
+    <article class="poster" style="--accent:#d9ff43"><div class="poster-visual"></div><div class="copy"><span class="index">03 / 05 · Goal Loop</span><h1>Speed with<br>hard checks.</h1></div></article>
+    <article class="poster" style="--accent:#d9ff43"><div class="poster-visual"></div><div class="copy"><span class="index">04 / 05 · Playground</span><h1>Interaction,<br>studied.</h1></div></article>
+    <article class="poster" style="--accent:#63e6ff"><div class="poster-visual"></div><div class="copy"><span class="index">05 / 05 · Small tools</span><h1>Small tools,<br>finished.</h1></div></article>
+  </main>
+  <output id="status">Loading</output>
+  <script type="module" src="./harness.ts"></script>
+</body>
+</html>

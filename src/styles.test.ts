@@ -27,6 +27,7 @@ describe('accessible typography-led styles', () => {
   it('settles the complete hierarchy under reduced motion', () => {
     const reduced = styles.slice(
       styles.indexOf('@media (prefers-reduced-motion: reduce)'),
+      styles.indexOf('/* Homepage poster slider */'),
     )
 
     expect(reduced).toContain('opacity: 1')
@@ -138,6 +139,43 @@ describe('retired Home presentation', () => {
     expect(styles).not.toMatch(
       /\.hero(?:\s|[>{.:#])|\.hero-(?:graphic|introduction)|\.flagship|\.side-quest|\.system-(?:copy|index|link)|\.(?:section-heading|compact-heading|unlinked-note)/,
     )
+  })
+})
+
+describe('poster home styles', () => {
+  it('keeps poster content inset at desktop and mobile widths', () => {
+    const desktop = styles.match(/\.poster\s*\{([^}]+)\}/)?.[1]
+    const mobile = styles.slice(styles.lastIndexOf('@media (max-width: 760px)')).match(/\.poster\s*\{([^}]+)\}/)?.[1]
+    const copy = [...styles.matchAll(/\.poster-copy\s*\{([^}]+)\}/g)].find((match) => match[1].includes('padding-inline: var(--poster-gutter)'))?.[1]
+    expect(desktop).toMatch(/--poster-gutter:\s*clamp\(1\.25rem,\s*4vw,\s*4rem\)/)
+    expect(mobile).toMatch(/--poster-gutter:\s*1\.25rem/)
+    expect(copy).toMatch(/padding-inline:\s*var\(--poster-gutter\)/)
+    expect(styles).toMatch(/\.poster-top\s*\{[^}]*margin-inline:\s*var\(--poster-gutter\)/)
+  })
+  it('gives every masked heading room for descenders without changing copy spacing', () => {
+    const mask = [...styles.matchAll(/\.poster-title-mask\s*\{([^}]+)\}/g)].at(-1)?.[1]
+    expect(mask).toMatch(/overflow:\s*hidden/)
+    expect(mask).toMatch(/padding-bottom:\s*var\(--title-descent\)/)
+    expect(mask).toMatch(/margin-bottom:\s*calc\(-1 \* var\(--title-descent\)\)/)
+  })
+  it('puts mobile poster copy before a growing visual slot', () => {
+    const mobile = styles.slice(styles.lastIndexOf('@media (max-width: 760px)'), styles.lastIndexOf('@media (pointer: coarse)'))
+    expect(mobile).toMatch(/\.poster-copy\s*\{[^}]*order:\s*2[^}]*margin-top:\s*0/)
+    expect(mobile).toMatch(/\.poster-visual\s*\{[^}]*order:\s*3[^}]*min-height:\s*38svh/)
+  })
+  it('keeps a native snap track, static grain, selection, and focus', () => {
+    expect(styles).toMatch(/\.poster-track\s*\{[^}]*scroll-snap-type:\s*x mandatory/)
+    expect(styles).toMatch(/\.poster-track\.is-controlled\s*\{[^}]*scroll-snap-type:\s*none/)
+    expect(styles).toMatch(/\.poster-track\.is-dragging\s*\{[^}]*user-select:\s*none/)
+    expect(styles).toMatch(/\.home-slider::after\s*\{[^}]*pointer-events:\s*none/)
+    expect(styles).toMatch(/\.route-home ::selection\s*\{[^}]*background:\s*#d9ff43/)
+    expect(styles).toMatch(/\.route-home :is\(a, button, input, textarea, \[tabindex\]\):focus-visible\s*\{[^}]*outline:\s*2px solid/)
+  })
+  it('settles poster motion for reduced preference', () => {
+    const reduced = styles.slice(styles.lastIndexOf('@media (prefers-reduced-motion: reduce)'))
+    expect(reduced).toContain('.poster-track')
+    expect(reduced).toContain('animation: none')
+    expect(reduced).toContain('transform: none')
   })
 })
 

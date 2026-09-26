@@ -40,9 +40,9 @@ describe('route records', () => {
   it('derives canonical metadata for every ordinary route', () => {
     expect(ROUTES.map(routeMetadata)).toEqual([
       {
-        title: 'Hoang Viet To — independent software systems builder',
+        title: 'Hoang Viet To — Software Developer',
         description:
-          'An independent software systems builder turning messy operations into reliable products and improving the loops that ship them.',
+          "I adopt new tools early and hold their output to the same standard as my own, whether I'm shipping alone or with a team.",
         canonical: 'https://portfolio-pied-eight-38.vercel.app/',
       },
       {
@@ -66,7 +66,7 @@ describe('route records', () => {
     ])
   })
 
-  it('keeps truthful content and only the verified side-quest URLs', () => {
+  it('keeps truthful content and the unlinked side quest', () => {
     expect(FLAGSHIPS.map(({ name }) => name)).toEqual([
       'GameOnVB',
       'Goal Loop',
@@ -74,10 +74,10 @@ describe('route records', () => {
     expect(JSON.stringify([FLAGSHIPS, SIDE_QUESTS])).not.toMatch(
       /\b(?:TBD|TODO|placeholder|\d+%)\b/i,
     )
-    expect(SIDE_QUESTS.map(({ url }) => url)).toEqual([
-      PROJECT_STORIES['screen-switch'].verifiedUrl,
-      PROJECT_STORIES.suburbs.verifiedUrl,
-    ])
+    expect(SIDE_QUESTS).toEqual([{
+      name: 'Screen Switch',
+      summary: PROJECT_STORIES['screen-switch'].preview,
+    }])
   })
 })
 

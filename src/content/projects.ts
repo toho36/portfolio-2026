@@ -1,15 +1,12 @@
 export const PROJECT_SLUGS = [
   'gameonvb',
-  'suburbs',
   'screen-switch',
   'voleyevents',
 ] as const
 
 export type ProjectSlug = (typeof PROJECT_SLUGS)[number]
 
-export type VerifiedProjectUrl =
-  | 'https://gameonvb.cz/'
-  | 'https://suburbs.vercel.app/'
+export type VerifiedProjectUrl = 'https://gameonvb.cz/'
 
 export interface ProjectStory {
   readonly preview: string
@@ -32,18 +29,6 @@ export const PROJECT_STORIES: Readonly<Record<ProjectSlug, ProjectStory>> = {
     evidence:
       'The current public site exposes upcoming events and community highlights.',
     verifiedUrl: 'https://gameonvb.cz/',
-  },
-  suburbs: {
-    preview:
-      'A motion-led skateboard storefront concept built around product drops and brand story.',
-    role: 'Frontend developer.',
-    constraint:
-      'Make the concept feel kinetic without hiding products or narrative behind motion.',
-    decision:
-      'Use scroll-led transitions and responsive layout to move from the latest drop into product story, reel, and team.',
-    evidence:
-      'The current public demo exposes those sections and remains directly readable.',
-    verifiedUrl: 'https://suburbs.vercel.app/',
   },
   'screen-switch': {
     preview:

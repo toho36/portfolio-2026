@@ -1,7 +1,7 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import App, { applyRouteMetadata, installRevealMotion } from './App'
+import App, { applyRouteMetadata, installRevealMotion, selectHomeTransition } from './App'
 import { readFileSync } from 'node:fs'
 import { ROUTES, resolveRoute, routeMetadata } from './content/routes'
 
@@ -19,48 +19,28 @@ function createClassList() {
   }
 }
 
-describe('systems-builder shell', () => {
-  it('opens a selectable world while preserving the sourced builder identity', () => {
+describe('poster homepage shell', () => {
+  it('renders the approved hero and all seven posters in order', () => {
     const markup = render()
-
-    expect(markup).toContain(
-      'I turn messy operations into software — and software delivery into a system.',
-    )
-    const hero = markup.slice(
-      markup.indexOf('class="hero"'),
-      markup.indexOf('id="flagships"'),
-    )
-    expect(hero).not.toMatch(/frontend|full[-\s]?stack/i)
-    expect(markup).toContain('I MAKE')
-    expect(markup).toContain('THINGS')
-    expect(markup).toContain('CLICK.')
-    expect(markup).toContain('class="world-portal"')
-    expect(markup).toContain('aria-label="Select Goal Loop"')
-    expect(markup).toContain('aria-pressed="true"')
-    expect(markup).toContain('role="group" aria-label="Choose a world"')
-    expect(markup).not.toContain('id="world-selection"')
-    expect(markup).not.toContain('src="/assets/systems-field.svg"')
+    expect(markup).toContain('New tools.')
+    expect(markup).toContain('Old standards.')
+    expect([...markup.matchAll(/data-poster="([^"]+)"/g)].map((m) => m[1])).toEqual([
+      'hero', 'gameonvb', 'solidpixels', 'goal-loop', 'playground', 'tools', 'contact',
+    ])
+    expect(markup).toContain('data-home-state="static"')
     expect(markup).toContain('>Homepage</a>')
   })
 
-  it('orders ordinary flagship routes inside the flagship section', () => {
+  it('links approved projects and keeps SolidPixels and Small tools non-link', () => {
     const markup = render()
-    const flagships = markup.slice(
-      markup.indexOf('<section id="flagships"'),
-      markup.indexOf('<section id="side-quests"'),
-    )
-
-    expect(flagships.indexOf('GameOnVB')).toBeGreaterThan(-1)
-    expect(flagships.indexOf('GameOnVB')).toBeLessThan(
-      flagships.indexOf('Goal Loop'),
-    )
-    expect(flagships).toContain('href="/gameonvb"')
-    expect(flagships).toContain('href="/goal-loop"')
-    expect(flagships).not.toMatch(/Screen Switch|Suburbs/)
-    expect(markup.indexOf('id="side-quests"')).toBeGreaterThan(
-      markup.indexOf('id="flagships"'),
-    )
-    expect(markup).not.toMatch(/href="#project-|<dialog|href="#"/)
+    expect(markup).toContain('href="/gameonvb"')
+    expect(markup).toContain('href="/goal-loop"')
+    expect(markup).toContain('href="/playground"')
+    const solid = markup.slice(markup.indexOf('data-poster="solidpixels"'), markup.indexOf('data-poster="goal-loop"'))
+    expect(solid).not.toContain('<a ')
+    const tools = markup.slice(markup.indexOf('data-poster="tools"'), markup.indexOf('data-poster="contact"'))
+    expect(tools).toContain('Screen Switch, a native macOS menu-bar utility that exchanges windows between displays.')
+    expect(tools).not.toContain('<a ')
   })
 
   it('preserves contacts, both native CV downloads, landmarks, and link targets', () => {
@@ -84,6 +64,10 @@ describe('systems-builder shell', () => {
     expect(markup).toContain('<nav aria-label="Primary"')
     expect(markup).toContain('<nav aria-label="Contact and CV"')
     expect(markup).toContain('href="mailto:tohoangviet1998@gmail.com"')
+    const contact = markup.slice(markup.indexOf('data-poster="contact"'))
+    expect(contact).not.toContain('class="target-link poster-email"')
+    expect(contact).not.toContain('>Copy</button>')
+    expect(contact).not.toContain('aria-hidden="true">tohoangviet1998@gmail.com')
     expect(markup).toContain('href="https://github.com/toho36"')
     expect(markup).toContain(
       'href="https://www.linkedin.com/in/hoangvietto/"',
@@ -96,7 +80,7 @@ describe('systems-builder shell', () => {
     )
   })
 
-  it('renders all four routes distinctly and falls unknown paths back to home', () => {
+  it('renders all four routes distinctly and gives unknown paths a 404', () => {
     const gameOnVB = render('/gameonvb/')
     const goalLoop = render('/goal-loop')
     const playground = render('/playground')
@@ -117,9 +101,7 @@ describe('systems-builder shell', () => {
       expect(markup).not.toContain('id="goal-loop-title"')
       expect(markup).not.toContain('id="run-tape"')
     }
-    expect(unknown).toContain(
-      'I turn messy operations into software — and software delivery into a system.',
-    )
+    expect(unknown).toContain("This page doesn&#x27;t exist.")
   })
 
   it('keeps every route destination and current-page link truthful', () => {
@@ -199,6 +181,16 @@ describe('systems-builder shell', () => {
     expect(source).not.toMatch(
       /['"]\.\/(?:machine|loops)\/|ProjectDetailDialog|showModal/,
     )
+  })
+
+  it('keeps shared-element navigation and a curtain fallback', () => {
+    const source = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8')
+    expect(source).toContain('document.startViewTransition')
+    expect(selectHomeTransition(true, false, true, false)).toBe('curtain')
+    expect(selectHomeTransition(true, false, true, true)).toBe('shared')
+    expect(selectHomeTransition(true, true, true, false)).toBe('plain')
+    expect(selectHomeTransition(true, false, false, false)).toBe('plain')
+    expect(source).toContain("dataset.curtain = 'reveal'")
   })
 })
 

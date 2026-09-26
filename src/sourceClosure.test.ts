@@ -40,7 +40,7 @@ const ROUTE_SCOPED_DEPENDENCIES = [
   'three',
 ] as const
 
-const ROUTE_SCOPED_ROOTS = ['./playground/'] as const
+const ROUTE_SCOPED_ROOTS = ['./playground/', './home/'] as const
 
 const ABSENT_DEPENDENCIES = [
   ...GLOBALLY_FORBIDDEN_DEPENDENCIES,
@@ -158,8 +158,10 @@ describe('retired source closure', () => {
       .sort()
 
     expect(importingModules).toEqual([
+      './home/loadPosterRuntime.ts',
       './playground/loadRelayRuntime.ts',
     ])
+    expect(sourceModules['./home/loadPosterRuntime.ts'].match(/import\(['"]gsap['"]\)/g)).toHaveLength(1)
   })
 
   it('loads Three only through the wire seam and no source imports Rapier', () => {
@@ -167,7 +169,8 @@ describe('retired source closure', () => {
       .filter(([path]) => path !== './sourceClosure.test.ts' && !path.endsWith('.test.ts'))
       .filter(([, source]) => importsRetiredDependency(source, 'three'))
       .map(([path]) => path)
-    expect(importingModules).toEqual(['./playground/loadWireRuntime.ts'])
+    expect(importingModules.sort()).toEqual(['./home/loadPosterRuntime.ts', './playground/loadWireRuntime.ts'])
+    expect(sourceModules['./home/loadPosterRuntime.ts'].match(/import\(['"]three['"]\)/g)).toHaveLength(1)
     expect(sourceModules['./playground/loadWireRuntime.ts'].match(/import\(['"]three['"]\)/g)).toHaveLength(1)
     for (const [path, source] of Object.entries(sourceModules))
       if (path !== './sourceClosure.test.ts') expect(importsRetiredDependency(source, '@dimforge/rapier3d-compat')).toBe(false)

@@ -3,9 +3,9 @@ export const ROUTES = [
     id: 'home',
     path: '/',
     label: 'Homepage',
-    title: 'Hoang Viet To — independent software systems builder',
+    title: 'Hoang Viet To — Software Developer',
     description:
-      'An independent software systems builder turning messy operations into reliable products and improving the loops that ship them.',
+      "I adopt new tools early and hold their output to the same standard as my own, whether I'm shipping alone or with a team.",
   },
   {
     id: 'voleyevents',

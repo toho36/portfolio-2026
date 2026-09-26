@@ -35,18 +35,12 @@ export const FLAGSHIPS: readonly Flagship[] = [
 interface SideQuest {
   readonly name: string
   readonly summary: string
-  readonly url?: string
 }
 
 export const SIDE_QUESTS: readonly SideQuest[] = [
   {
     name: 'Screen Switch',
     summary: PROJECT_STORIES['screen-switch'].preview,
-  },
-  {
-    name: 'Suburbs',
-    summary: PROJECT_STORIES.suburbs.preview,
-    url: PROJECT_STORIES.suburbs.verifiedUrl,
   },
 ]
 
