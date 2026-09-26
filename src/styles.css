@@ -1539,10 +1539,13 @@ footer p {
 .poster[data-poster='contact'] .poster-title-mask { grid-column: 1; align-self: end; }
 .poster[data-poster='contact'] .poster-body { grid-column: 1; align-self: start; }
 .poster[data-poster='contact'] .poster-copy h2 { font-size: clamp(3rem, 5.5vw, 6rem); }
-.poster[data-poster='tools'] .poster-copy { grid-column: 1 / -1; }
+@media (min-width: 761px) and (pointer: fine) {
+  .poster[data-poster='tools'] .poster-copy h2 { font-size: clamp(3rem, 6vw, 7rem); }
+}
 .poster-copy {
   position: relative;
   z-index: 3;
+  pointer-events: none;
   grid-column: 1 / 10;
   align-self: end;
   min-width: 0;
@@ -1552,6 +1555,7 @@ footer p {
   transform: translateX(calc(var(--in-x, 0) * 2vw)) scale(var(--out-scale));
   transform-origin: left center;
 }
+.poster-copy :is(a, button, input, textarea, select, label, form) { pointer-events: auto; }
 .poster-title-mask { --title-descent: clamp(.5rem, 1.4vw, 1.5rem); overflow: hidden; padding-bottom: var(--title-descent); margin-bottom: calc(-1 * var(--title-descent)); }
 .poster-copy h1, .poster-copy h2 {
   max-width: 11ch;

@@ -143,6 +143,12 @@ describe('retired Home presentation', () => {
 })
 
 describe('poster home styles', () => {
+  it('lets visuals receive clicks through copy while keeping copy controls interactive', () => {
+    const copy = [...styles.matchAll(/\.poster-copy\s*\{([^}]+)\}/g)].find((match) => match[1].includes('grid-column: 1 / 10'))?.[1]
+    expect(copy).toMatch(/pointer-events:\s*none/)
+    expect(styles).toMatch(/\.poster-copy\s+:is\(a, button, input, textarea, select, label, form\)\s*\{\s*pointer-events:\s*auto/)
+    expect(styles).not.toMatch(/\.poster\[data-poster='tools'\] \.poster-copy\s*\{[^}]*grid-column:\s*1\s*\/\s*-1/)
+  })
   it('keeps poster content inset at desktop and mobile widths', () => {
     const desktop = styles.match(/\.poster\s*\{([^}]+)\}/)?.[1]
     const mobile = styles.slice(styles.lastIndexOf('@media (max-width: 760px)')).match(/\.poster\s*\{([^}]+)\}/)?.[1]
