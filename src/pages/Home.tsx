@@ -5,6 +5,7 @@ import { createLoader } from '../home/loader'
 import { loadPosterBridge, type PosterRuntime } from '../home/posterBridge'
 import { bendFromVelocity, isClick } from '../home/sliderMath'
 import { createSliderController } from '../home/sliderController'
+import { createCursorFollow } from '../home/cursorFollow'
 import { sendContact, validateContact, type ContactErrors, type ContactTopic, type ContactValues } from '../home/contactForm'
 
 const email = CONTACT[0].href.slice('mailto:'.length)
@@ -67,12 +68,7 @@ function ContactPoster() {
         <fieldset className="poster-form-topic"><legend>Topic</legend><div>{(['Role', 'Project', 'Other'] as const).map((topic: ContactTopic) => <label key={topic}><input type="radio" name="topic" value={topic} checked={values.topic === topic} onChange={() => update('topic', topic)} /><span>{topic}</span></label>)}</div></fieldset>
         <div className="poster-form-field"><label htmlFor="contact-message">Message</label><textarea id="contact-message" name="message" ref={messageRef} required minLength={20} maxLength={4000} rows={4} value={values.message} onChange={(event) => update('message', event.target.value)} aria-invalid={!!errors.message} aria-describedby={errors.message ? 'contact-message-error' : undefined} />{errors.message && <span id="contact-message-error" className="poster-form-error">{errors.message}</span>}</div>
         <div className="poster-honey"><label htmlFor="contact-honey">Leave this field empty</label><input id="contact-honey" name="_honey" tabIndex={-1} autoComplete="off" value={values._honey} onChange={(event) => update('_honey', event.target.value)} /></div>
-        <button className="magnetic-cta" type="submit" disabled={sending} onPointerMove={(event) => {
-          if (event.pointerType !== 'mouse') return
-          const rect = event.currentTarget.getBoundingClientRect()
-          event.currentTarget.style.setProperty('--mag-x', `${(event.clientX - rect.left - rect.width / 2) * 0.3}px`)
-          event.currentTarget.style.setProperty('--mag-y', `${(event.clientY - rect.top - rect.height / 2) * 0.3}px`)
-        }} onPointerLeave={(event) => { event.currentTarget.style.setProperty('--mag-x', '0px'); event.currentTarget.style.setProperty('--mag-y', '0px') }}>{sending ? 'Sending…' : HOME_COPY.contactCta} <span aria-hidden="true">↗</span></button>
+        <button className="magnetic-cta" type="submit" disabled={sending}>{sending ? 'Sending…' : HOME_COPY.contactCta} <span aria-hidden="true">↗</span></button>
         {submitError === 'send' && <p className="poster-form-error" role="alert">Couldn't send. Email me directly at <a className="target-link" href={CONTACT[0].href}>{email}</a></p>}
         {submitError === 'rate' && <p className="poster-form-error" role="alert">Please wait a minute before sending another message.</p>}
       </form>}
@@ -129,6 +125,9 @@ export function HomePage({ onNavigate }: { readonly onNavigate: (event: MouseEve
   const trackRef = useRef<HTMLOListElement>(null)
   const hostRef = useRef<HTMLDivElement>(null)
   const cursorRef = useRef<HTMLDivElement>(null)
+  const followRef = useRef<ReturnType<typeof createCursorFollow> | null>(null)
+  const runtimeRef = useRef<PosterRuntime | null>(null)
+  const smoothRef = useRef<MediaQueryList | null>(null)
   const [state, setState] = useState<'static' | 'loading' | 'ready'>('static')
   const [progress, setProgress] = useState(0)
   const [active, setActive] = useState(0)
@@ -168,6 +167,7 @@ export function HomePage({ onNavigate }: { readonly onNavigate: (event: MouseEve
       if (canceled) { if (result.status === 'created') result.runtime.destroy(); return }
       if (result.status === 'created') {
         runtime = result.runtime
+        runtimeRef.current = runtime
         runtimeReady = true
         runtime.setActive(controller.index)
         showRuntime()
@@ -182,18 +182,36 @@ export function HomePage({ onNavigate }: { readonly onNavigate: (event: MouseEve
       controller.destroy()
       loader.destroy()
       runtime?.destroy()
+      runtimeRef.current = null
     }
   }, [])
+
+  useEffect(() => {
+    const cursor = cursorRef.current
+    if (!cursor) return
+    const smooth = matchMedia('(pointer: fine) and (prefers-reduced-motion: no-preference)')
+    smoothRef.current = smooth
+    const follow = createCursorFollow(cursor, () => smooth.matches)
+    followRef.current = follow
+    return () => { follow.stop(); followRef.current = null }
+  }, [])
+
+  function setPointer(main: HTMLElement, x: number, y: number) {
+    main.style.setProperty('--px', x.toFixed(3))
+    main.style.setProperty('--py', y.toFixed(3))
+    runtimeRef.current?.setPointer(x, y)
+  }
 
   function moveCursor(event: MouseEvent<HTMLElement>) {
     const cursor = cursorRef.current
     if (!cursor) return
-    cursor.style.transform = `translate(${event.clientX}px, ${event.clientY}px)`
+    followRef.current?.move(event.clientX, event.clientY)
+    if (smoothRef.current?.matches) setPointer(event.currentTarget, event.clientX / innerWidth * 2 - 1, event.clientY / innerHeight * 2 - 1)
     cursor.dataset.label = (event.target as Element).closest('input, textarea, label') ? '' : (event.target as Element).closest('.screen-switch-hit') ? 'Switch' : (event.target as Element).closest('button') ? 'Send' : (event.target as Element).closest('a') ? 'Open' : 'Drag'
   }
 
   return (
-    <main id="main-content" tabIndex={-1} className="home-slider" data-home-state={state} data-active={POSTERS[active].id} onMouseMove={moveCursor} onMouseLeave={() => { if (cursorRef.current) cursorRef.current.dataset.label = '' }}>
+    <main id="main-content" tabIndex={-1} className="home-slider" data-home-state={state} data-active={POSTERS[active].id} onMouseMove={moveCursor} onMouseLeave={(event) => { followRef.current?.stop(); setPointer(event.currentTarget, 0, 0); if (cursorRef.current) cursorRef.current.dataset.label = '' }}>
       <div className="poster-canvas-host" ref={hostRef} aria-hidden="true" />
       <div className="home-loader" role="status" aria-label={HOME_COPY.loader}><span>{HOME_COPY.loader}</span><strong>{String(progress).padStart(3, '0')} %</strong></div>
       <div className="home-counter" aria-hidden="true">{POSTERS[active].index} / 06</div>
@@ -215,7 +233,7 @@ export function HomePage({ onNavigate }: { readonly onNavigate: (event: MouseEve
         </li>)}
       </ol>
       <p className="poster-hint"><span>{HOME_COPY.hintDesktop}</span><span>{HOME_COPY.hintTouch}</span><span aria-hidden="true"> ↓</span></p>
-      <div className="home-cursor" ref={cursorRef} aria-hidden="true" />
+      <div className="home-cursor" ref={cursorRef} aria-hidden="true" style={{ '--cursor-accent': POSTERS[active].accent } as CSSProperties} />
       <p className="visually-hidden" aria-live="polite">{announcement}</p>
     </main>
   )

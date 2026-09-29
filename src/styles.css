@@ -1652,8 +1652,6 @@ footer p {
   font-weight: 700;
   cursor: pointer;
   text-decoration: none;
-  transform: translate(var(--mag-x, 0px), var(--mag-y, 0px));
-  transition: transform .3s cubic-bezier(.25,1,.5,1);
 }
 .magnetic-cta:disabled { opacity: .65; cursor: wait; }
 .poster-contact nav { display: flex; flex-wrap: wrap; gap: .25rem; }
@@ -1662,9 +1660,14 @@ footer p {
 @media (pointer: fine) and (prefers-reduced-motion: no-preference) {
   .home-slider, .home-slider * { cursor: none; }
   .home-slider :is(input, textarea, [contenteditable]) { cursor: text; }
-  .home-cursor { position: fixed; z-index: 35; top: 0; left: 0; display: grid; place-items: center; width: 3.5rem; height: 3.5rem; border: 1px solid var(--paper); border-radius: 50%; pointer-events: none; color: var(--paper); font: 10px ui-monospace, monospace; }
+  .home-cursor { position: fixed; z-index: 35; top: 0; left: 0; display: grid; place-items: center; width: 3.5rem; height: 3.5rem; border: 1px solid var(--cursor-accent, var(--paper)); border-radius: 50%; pointer-events: none; color: var(--paper); font: 10px ui-monospace, monospace; mix-blend-mode: difference; transition: border-color .3s, opacity .2s; }
   .home-cursor::after { content: attr(data-label); }
   .home-cursor:not([data-label]), .home-cursor[data-label=''] { opacity: 0; }
+}
+@media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .home-slider :is(.switch-monitor, .switch-window) { --depth: 8px; translate: calc(var(--px, 0) * var(--depth)) calc(var(--py, 0) * var(--depth)); transition: translate .6s cubic-bezier(.25,1,.5,1); }
+  .home-slider .switch-window { --depth: 16px; }
+  .home-slider .goal-pipeline { transform: perspective(900px) rotateX(calc(var(--py, 0) * 18deg)) rotateY(calc(var(--px, 0) * -26deg)); transition: transform .6s cubic-bezier(.25,1,.5,1); }
 }
 .route-home #main-content { view-transition-name: none; }
 .route-home .poster-visual { view-transition-name: none; }
@@ -1713,14 +1716,13 @@ html[data-curtain='reveal']::after { animation: curtain-reveal .2s cubic-bezier(
 @media (pointer: coarse) {
   .poster-hint span:first-child { display: none; }
   .poster-hint span:nth-child(2) { display: inline; }
-  .magnetic-cta { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .poster-track { scroll-behavior: auto; }
   .screen-switch[data-touched='true'][data-swapped] :is(.switch-window-a, .switch-window-b) { animation: switch-crossfade 150ms ease-out both; }
   .screen-switch[data-touched='true'][data-swapped] .switch-menu-icon { animation: none; }
   @keyframes switch-crossfade { 0% { opacity: 0; } 100% { opacity: 1; } }
-  .poster, .poster-visual, .home-loader, .magnetic-cta { transition: none; }
+  .poster, .poster-visual, .home-loader { transition: none; }
   .home-slider:not([data-home-state='loading']) .poster-copy h1 span { animation: none; opacity: 1; transform: none; }
   .home-slider[data-home-state='loading'] .poster-copy h1 span { transform: none; }
   .home-slider[data-home-state='ready'] .poster[data-poster='hero'] .poster-title-mask::after { animation: none; }

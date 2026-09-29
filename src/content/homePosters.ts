@@ -23,7 +23,7 @@ export const POSTERS: readonly Poster[] = [
   { index: '01', id: 'gameonvb', label: 'GameOnVB', heading: 'Less organising. More time on court.', body: 'Registration and organisation for recurring recreational volleyball events, handled by one focused product.', accent: '#ff5a24', href: '/gameonvb' },
   { index: '02', id: 'solidpixels', label: 'SolidPixels', heading: 'Shared codebases, shared standards.', body: 'At SolidPixels I work with other developers on a CMS platform and client sites: frontend, backend and third-party integrations.', accent: '#1557ff' },
   { index: '03', id: 'goal-loop', label: 'Goal Loop', heading: 'Speed with hard checks.', body: 'Several models build, critique and review. Every result passes explicit verification gates or is blocked.', accent: '#d9ff43', href: '/goal-loop' },
-  { index: '04', id: 'playground', label: 'Playground', heading: 'Interaction, studied closely.', body: 'A real-time 3D skill game. An exercise in input, feedback and rendering on every device.', accent: '#d9ff43', href: '/playground' },
+  { index: '04', id: 'playground', label: 'Playground', heading: 'Interaction, studied closely.', body: 'A real-time 3D skill game. An exercise in input, feedback and rendering on every device.', accent: '#ff4fd8', href: '/playground' },
   { index: '05', id: 'tools', label: 'Small tools', heading: 'Small tools, finished properly.', body: 'Screen Switch, a native macOS menu-bar utility that exchanges windows between displays.', accent: '#63e6ff' },
   { index: '06', id: 'contact', label: 'Contact', heading: "Let's talk about your project.", body: 'Roles, collaborations or a difficult software problem. I usually reply within a few days.', accent: '#f2efe6' },
 ] as const

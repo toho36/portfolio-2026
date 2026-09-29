@@ -1,6 +1,7 @@
 export interface PosterRuntime {
   setActive(index: number): void
   setBend(amount: number): void
+  setPointer(x: number, y: number): void
   destroy(): void
 }
 

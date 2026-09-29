@@ -77,7 +77,7 @@ describe('posterRuntime', () => {
       removeEventListener: (name: string) => windowListeners.delete(name) })
     vi.stubGlobal('document', { hidden: false,
       createElement: () => {
-        const canvas = { width: 0, height: 0, text: '', getContext: () => ({ fillText: (value: string) => { canvas.text = value } }) }
+        const canvas = { width: 0, height: 0, text: '', getContext: () => ({ measureText: (value: string) => ({ width: value.length * 58 }), fillText: (value: string) => { canvas.text = value } }) }
         return canvas
       },
       addEventListener: (name: string, fn: Function) => documentListeners.set(name,fn),
@@ -118,6 +118,15 @@ describe('posterRuntime', () => {
       callbacks.delete(nextId); nextFrame(40 + nextId)
       expect(1.85 * cms.scale.x).toBeLessThanOrEqual(4 * rect.height / rect.width)
     }
+    expect(cms.rotation.x).toBe(0)
+    runtime.setPointer(5, -1)
+    for (let i = 0; i < 40 && callbacks.size; i++) {
+      const [pointerId, pointerFrame] = callbacks.entries().next().value!
+      callbacks.delete(pointerId); pointerFrame(100 + i * 16)
+    }
+    expect(cms.position.x).toBe(0)
+    expect(cms.rotation.x).toBeCloseTo(-.32)
+    expect(cms.rotation.y).toBeCloseTo(.45)
     runtime.destroy()
     expect(windowListeners.size).toBe(0)
     expect(documentListeners.size).toBe(0)

@@ -4,6 +4,7 @@ import { CMS_BLOCKS, CMS_DURATION, GOAL_DURATION, sampleCmsBlock, sampleGoalLoop
 export interface PosterRuntime {
   setActive(index: number): void
   setBend(amount: number): void
+  setPointer(x: number, y: number): void
   destroy(): void
 }
 
@@ -44,11 +45,14 @@ export function createPosterRuntime(three: any, opts: {
 
   const camera = new three.OrthographicCamera(-4, 4, 2.5, -2.5, 0.1, 20)
   camera.position.z = 10
+  // Perspective twin of `camera` so pointer tilt reads as depth, not a squash.
+  const tiltCamera = new three.PerspectiveCamera(30, 1, .1, 100)
   const scenes: PosterScene[] = opts.slots.map(() => ({ scene: new three.Scene(), pieces: [], played: false, started: -1 }))
   const goalOverlay = opts.slots[3]?.querySelector?.<HTMLElement>('.goal-pipeline')
   const goalStages = goalOverlay?.querySelectorAll<HTMLElement>('.goal-stage')
   let dpr = Math.min(window.devicePixelRatio || 1, 2)
   let destroyed = false, raf = 0, bend = 0, targetBend = 0, lastBendInput = 0
+  let px = 0, py = 0, targetPx = 0, targetPy = 0
   let frameCount = 0, frameTotal = 0, previousFrame = 0, firstFrame = false
 
   function material(hex: string, alpha: number) {
@@ -178,7 +182,8 @@ export function createPosterRuntime(three: any, opts: {
     const impact = opts.reducedMotion ? 1 : clamp((age - 1180) / 220, 0, 1)
     rippleMaterial.opacity = t === 1 && impact < 1 ? .75 * (1 - impact) : 0
     ripple.scale.setScalar(1 + impact * 1.3)
-    court.rotation.y = bend * .35
+    court.rotation.y = bend * .35 + px * .06
+    court.rotation.x = py * .03
   }
 
   let drawOrder = 0
@@ -198,13 +203,18 @@ export function createPosterRuntime(three: any, opts: {
   function label(parent: any, value: string, x: number, y: number, w: number, h: number, hex: string) {
     if (typeof document.createElement !== 'function') return null
     const canvas = document.createElement('canvas')
-    canvas.width = Math.max(128, value.length * 25 + 8); canvas.height = 64
     const ctx = canvas.getContext('2d')
     if (!ctx) return null
+    const font = 'bold 96px ui-monospace, SFMono-Regular, Menlo, monospace'
+    ctx.font = font
+    canvas.width = Math.ceil(ctx.measureText(value).width) + 16; canvas.height = 160
+    // Keep the glyph aspect ratio; right-align inside the requested box.
+    const width = Math.min(w, h * canvas.width / canvas.height)
+    x += (w - width) / 2; w = width
+    ctx.font = font
     ctx.fillStyle = hex
-    ctx.font = 'bold 38px ui-monospace, SFMono-Regular, Menlo, monospace'
     ctx.textBaseline = 'middle'
-    ctx.fillText(value, 4, 33)
+    ctx.fillText(value, 8, 84)
     const texture = new three.CanvasTexture(canvas)
     texture.colorSpace = three.SRGBColorSpace
     const mat = new three.SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false })
@@ -254,6 +264,8 @@ export function createPosterRuntime(three: any, opts: {
   cursorHalo.position.set(.09, -.15, -.01)
   function updateCms(age: number) {
     cms.rotation.y = bend * .22
+    cms.rotation.x = py * .32
+    cms.rotation.y += px * .45
     CMS_BLOCKS.forEach((_, i) => {
       const state = sampleCmsBlock(i, age)
       const { group, lines } = cmsBlocks[i]
@@ -329,6 +341,7 @@ export function createPosterRuntime(three: any, opts: {
         piece.mesh.position.x = 0
         piece.mesh.scale.x = piece.motion==='draw' ? Math.max(.001,t) : 1
       }
+      slot.scene.rotation.set(py * .32, px * .45, 0)
       if (i === 1) updateCourt(age)
       if (i === 2) {
         cms.scale.setScalar(Math.min(1, 4 * rect.height / rect.width / 1.85))
@@ -347,7 +360,10 @@ export function createPosterRuntime(three: any, opts: {
         courtCamera.bottom = -courtCamera.top
         courtCamera.updateProjectionMatrix()
       }
-      renderer.render(slot.scene, i === 1 ? courtCamera : camera)
+      tiltCamera.aspect = rect.width / rect.height
+      tiltCamera.position.z = camera.top / Math.tan(Math.PI / 12)
+      tiltCamera.updateProjectionMatrix()
+      renderer.render(slot.scene, i === 1 ? courtCamera : tiltCamera)
     }
     if (!firstFrame) { firstFrame = true; opts.onFirstFrame() }
   }
@@ -366,8 +382,12 @@ export function createPosterRuntime(three: any, opts: {
     if (now-lastBendInput>120) targetBend=0
     bend += (targetBend-bend)*Math.min(1,Math.max(.15,dt/80))
     if (Math.abs(bend)<.002 && targetBend===0) bend=0
+    const follow = Math.min(1, dt/140)
+    px += (targetPx-px)*follow
+    py += (targetPy-py)*follow
+    if (Math.abs(targetPx-px)<.002 && Math.abs(targetPy-py)<.002) { px=targetPx; py=targetPy }
     draw(now)
-    if (Math.abs(bend-targetBend)>.002 || targetBend!==0 || scenes.some((s, i) => s.started>=0 && now-s.started<duration(i))) request()
+    if (Math.abs(bend-targetBend)>.002 || targetBend!==0 || px!==targetPx || py!==targetPy || scenes.some((s, i) => s.started>=0 && now-s.started<duration(i))) request()
   }
   function request() { if (!destroyed && !document.hidden && !raf) raf=requestAnimationFrame(tick) }
   function visibility() { if (document.hidden) { cancelAnimationFrame(raf); raf=0; previousFrame=0 } else request() }
@@ -389,6 +409,12 @@ export function createPosterRuntime(three: any, opts: {
       if (destroyed || opts.reducedMotion) return
       targetBend=clamp(amount,-.35,.35)
       lastBendInput=performance.now()
+      request()
+    },
+    setPointer(x, y) {
+      if (destroyed || opts.reducedMotion) return
+      targetPx=clamp(x,-1,1)
+      targetPy=clamp(y,-1,1)
       request()
     },
     destroy() {
