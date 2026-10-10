@@ -80,9 +80,11 @@ export function WorkIndex({ items, coordinator, screenSwitchDemo }: SelectedWork
 
   if (!selected) return null
   const panelId = `${instance}-attachment`
+  const demo = selected.id === 'screen-switch' && screenSwitchDemo && <div className="work-demo-slot" role="group" aria-label="Screen Switch demonstration">{screenSwitchDemo}</div>
   const panel = <div className="work-preview" id={panelId} role="region" aria-label={`${selected.title} attachment`}>
     <div className="work-preview-frame"><div className="work-attachment" ref={attachment}><Attachment item={selected} /></div></div>
     <div className="work-preview-text"><Detail item={selected} /></div>
+    {sticky && demo}
   </div>
 
   return <section className="landing-work landing-section work-index" id="work" aria-labelledby={`${instance}-title`}>
@@ -102,7 +104,7 @@ export function WorkIndex({ items, coordinator, screenSwitchDemo }: SelectedWork
             <span className="work-contribution">{item.contribution}</span>
           </button>
           {!sticky && item.id === selected.id && panel}
-          {item.id === 'screen-switch' && item.id === selected.id && screenSwitchDemo && <div className="work-demo-slot" role="group" aria-label="Screen Switch demonstration">{screenSwitchDemo}</div>}
+          {!sticky && item.id === selected.id && demo}
         </li>)}
       </ul>
       {sticky && panel}

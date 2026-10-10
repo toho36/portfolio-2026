@@ -8,8 +8,15 @@ From the repository root, serve this harness through Vite and open
 Integration: import `WorkIndex` and `WORK_ITEMS` from
 `src/home/landing/work/WorkIndex`; supply the page's shared `coordinator`.
 Pass T5a's component as `screenSwitchDemo` (a React node, with that same
-coordinator). This slot mounts below the selected Screen Switch row and is
-outside the attachment mask. Only one copy is mounted.
+coordinator). On a tall desktop, this slot mounts inside the right detail
+column, after the detail text and outside the attachment mask. On mobile
+and short desktop it mounts below the selected Screen Switch row. Only one
+copy is mounted.
+
+The harness supplies a 420 px tall placeholder. Select Screen Switch at
+1440×900 and verify that Goal Loop remains visible in the left list; check
+390×844 and 1280×720 for the inline placement. The placeholder tests layout,
+not T5a motion.
 
 All four contribution sentences remain visible. Arrow keys move row focus;
 Enter or Space selects. Hover only highlights. The selected attachment is
