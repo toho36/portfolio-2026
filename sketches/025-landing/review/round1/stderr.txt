@@ -1,0 +1,1117 @@
+Reading prompt from stdin...
+OpenAI Codex v0.160.1
+--------
+workdir: /Users/vitek/Documents/agent-runs/portfolio-2026/2026-10-10-landing-t1/wt
+model: gpt-6-astra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a12648-84d9-7560-8cd8-b32fdc54a0f5
+--------
+user
+You are a senior web art director and front-end tech lead. Read-only review. Do not edit files. Answer in Czech.
+
+Review ticket T1 = static composition of the new portfolio homepage (no motion yet). Read docs/direction/homepage-hero-brainstorm/LANDING-PLAN-v2.md, tickets/T1-staticka-kompozice.md, content/COPY.md, and the code src/home/landing/. Screenshots attached (1440 fold/full, 1280, 768, 390 fold/full, 320) are from a production build preview.
+
+Parent measured: no horizontal overflow at 1440/1280/768; 20px horizontal overflow at 390 and 320 (proof panel figure, steps list, img bleed right). H1 Georgia 60px@1440, 41px@390.
+
+Parent-noted issues: tiny unreadable text inside the GameOnVB screenshot at desktop; Goal Loop role shows "—"; Playground link duplicated in Selected work; eyebrow "Hoang Viet To / Software Developer" repeats the header.
+
+Task:
+1. Verdict APPROVE / CHANGES_REQUIRED for T1 against its acceptance and the senior/premium bar (not a template look).
+2. Concrete blocking fixes (max 8), each actionable for a coding agent: what, where, target value.
+3. Non-blocking improvements (max 5).
+4. Is the P1 proof panel credible and legible? What crop/scale should each step use on desktop and mobile?
+Under 700 words. End with JSON: {"verdict":"...","blocking":[...],"nonblocking":[...]}.
+
+codex
+Použiji pravidla pro review a posoudím screenshoty proti zadání T1, textům a implementaci. Zaměřím se na kompozici, čitelnost důkazu a mobilní přetékání; soubory měnit nebudu.
+
+exec
+/bin/zsh -lc 'cat /Users/vitek/.agents/skills/superpowers/using-superpowers/SKILL.md /Users/vitek/.agents/skills/review/SKILL.md' in /Users/vitek/Documents/agent-runs/portfolio-2026/2026-10-10-landing-t1/wt
+ succeeded in 0ms:
+---
+name: using-superpowers
+description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+---
+
+<EXTREMELY-IMPORTANT>
+If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
+
+IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
+
+This is not negotiable. This is not optional. You cannot rationalize your way out of this.
+</EXTREMELY-IMPORTANT>
+
+## How to Access Skills
+
+**In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
+
+**In other environments:** Check your platform's documentation for how skills are loaded.
+
+# Using Skills
+
+## The Rule
+
+**Invoke relevant or requested skills BEFORE any response or action.** Even a 1% chance a skill might apply means that you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
+
+```dot
+digraph skill_flow {
+    "User message received" [shape=doublecircle];
+    "About to EnterPlanMode?" [shape=doublecircle];
+    "Already brainstormed?" [shape=diamond];
+    "Invoke brainstorming skill" [shape=box];
+    "Might any skill apply?" [shape=diamond];
+    "Invoke Skill tool" [shape=box];
+    "Announce: 'Using [skill] to [purpose]'" [shape=box];
+    "Has checklist?" [shape=diamond];
+    "Create TodoWrite todo per item" [shape=box];
+    "Follow skill exactly" [shape=box];
+    "Respond (including clarifications)" [shape=doublecircle];
+
+    "About to EnterPlanMode?" -> "Already brainstormed?";
+    "Already brainstormed?" -> "Invoke brainstorming skill" [label="no"];
+    "Already brainstormed?" -> "Might any skill apply?" [label="yes"];
+    "Invoke brainstorming skill" -> "Might any skill apply?";
+
+    "User message received" -> "Might any skill apply?";
+    "Might any skill apply?" -> "Invoke Skill tool" [label="yes, even 1%"];
+    "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
+    "Invoke Skill tool" -> "Announce: 'Using [skill] to [purpose]'";
+    "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
+    "Has checklist?" -> "Create TodoWrite todo per item" [label="yes"];
+    "Has checklist?" -> "Follow skill exactly" [label="no"];
+    "Create TodoWrite todo per item" -> "Follow skill exactly";
+}
+```
+
+## Red Flags
+
+These thoughts mean STOP—you're rationalizing:
+
+| Thought | Reality |
+|---------|---------|
+| "This is just a simple question" | Questions are tasks. Check for skills. |
+| "I need more context first" | Skill check comes BEFORE clarifying questions. |
+| "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
+| "I can check git/files quickly" | Files lack conversation context. Check for skills. |
+| "Let me gather information first" | Skills tell you HOW to gather information. |
+| "This doesn't need a formal skill" | If a skill exists, use it. |
+| "I remember this skill" | Skills evolve. Read current version. |
+| "This doesn't count as a task" | Action = task. Check for skills. |
+| "The skill is overkill" | Simple things become complex. Use it. |
+| "I'll just do this one thing first" | Check BEFORE doing anything. |
+| "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
+| "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
+
+## Skill Priority
+
+When multiple skills could apply, use this order:
+
+1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
+2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
+
+"Let's build X" → brainstorming first, then implementation skills.
+"Fix this bug" → debugging first, then domain-specific skills.
+
+## Auto-Loading Guardrails
+
+Auto-load these guardrails when they apply:
+
+- **caveman** — auto-load at session start for normal coding conversations to keep responses terse and token-efficient. Respect caveman opt-out config: if `CAVEMAN_DEFAULT_MODE=off` or `~/.config/caveman/config.json` sets `"defaultMode": "off"`, do not auto-load it. If the user asks for normal prose or says "stop caveman" / "normal mode", do not invoke it.
+- **simplicity-guard** — auto-load for net-new code or feature implementation work.
+- **surgical-editing** — auto-load for modifications to existing code.
+- **Neither simplicity-guard nor surgical-editing** — for pure analysis, explanation, or read-only questions.
+
+## Skill Types
+
+**Rigid** (TDD, debugging): Follow exactly. Don't adapt away discipline.
+
+**Flexible** (patterns): Adapt principles to context.
+
+The skill itself tells you which.
+
+## User Instructions
+
+Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+---
+name: review
+description: Review code changes for security, performance, bugs, and quality. Reviews staged changes, unstaged changes, specific commits, or PR-ready diffs.
+---
+
+<objective>
+Review code changes and provide structured feedback covering security, performance, bug risks, code quality, and test coverage gaps. This skill analyzes diffs and surrounding context to catch issues before they reach production.
+</objective>
+
+<context>
+This skill reviews code changes at various stages of the development workflow. It can review staged changes before a commit, unstaged work-in-progress, a specific commit, or the full set of changes on a branch that are ready for a pull request.
+
+The reviewer reads both the diff and the surrounding source files to understand intent and catch issues that only appear in context.
+</context>
+
+<core_principle>
+**FIND REAL ISSUES, NOT STYLE NITS.** Focus on problems that cause bugs, security vulnerabilities, performance degradation, or maintainability pain. Avoid nitpicking formatting or subjective style preferences unless they harm readability.
+</core_principle>
+
+<analysis_only_rule>
+**THIS SKILL IS READ-ONLY. DO NOT MODIFY CODE.**
+
+The purpose is to review and report findings. Making changes during review conflates the reviewer and author roles. Present findings and let the user decide what to act on.
+</analysis_only_rule>
+
+<working_directory_awareness>
+**Before running any `git` command:** check whether your dispatch context specifies a working directory (look for "Working directory:" in your initial prompt). If it does and `pwd` does not match it, prefix every git invocation with `-C <that path>` (e.g. `git -C /path/to/worktree diff --cached`). Reviewing the wrong directory's diff is a silent failure mode — the review will look correct but cover the wrong code.
+</working_directory_awareness>
+
+<quick_start>
+
+<determine_review_scope>
+
+Parse the user's input to determine what to review:
+
+1. **No arguments** - Review staged changes first. If nothing is staged, review unstaged changes.
+   - Staged: `git diff --cached`
+   - Unstaged: `git diff`
+   - If both are empty, review the most recent commit: `git show HEAD`
+
+2. **Commit hash argument** (e.g., `/review abc1234`) - Review that specific commit.
+   - `git show <hash>`
+
+3. **File path argument** (e.g., `/review src/foo.ts`) - Review unstaged changes in that file.
+   - `git diff -- <path>` then fall back to `git diff --cached -- <path>`
+
+4. **"pr" argument** (e.g., `/review pr`) - Review all changes since branching from main.
+   - `git diff main...HEAD`
+   - If on main, review `git diff HEAD~1`
+
+After obtaining the diff, if it is empty, inform the user that there are no changes to review and stop.
+
+</determine_review_scope>
+
+<gather_context>
+
+Before analyzing the diff:
+
+1. **Read changed files in full** - Do not review a diff in isolation. Read each modified file to understand the surrounding code, imports, types, and control flow.
+2. **Identify the tech stack** - Note languages, frameworks, and libraries in use. This affects what patterns are risky.
+3. **Check for related test files** - For each changed source file, look for corresponding test files. Note whether tests were updated alongside the changes.
+4. **Check for configuration changes** - If config files changed (env, CI, package.json, tsconfig, etc.), pay extra attention to side effects.
+
+</gather_context>
+
+<review_categories>
+
+Analyze the changes against each category below. Only report findings that are actually present. Skip categories with no issues.
+
+**A. Security Issues** (Severity: CRITICAL or HIGH)
+- Injection vulnerabilities (SQL injection, command injection, template injection)
+- Cross-site scripting (XSS) - unsanitized user input rendered in HTML
+- Authentication and authorization flaws (missing auth checks, privilege escalation)
+- Secrets or credentials hardcoded or logged
+- Insecure deserialization or unsafe eval usage
+- Path traversal or file access vulnerabilities
+- Missing input validation on external data
+
+**B. Performance Concerns** (Severity: HIGH or MEDIUM)
+- N+1 query patterns in database access
+- Unnecessary memory allocations in hot paths or loops
+- Blocking operations on the main thread or in async contexts
+- Missing pagination on unbounded queries
+- Redundant computation that could be cached or memoized
+- Large payloads without streaming or chunking
+
+**C. Bug Risks** (Severity: HIGH or MEDIUM)
+- Off-by-one errors in loops or array access
+- Null/undefined dereferences without guards
+- Race conditions in concurrent or async code
+- Incorrect error handling (swallowed errors, wrong error types)
+- Type mismatches or unsafe type assertions
+- Logic errors in conditionals (inverted checks, missing cases)
+- Resource leaks (unclosed connections, file handles, listeners)
+
+**D. Code Quality** (Severity: MEDIUM or LOW)
+- Unclear or misleading naming
+- Significant code duplication that should be extracted
+- Excessive complexity (deeply nested logic, functions doing too many things)
+- Dead code or unreachable branches
+- Missing or misleading comments on non-obvious logic
+- Inconsistency with patterns used elsewhere in the codebase
+
+**E. Test Coverage Gaps** (Severity: MEDIUM or LOW)
+- New logic paths without corresponding test cases
+- Changed behavior without updated tests
+- Edge cases not covered (empty inputs, boundary values, error paths)
+- Missing integration tests for new API endpoints or database changes
+
+</review_categories>
+
+<format_findings>
+
+For each finding, use this structure:
+
+```
+### [SEVERITY] Category: Brief Title
+
+**File**: `path/to/file.ext` (lines X-Y)
+
+**Issue**: Clear description of the problem.
+
+**Why it matters**: What could go wrong if this is not addressed.
+
+**Suggestion**: How to fix it, with a code snippet if helpful.
+```
+
+Severity levels:
+- **CRITICAL** - Must fix before merge. Security vulnerability or data loss risk.
+- **HIGH** - Should fix before merge. Likely bug or significant performance issue.
+- **MEDIUM** - Should fix soon. Code quality or moderate risk issue.
+- **LOW** - Consider fixing. Minor improvement opportunity.
+
+</format_findings>
+
+</quick_start>
+
+<critical_rules>
+
+1. **READ THE FULL FILE**: Never review a diff without reading the complete source file for context
+2. **NO FALSE ALARMS**: Only report issues you can explain concretely. Do not report vague concerns
+3. **PRIORITIZE**: Lead with the most severe findings. Do not bury critical issues under style nits
+4. **BE SPECIFIC**: Include file paths, line numbers, and code references for every finding
+5. **EXPLAIN THE RISK**: For each finding, explain what could actually go wrong
+6. **CHECK TESTS**: Always check whether changes have corresponding test updates
+7. **CONSIDER THE STACK**: Apply language-specific and framework-specific knowledge to your review
+8. **DO NOT MODIFY CODE**: Present findings only. The user decides what to act on
+
+</critical_rules>
+
+<output_format>
+
+```markdown
+## Code Review: [brief description of what was reviewed]
+
+**Scope**: [staged changes | unstaged changes | commit abc1234 | PR changes from main]
+**Files reviewed**: [count] files changed, [additions] additions, [deletions] deletions
+
+---
+
+### Findings
+
+[Findings grouped by severity, highest first. Use the format from <format_findings>.]
+
+---
+
+### Summary
+
+| Severity | Count |
+|----------|-------|
+| CRITICAL | X     |
+| HIGH     | X     |
+| MEDIUM   | X     |
+| LOW      | X     |
+
+### Recommended Actions
+
+1. [Most important action to take]
+2. [Next most important action]
+3. [...]
+```
+
+If no issues are found:
+
+```markdown
+## Code Review: [brief description]
+
+**Scope**: [what was reviewed]
+**Files reviewed**: [count]
+
+No significant issues found. The changes look good to merge.
+```
+
+</output_format>
+
+<decision_gate>
+
+**After presenting findings, ALWAYS offer these options:**
+
+```
+─────────────────────────────────────────
+REVIEW COMPLETE
+
+What would you like to do?
+
+1. **Fix issues** - I'll address the findings starting with the most critical
+2. **Save review** - Export findings to a markdown file
+3. **Review again** - Re-review with different scope or focus
+4. **Discuss a finding** - Ask questions about a specific issue
+5. **Other** - Tell me what you need
+─────────────────────────────────────────
+```
+
+**Wait for user response before taking any action.**
+
+This gate is MANDATORY. Never skip it. Never auto-implement fixes.
+
+</decision_gate>
+
+exec
+/bin/zsh -lc "pwd; rg --files -g 'AGENTS.md' -g 'LANDING-PLAN-v2.md' -g 'T1-staticka-kompozice.md' -g 'COPY.md' src/home/landing docs tickets content" in /Users/vitek/Documents/agent-runs/portfolio-2026/2026-10-10-landing-t1/wt
+ exited 2 in 0ms:
+/Users/vitek/Documents/agent-runs/portfolio-2026/2026-10-10-landing-t1/wt
+rg: tickets: No such file or directory (os error 2)
+rg: content: No such file or directory (os error 2)
+docs/direction/homepage-hero-brainstorm/LANDING-PLAN-v2.md
+docs/direction/homepage-hero-brainstorm/content/COPY.md
+docs/direction/homepage-hero-brainstorm/tickets/T1-staticka-kompozice.md
+
+exec
+/bin/zsh -lc 'cat docs/direction/homepage-hero-brainstorm/LANDING-PLAN-v2.md docs/direction/homepage-hero-brainstorm/tickets/T1-staticka-kompozice.md docs/direction/homepage-hero-brainstorm/content/COPY.md' in /Users/vitek/Documents/agent-runs/portfolio-2026/2026-10-10-landing-t1/wt
+ succeeded in 0ms:
+# Homepage landing page: plán v2 po review Astry (2026-10-10)
+
+Stav: brainstorm uzavřený, implementace NEschválená. Vstupy: `LANDING-BRAINSTORM.md` (v1), `astra-landing-review/REVIEW.md` (GPT-6 Astra, read-only, exit 0, 115 s). Tickety: `tickets/`.
+
+## Co se změnilo proti v1 (podle Astry)
+
+- **4 celky místo 6.** Hero, Vybraná práce (Rejstřík), Jak pracuju, Kontakt. Bento SolidPixels zrušeno, SolidPixels dostane rozšířený detail přímo v Rejstříku. Screen Switch demo patří do detailu své položky. Playground jen vedlejší odkaz.
+- **Přesnější pravidlo pohybu:** ve viditelné ploše nejvýše jedna dominantní animace. Vedle ní jen lokální odezva ovládání (fokus, podtržení, barva, 120–160 ms). Nová akce ukončí předchozí dominantní pohyb. Mimo viewport a ve skrytém dokumentu se nic nepřehrává. Globální token 900 ms zrušen; délka patří ději.
+- **P1 se spouští tlačítkem**, ne sám. Ovladatelné Pauza / Pokračovat (hover pauza nestačí).
+- **P1 musí být poctivý:** skutečné CMS rozhraní s povolenými demo daty, jedna identifikovatelná změna, tentýž obsah v náhledu i na webu, popisek „co dělal Vítek / co tým“, štítek „rekonstrukce postupu s demo daty“. Samotná změna obsahu nedokazuje backend ani integrace.
+- **Zakázané „laciné“ reakce:** magnetické tlačítko souběžně s náhledem, popisek pronásledující kurzor, naklánění karet, falešné psaní, postupné rozsvěcení celé mřížky.
+- **Paralelismus:** oddělené složky ani běžné worktrees neplatí (sdílí Git common directory). Paralelně psát jen v **nezávislých klonech** (`git clone --local`, vlastní common directory) a integrovat sériově. Čtení a review mohou běžet paralelně vždy.
+- **T6 musí řešit routing:** `src/App.tsx` sdílí `LightTable` pro `/`, `/gameonvb`, `/goal-loop`. Výměna `Home.tsx` nestačí.
+
+## Struktura stránky
+
+1. **Hero.** Jméno, role, jedna věta konkrétní odpovědnosti, P1 panel, odkazy „Práce“ a „Kontakt“. Slogan „New tools. Old standards.“ jen jako vedlejší věta (rozhodne majitel).
+2. **Vybraná práce (Rejstřík).** SolidPixels (největší váha, rozšířený detail), GameOnVB, Screen Switch (s demem), Goal Loop. Playground jako vedlejší odkaz. Všechny projekty viditelné bez dlouhého scrollu. Sticky náhled jen na dostatečně vysokém desktopu.
+3. **Jak pracuju.** Krátký odstavec: sólo i tým, rozhodování, ověřování. Goal Loop jako jeden doložitelný příklad.
+4. **Kontakt.** Existující formulář, e-mail, CV.
+
+Obsah projektů už existuje v `src/content/projects.ts` (`role`, `constraint`, `decision`, `evidence`). Rejstřík ho použije.
+
+## 4 autorské momenty (z review)
+
+| Moment | Spouštěč | Délka | Koncový stav |
+|---|---|---|---|
+| CMS → web (P1) | tlačítko „Přehrát postup“ | ~6 s, přechody 240 ms | čitelný výsledek + popisek změny, bez falešného kurzoru |
+| Výměna přílohy v Rejstříku | klik / tap / klávesnice | 220 ms, jedna maska | jeden náhled + trvale čitelná odpovědnost; rychlé volby ruší předchozí přechod |
+| Detail SolidPixels | aktivace popisku části UI | 260 ms | zvětšený skutečný výřez v pevném rámu + vysvětlení příspěvku; mobil má vlastní výřez |
+| Screen Switch | klik | 280 ms, obě okna naráz | stabilní rozložení + textové oznámení, štítek „ilustrace funkce“ |
+
+Reduced-motion: přímé přepnutí mezi obsahově úplnými stavy. Nic z toho nepotřebuje WebGL.
+
+## Tickety a pořadí
+
+```
+T0 obsah ─► T0a podklady P1 ─► T1 statická kompozice ─► T2 tokeny + rozhraní
+                                                         ├─► T3 Hero + P1
+                                                         ├─► T4 Rejstřík + detail SolidPixels
+                                                         ├─► T5 Jak pracuju + Kontakt
+                                                         └─► T5a Screen Switch adaptace
+                                          T3,T4,T5,T5a ─► T6 integrace + routing ─► T7 QA brána
+```
+
+T0, T0a: majitel (obsah, povolení, podklady). T1–T7: Sol worker, každý ticket zvlášť.
+T3, T4, T5, T5a: smí běžet paralelně jen v nezávislých klonech. Jinak sériově.
+
+## Blokery u majitele (před T0a)
+
+1. Smí P1 ukazovat skutečné SolidPixels CMS rozhraní s demo daty? (povolení zaměstnavatele)
+2. Jaké podklady doloží backend a integrace? (bez nich je jen v textu, ne v důkazu)
+3. Zůstává slogan „New tools. Old standards.“?
+4. Tickety do Hermes Kanban, nebo jen soubory?
+
+## Top 5 rizik (Astra)
+
+1. Inscenované důkazy a nejasně připsané zásluhy.
+2. Opakování obsahu odsune projekty a kontakt.
+3. Souběžné animace schované pod „mikrostavy“.
+4. Mobil jako zmenšený desktop (CMS, sticky rejstřík).
+5. Konflikty agentů a regrese sdílených tras při integraci.
+
+## Rozhodnutí majitele (2026-10-10) a druhé review Astry
+
+Majitel: (1) SolidPixels CMS UI se NESMÍ ukázat vůbec. (2) Backend doloží GameOnVB. (3) Slogan lze nahradit. (4) Tickety do Hermes Kanban, vše potřebné.
+
+Astra (`astra-p1-slogan-review/REVIEW.md`, GPT-6 Astra, read-only, exit 0, 76 s): P1′ GameOnVB = REWORK a použít. Headline b → f → e.
+
+Změny plánu:
+- **P1′ GameOnVB lifecycle** místo „CMS → web“. 4 kroky, tentýž termín a tentýž demo hráč: (1) uložený otevřený termín s kapacitou a opakováním, (2) potvrzená veřejná registrace + změna obsazenosti, (3) příchozí transakce spárovaná s registrací (stav před/po, audit) se štítkem „Simulated bank input“, (4) uložená docházka téhož hráče. Trvalý štítek „Reconstruction with demo data“.
+- Krok 3 jen pokud párovací mechanismus v kódu opravdu existuje. Ruční přepnutí „zaplaceno“ se nesmí vydávat za párování. Jinak tvrzení zúžit na správu plateb.
+- Kroky jsou **přímo volitelné** (4 tlačítka / taby). Tlačítko „Play“ spustí krátký průchod, Pauza/Pokračovat, konec = čitelný souhrn. Ne 6 s nucené sekvence.
+- Záložní varianta, pokud 4 kroky nebudou čitelné: statická dvojice veřejná registrace → spárovaná platba; celý průchod v detailu projektu.
+- **SolidPixels jen textem**: kontext týmu, vlastní příspěvek (frontend, backend, integrace) oddělený od výsledku týmu, jeden zveřejnitelný příklad problém → změna → ověření, bez metrik. Moment „Detail SolidPixels“ (zoom UI) zrušen.
+- **Hero text (doporučení Astry, čeká na potvrzení majitele v T0):**
+  - Hoang Viet To / Software Developer
+  - **I build web platforms and the systems behind them.**
+  - At SolidPixels, I work across CMS, frontend, backend and third-party integrations; GameOnVB is my own full-stack product.
+- Alternativy: „Production web software, from interface to integration.“ / „Full-stack web development, alone or in a team.“
+# T1 — Statická kompozice celé stránky (Sol)
+
+Závisí na: T0, T0a. Blokuje: T2.
+
+## Cíl
+Izolovaná studie celé homepage BEZ pohybu, která prokáže hierarchii, rytmus a mobil.
+
+## Smí měnit
+- `src/home/landing/` (nová složka): `LandingPage.tsx` (statická kostra 4 celků), `landing.css`, `LandingPage.test.ts`. Komponenta zatím NENÍ připojená na žádnou trasu.
+- `sketches/025-landing/` (nová složka): `index.html` + `main.tsx` jen jako náhledový harness, který připojí `LandingPage`; `README.md`.
+- Vše ostatní v `src/` read-only (obsah se importuje z `src/content/`).
+
+## Specifikace
+- 4 celky: Hero (s P1 v koncovém stavu), Rejstřík, Jak pracuju, Kontakt.
+- Typografie: 2 písma (serif display, grotesk text/UI). Nadpis hera 54–64 px na 1440, prostrkání −3 %, řádkování 1.0–1.1. Text 17–18 px.
+- Pozadí papírově tmavé (ne #000). Jeden akcent jen pro stav (aktivní řádek, fokus).
+- Rytmus sekcí: H2 vlevo, akce vpravo na stejném účaří.
+- Rejstřík: všechny 4 projekty + odkaz Playground viditelné na 1440×900 bez dalšího scrollu po vstupu do sekce. SolidPixels má největší váhu.
+- Mobil (390): vlastní kompozice. P1 na celou šířku s předem komponovaným výřezem, text v panelu min. 12 px. Rejstřík jako seznam s rozbalovacím detailem (`<details>` nebo button + region).
+- Stavy navíc: Rejstřík s otevřeným detailem SolidPixels; reduced-motion = stejné.
+
+## Kritéria přijetí
+- Na všech viewportech z _COMMON bez horizontálního přetečení a bez překryvu navigace a obsahu.
+- Kontakt dosažitelný z hera jedním odkazem.
+- HTML obsahuje jméno, roli a odpovědnost jako text.
+- Screenshoty všech viewportů + otevřený detail. Krátký README se zdůvodněním kompozice.
+- Review Astrou (read-only) nad screenshoty před T2. Výsledek se uloží do `sketches/025-landing/review/`.
+
+## Kontroly
+`npm run check`; `npx vitest run src/home/landing`; `node node_modules/vite/bin/vite.js build sketches/025-landing --config vite.config.ts --outDir /tmp/landing-025-build --emptyOutDir`; cmux screenshoty (post-loop, controller).
+# Homepage landing — schválené texty (T0, 2026-10-10)
+
+Stav: headline a hero line schválil majitel 2026-10-10 („proceed s doporučením“). Ostatní věty jsou převzaté z existujícího obsahu (zdroj u každé). Nová tvrzení nejsou.
+
+## 1. Hero
+
+- Name: **Hoang Viet To**
+- Role: **Software Developer** (`HOME_COPY.role`, `src/content/homePosters.ts`)
+- Headline: **I build web platforms and the systems behind them.** (schváleno)
+- Line: **At SolidPixels, I work across CMS, frontend, backend and third-party integrations; GameOnVB is my own full-stack product.** (schváleno)
+- Links: `Work` → `#work`, `Contact` → `#contact`
+- Proof panel label: `GameOnVB — from event to attendance` + štítek `Reconstruction with demo data` (texty kroků v `P1-SCRIPT.md`, T0a)
+
+## 2. Selected work (Rejstřík)
+
+| Pořadí | Název | Role | Solo / team | Věta příspěvku | Zdroj |
+|---|---|---|---|---|---|
+| 1 | SolidPixels | CMS, frontend, backend, integrations | Team | I work with other developers on a CMS platform and client sites: frontend, backend and third-party integrations. | `homePosters.ts` solidpixels.body, memory `portfolio-copy-facts` |
+| 2 | GameOnVB | Full-stack developer | Solo | A registration and operations system for recurring recreational volleyball events. | `projects.ts` voleyevents.preview / role |
+| 3 | Screen Switch | Independent macOS developer | Solo | A native menu-bar macOS utility that exchanges eligible windows between displays. | `projects.ts` screen-switch |
+| 4 | Goal Loop | — (vlastní nástroj) | Solo | Several models build, critique and review. Every result passes explicit verification gates or is blocked. | `homePosters.ts` goal-loop.body |
+| odkaz | Playground | — | Solo | A real-time 3D skill game. | `homePosters.ts` playground.body |
+
+GameOnVB detail (z `projects.ts`):
+- Constraint: Bring registration, payment matching, cancellation credit and organizer administration into one coherent flow.
+- Decision: Model money, capacity and audit as part of the registration lifecycle rather than bolted-on admin tasks.
+- Link: `View project` → `/gameonvb`, živý web `https://gameonvb.cz/`.
+
+Screen Switch detail (z `projects.ts`):
+- Constraint: Preserve useful window geometry and fail visibly when Accessibility permission or destination displays are unavailable.
+- Decision: Keep the utility menu-bar-only; preserve normalized position and size where possible, then clamp to the destination's visible area.
+
+Goal Loop: `View project` → `/goal-loop`.
+
+## 3. SolidPixels detail (jen text, žádné UI)
+
+- Context: Team work on a CMS platform and client sites.
+- My part: frontend, backend and third-party integrations.
+- Team result vs. my part: the platform and the client sites are team work; my contribution is the frontend, backend and integration work within them.
+- Example (problém → změna → ověření): **CHYBÍ — majitel dodá jeden zveřejnitelný příklad.** Do té doby se příklad nezobrazuje (sekce funguje bez něj).
+
+## 4. How I work (max. 60 slov)
+
+> I work alone on my own products and with other developers at SolidPixels. I adopt new tools early and hold their output to the same standard as my own: every change is checked before it ships. Goal Loop is how I run that process.
+
+Zdroj: `HOME_COPY.positioning` (`homePosters.ts`), Goal Loop body. 54 slov.
+
+## 5. Contact
+
+Beze změny: existující `ContactPoster` (`src/pages/Home.tsx`), `HOME_COPY.contactCta`, odkazy z `CONTACT` (`src/content/systems.ts`).
+- Section heading: „Let's talk about your project.“ (`homePosters.ts` contact.heading)
+- Body: „Roles, collaborations or a difficult software problem. I usually reply within a few days.“
+
+## Vyřazeno
+
+„New tools. Old standards.“ jako headline (lze číst jako „staré postupy“).
+
+exec
+/bin/zsh -lc "rg --files src/home/landing; rg --files -g AGENTS.md -g '*landing*test*' -g '*landing*spec*'; ls sketches/025-landing/review" in /Users/vitek/Documents/agent-runs/portfolio-2026/2026-10-10-landing-t1/wt
+ succeeded in 0ms:
+src/home/landing/assets/step4-mobile.png
+src/home/landing/assets/step4-crop.png
+src/home/landing/landing.css
+src/home/landing/LandingPage.test.ts
+src/home/landing/LandingPage.tsx
+1280-fold.png
+1440-fold.png
+1440-full.png
+320-fold.png
+390-fold.png
+390-full.png
+768-fold.png
+PROMPT.md
+argv.json
+invoke.py
+stderr.txt
+stdout.txt
+
+exec
+/bin/zsh -lc "cat src/home/landing/LandingPage.tsx src/home/landing/landing.css src/home/landing/LandingPage.test.ts sketches/025-landing/README.md docs/direction/homepage-hero-brainstorm/tickets/_COMMON.md; rg --files docs/direction/homepage-hero-brainstorm | rg 'P1|MANIFEST|ASSET'" in /Users/vitek/Documents/agent-runs/portfolio-2026/2026-10-10-landing-t1/wt
+ succeeded in 0ms:
+import { CONTACT } from '../../content/systems'
+import { HOME_COPY, POSTERS } from '../../content/homePosters'
+import { PROJECT_STORIES } from '../../content/projects'
+import attendanceDesktop from './assets/step4-crop.png'
+import attendanceMobile from './assets/step4-mobile.png'
+import './landing.css'
+
+const contact = POSTERS.find((poster) => poster.id === 'contact')!
+const goalLoop = POSTERS.find((poster) => poster.id === 'goal-loop')!
+const steps = ['Event opens', 'Player registers', 'Payment matched', 'Attendance resolved']
+
+export function LandingPage() {
+  return <div className="landing-page" id="landing-top">
+    <a className="landing-skip" href="#landing-main">Skip to content</a>
+    <header className="landing-header">
+      <a className="landing-brand" href="#landing-top">Hoang Viet To</a>
+      <span className="landing-header-role">{HOME_COPY.role}</span>
+      <nav aria-label="Primary"><a href="#work">Work</a><a href="#contact">Contact <span aria-hidden="true">↗</span></a></nav>
+    </header>
+    <main id="landing-main" tabIndex={-1}>
+      <section className="landing-hero" id="introduction" aria-labelledby="landing-headline">
+        <div className="landing-hero-copy">
+          <p className="landing-kicker">Hoang Viet To <span aria-hidden="true">/</span> {HOME_COPY.role}</p>
+          <div id="landing-headline"><h1>I build web platforms and the systems behind them.</h1></div>
+          <p className="landing-intro">At SolidPixels, I work across CMS, frontend, backend and third-party integrations; GameOnVB is my own full-stack product.</p>
+          <div className="landing-hero-links"><a className="landing-button" href="#work">Work <span aria-hidden="true">↓</span></a><a className="landing-text-link" href="#contact">Contact <span aria-hidden="true">↗</span></a></div>
+        </div>
+        <figure className="landing-proof" aria-labelledby="landing-proof-title">
+          <figcaption className="landing-proof-heading"><p id="landing-proof-title">GameOnVB — from event to attendance</p><span className="landing-proof-label">Reconstruction with demo data</span></figcaption>
+          <ol className="landing-proof-steps" aria-label="Registration lifecycle">
+            {steps.map((step, index) => <li key={step} aria-current={index === 3 ? 'step' : undefined}><span className="landing-step-number">0{index + 1}</span><span>{step}{index === 2 && <small>Simulated bank input</small>}</span></li>)}
+          </ol>
+          <div className="landing-proof-image"><picture><source media="(max-width: 600px)" srcSet={attendanceMobile} /><img src={attendanceDesktop} width={2048} height={841} alt="GameOnVB demo attendance: Demo Player has a matched payment and is marked as arrived. One of twelve places is occupied, none await payment, one player attended." /></picture></div>
+          <div className="landing-proof-end"><span className="landing-kicker">04 / Attendance resolved</span><p>The organizer records attendance against the same registration, with an audit entry.</p></div>
+          <a className="landing-proof-link" href="/gameonvb">View project <span aria-hidden="true">↗</span></a>
+        </figure>
+      </section>
+
+      <section className="landing-work landing-section" id="work" aria-labelledby="landing-work-title">
+        <div className="landing-section-heading"><h2 id="landing-work-title"><span className="landing-section-number">01</span>Selected work</h2><a href="/playground">Playground <span aria-hidden="true">↗</span></a></div>
+        <div className="landing-project-index">
+          <details className="landing-project landing-solidpixels" open>
+            <summary><span className="landing-project-number">01</span><span className="landing-project-name">SolidPixels</span><span className="landing-project-role">CMS, frontend, backend, integrations</span><span className="landing-project-kind">Team</span><span className="landing-disclosure" aria-hidden="true" /></summary>
+            <div className="landing-project-detail landing-solidpixels-detail">
+              <p className="landing-solidpixels-contribution">I work with other developers on a CMS platform and client sites: frontend, backend and third-party integrations.</p>
+              <dl><div><dt>Context</dt><dd>Team work on a CMS platform and client sites.</dd></div><div><dt>My part</dt><dd>frontend, backend and third-party integrations.</dd></div><div><dt>Team result vs. my part</dt><dd>the platform and the client sites are team work; my contribution is the frontend, backend and integration work within them.</dd></div></dl>
+            </div>
+          </details>
+          <details className="landing-project">
+            <summary><span className="landing-project-number">02</span><span className="landing-project-name">GameOnVB</span><span className="landing-project-role">Full-stack developer</span><span className="landing-project-kind">Solo</span><span className="landing-disclosure" aria-hidden="true" /></summary>
+            <div className="landing-project-detail"><p>{PROJECT_STORIES.voleyevents.preview}</p><dl><div><dt>Constraint</dt><dd>{PROJECT_STORIES.voleyevents.constraint}</dd></div><div><dt>Decision</dt><dd>{PROJECT_STORIES.voleyevents.decision}</dd></div></dl><div className="landing-detail-links"><a href="/gameonvb">View project ↗</a><a href={PROJECT_STORIES.gameonvb.verifiedUrl}>gameonvb.cz ↗</a></div></div>
+          </details>
+          <details className="landing-project">
+            <summary><span className="landing-project-number">03</span><span className="landing-project-name">Screen Switch</span><span className="landing-project-role">Independent macOS developer</span><span className="landing-project-kind">Solo</span><span className="landing-disclosure" aria-hidden="true" /></summary>
+            <div className="landing-project-detail"><p>{PROJECT_STORIES['screen-switch'].preview}</p><dl><div><dt>Constraint</dt><dd>{PROJECT_STORIES['screen-switch'].constraint}</dd></div><div><dt>Decision</dt><dd>{PROJECT_STORIES['screen-switch'].decision}</dd></div></dl></div>
+          </details>
+          <details className="landing-project">
+            <summary><span className="landing-project-number">04</span><span className="landing-project-name">Goal Loop</span><span className="landing-project-role">—</span><span className="landing-project-kind">Solo</span><span className="landing-disclosure" aria-hidden="true" /></summary>
+            <div className="landing-project-detail"><p>{goalLoop.body}</p><a href="/goal-loop">View project ↗</a></div>
+          </details>
+        </div>
+        <div className="landing-work-footnote"><span>A real-time 3D skill game.</span><a href="/playground">Playground <span aria-hidden="true">↗</span></a></div>
+      </section>
+
+      <section className="landing-approach landing-section" id="approach" aria-labelledby="landing-approach-title">
+        <div className="landing-section-heading"><h2 id="landing-approach-title"><span className="landing-section-number">02</span>How I work</h2><a href="/goal-loop">Goal Loop <span aria-hidden="true">↗</span></a></div>
+        <p>I work alone on my own products and with other developers at SolidPixels. I adopt new tools early and hold their output to the same standard as my own: every change is checked before it ships. Goal Loop is how I run that process.</p>
+      </section>
+
+      <section className="landing-contact landing-section" id="contact" aria-labelledby="landing-contact-title">
+        <div className="landing-section-heading"><h2 id="landing-contact-title"><span className="landing-section-number">03</span>{contact.heading}</h2><a href={CONTACT[0].href}>Email <span aria-hidden="true">↗</span></a></div>
+        <div className="landing-contact-grid"><div><p className="landing-contact-intro">{contact.body}</p><a className="landing-email" href={CONTACT[0].href}>{CONTACT[0].href.slice('mailto:'.length)}</a><nav className="landing-contact-links" aria-label="Contact and CV">{CONTACT.slice(1).map((link) => <a key={link.label} href={link.href} download={link.download}>{link.label} ↗</a>)}</nav></div>
+          <form className="landing-contact-form" aria-describedby="landing-form-note" onSubmit={(event) => event.preventDefault()}>
+            <p className="landing-form-note" id="landing-form-note">Static preview — use Email to get in touch.</p>
+            <div className="landing-form-row"><label htmlFor="landing-name">Name<input id="landing-name" name="name" autoComplete="name" /></label><label htmlFor="landing-email">Email<input id="landing-email" name="email" type="email" autoComplete="email" /></label></div>
+            <fieldset><legend>Topic</legend><div className="landing-topic-options">{(['Role', 'Project', 'Other'] as const).map((topic) => <label key={topic}><input type="radio" name="topic" value={topic} defaultChecked={topic === 'Project'} /><span>{topic}</span></label>)}</div></fieldset>
+            <label htmlFor="landing-message">Message<textarea id="landing-message" name="message" rows={3} minLength={20} maxLength={4000} /></label>
+            <button className="landing-button" type="submit" disabled>{HOME_COPY.contactCta} <span aria-hidden="true">↗</span></button>
+          </form>
+        </div>
+      </section>
+    </main>
+    <footer className="landing-footer"><span>Hoang Viet To <span aria-hidden="true">/</span> {HOME_COPY.role}</span><a href="#landing-top">Return to top ↑</a></footer>
+  </div>
+}
+.landing-page {
+  --landing-paper: #eeeae1;
+  --landing-muted: #b8b3a8;
+  --landing-ink: #1c1d1a;
+  --landing-line: #45463f;
+  --landing-state: #c5d7ac;
+  color: var(--landing-paper);
+  background: var(--landing-ink);
+  font: 17px/1.55 Arial, Helvetica, sans-serif;
+  color-scheme: dark;
+  min-height: 100svh;
+  padding-inline: clamp(20px, 5vw, 80px);
+  font-synthesis: none;
+}
+.landing-page *, .landing-page *::before, .landing-page *::after { box-sizing: border-box; }
+.landing-page :is(header, main, footer) { width: 100%; max-width: 1280px; margin-inline: auto; }
+.landing-page :is(h1, h2, p, figure, dl, dd, ol) { margin: 0; }
+.landing-page :is(h1, h2, .landing-project-name) { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
+.landing-page a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 5px; }
+.landing-page :is(a, summary, button, input, textarea):focus-visible { outline: 2px solid var(--landing-state); outline-offset: 5px; }
+.landing-page :is(a, summary):hover { text-decoration: underline; text-underline-offset: 5px; }
+.landing-page :is(button, input, textarea) { font: inherit; }
+.landing-page :is(a, button, summary) { -webkit-tap-highlight-color: transparent; }
+.landing-skip { position: absolute; left: 20px; top: 8px; padding: 8px 16px; background: var(--landing-ink); z-index: 2; clip-path: inset(50%); }
+.landing-skip:focus { clip-path: none; }
+.landing-header { display: flex; align-items: center; gap: 24px; min-height: 88px; border-bottom: 1px solid var(--landing-line); font-size: 13px; }
+.landing-brand { font-weight: 700; text-decoration: none; }
+.landing-header-role { color: var(--landing-muted); }
+.landing-header nav { display: flex; gap: 28px; margin-left: auto; }
+.landing-header nav a { display: inline-flex; align-items: center; gap: 12px; min-height: 44px; text-decoration: none; }
+.landing-hero { display: grid; grid-template-columns: minmax(0, .98fr) minmax(0, 1.02fr); gap: clamp(32px, 4vw, 64px); align-items: center; padding-block: 68px 80px; }
+.landing-kicker { font-size: 12px; line-height: 1.5; letter-spacing: .075em; color: var(--landing-muted); }
+.landing-hero-copy .landing-kicker { margin-bottom: 26px; }
+.landing-hero h1 { font-size: 60px; line-height: 1.05; letter-spacing: -.03em; max-width: 18ch; text-wrap: pretty; }
+.landing-intro { margin-top: 26px !important; max-width: 48ch; color: var(--landing-muted); font-size: 18px; }
+.landing-hero-links { display: flex; align-items: center; gap: 30px; margin-top: 30px; }
+.landing-button { display: inline-flex; align-items: center; justify-content: space-between; gap: 40px; min-height: 48px; padding: 12px 20px; border: 1px solid var(--landing-paper); background: var(--landing-paper); color: var(--landing-ink) !important; font-size: 14px; text-decoration: none; border-radius: 2px; }
+.landing-text-link { display: inline-flex; align-items: center; gap: 20px; min-height: 48px; font-size: 14px; }
+.landing-proof { border: 1px solid var(--landing-line); border-radius: 4px; background: #23241f; min-width: 0; }
+.landing-proof-heading { padding: 20px 22px; }
+.landing-proof-heading p { font-size: 15px; line-height: 1.4; }
+.landing-proof-label { display: block; margin-top: 7px; color: var(--landing-muted); font-size: 12px; }
+.landing-proof-steps { list-style: none; padding: 0 22px 18px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.landing-proof-steps li { display: flex; flex-direction: column; gap: 6px; font-size: 12px; line-height: 1.35; color: var(--landing-muted); border-top: 1px solid var(--landing-line); padding-top: 10px; }
+.landing-proof-steps li[aria-current] { color: var(--landing-state); border-color: var(--landing-state); }
+.landing-step-number { font-size: 12px; }
+.landing-proof-steps small { display: block; margin-top: 5px; font-size: 12px; }
+.landing-proof-image { margin-inline: 12px; overflow: hidden; background: #10091d; border: 1px solid var(--landing-line); }
+.landing-proof-image picture { display: block; }
+.landing-proof-image img { width: 100%; height: auto; display: block; }
+.landing-proof-end { padding: 18px 22px 8px; }
+.landing-proof-end p { margin-top: 8px; font-size: 13px; line-height: 1.5; }
+.landing-proof-link { margin: 0 22px 10px; display: flex; align-items: center; justify-content: space-between; min-height: 44px; font-size: 12px; text-decoration: none; }
+.landing-section { padding-block: 46px 56px; border-top: 1px solid var(--landing-line); scroll-margin-top: 24px; }
+.landing-section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 24px; margin-bottom: 30px; }
+.landing-section-heading h2 { display: flex; align-items: baseline; gap: 22px; font-size: 36px; line-height: 1.15; letter-spacing: -.025em; }
+.landing-section-number { font: 12px/1.5 Arial, Helvetica, sans-serif; letter-spacing: .06em; color: var(--landing-muted); }
+.landing-section-heading > a { flex: none; font-size: 13px; line-height: 1.5; padding-block: 12px; }
+.landing-project { border-top: 1px solid var(--landing-line); }
+.landing-project:last-child { border-bottom: 1px solid var(--landing-line); }
+.landing-project summary { display: grid; grid-template-columns: 44px minmax(0, 1fr) minmax(0, 240px) 56px 16px; gap: 16px; align-items: center; min-height: 82px; padding-block: 18px; cursor: pointer; list-style: none; }
+.landing-project summary::-webkit-details-marker { display: none; }
+.landing-project-number, .landing-project-kind { color: var(--landing-muted); font-size: 12px; }
+.landing-project-name { font-size: 28px; line-height: 1.2; letter-spacing: -.02em; }
+.landing-solidpixels .landing-project-name { font-size: 36px; }
+.landing-project-role { font-size: 13px; line-height: 1.5; color: var(--landing-muted); }
+.landing-disclosure::before { content: '+'; font-size: 20px; }
+.landing-project[open] .landing-disclosure::before { content: '−'; }
+.landing-project[open] .landing-project-number { color: var(--landing-state); }
+.landing-project-detail { margin-left: 60px; padding-bottom: 24px; max-width: 980px; }
+.landing-project-detail > p { max-width: 64ch; margin-bottom: 18px; }
+.landing-project-detail dl { display: grid; gap: 16px; }
+.landing-project-detail dt { font-size: 12px; color: var(--landing-muted); margin-bottom: 5px; }
+.landing-project-detail dd { font-size: 14px; line-height: 1.55; }
+.landing-solidpixels-detail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; }
+.landing-solidpixels-contribution { font-size: 19px; line-height: 1.5; max-width: 32ch !important; }
+.landing-solidpixels-detail dl { gap: 12px; }
+.landing-detail-links { display: flex; gap: 28px; flex-wrap: wrap; margin-top: 16px; font-size: 13px; }
+.landing-work-footnote { display: flex; justify-content: space-between; gap: 20px; padding-top: 20px; font-size: 13px; color: var(--landing-muted); }
+.landing-approach > p { max-width: 820px; margin-left: 60px; font-size: 24px; line-height: 1.6; letter-spacing: -.015em; }
+.landing-contact-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 80px; margin-left: 60px; }
+.landing-contact-intro { color: var(--landing-muted); max-width: 35ch; margin-bottom: 30px !important; font-size: 18px; }
+.landing-email { font-size: 20px; overflow-wrap: anywhere; }
+.landing-contact-links { display: flex; flex-wrap: wrap; gap: 6px 24px; margin-top: 30px; font-size: 13px; }
+.landing-contact-links a { display: inline-flex; align-items: center; min-height: 44px; }
+.landing-contact-form { display: grid; gap: 18px; }
+.landing-form-note { font-size: 12px; color: var(--landing-muted); }
+.landing-contact-form label { display: grid; gap: 6px; font-size: 13px; min-width: 0; }
+.landing-form-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+.landing-contact-form :is(input:not([type='radio']), textarea) { width: 100%; min-width: 0; border: 0; border-bottom: 1px solid var(--landing-muted); padding: 10px 0; border-radius: 0; background: transparent; color: var(--landing-paper); }
+.landing-contact-form textarea { resize: vertical; min-height: 90px; }
+.landing-contact-form fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.landing-contact-form legend { font-size: 13px; margin-bottom: 10px; }
+.landing-topic-options { display: flex; gap: 20px; flex-wrap: wrap; }
+.landing-topic-options label { display: flex; align-items: center; gap: 7px; min-height: 32px; }
+.landing-topic-options input { accent-color: var(--landing-state); margin: 0; }
+.landing-contact-form button { justify-self: start; cursor: not-allowed; background: transparent; color: var(--landing-muted) !important; border-color: var(--landing-line); }
+.landing-footer { display: flex; justify-content: space-between; gap: 24px; padding-block: 26px; border-top: 1px solid var(--landing-line); font-size: 12px; color: var(--landing-muted); }
+@media (min-width: 1000px) and (max-height: 760px) {
+  .landing-hero { padding-block: 40px 48px; }
+  .landing-hero h1 { font-size: 54px; }
+}
+@media (max-width: 1000px) {
+  .landing-hero { grid-template-columns: 1fr; gap: 40px; padding-block: 48px; }
+  .landing-hero-copy { max-width: 650px; }
+  .landing-hero h1 { max-width: 20ch; font-size: 56px; }
+  .landing-proof { max-width: 760px; }
+  .landing-project summary { grid-template-columns: 32px minmax(0, 1fr) minmax(0, 190px) 40px 16px; gap: 12px; }
+  .landing-project-detail, .landing-approach > p, .landing-contact-grid { margin-left: 44px; }
+  .landing-solidpixels-detail { gap: 30px; }
+  .landing-contact-grid { gap: 36px; }
+}
+@media (max-width: 600px) {
+  .landing-page { padding-inline: 20px; font-size: 17px; }
+  .landing-header { min-height: 76px; gap: 12px; }
+  .landing-header-role { display: none; }
+  .landing-header nav { gap: 20px; }
+  .landing-header nav a { gap: 6px; }
+  .landing-hero { padding-block: 36px 44px; gap: 36px; }
+  .landing-hero-copy .landing-kicker { font-size: 12px; letter-spacing: .015em; margin-bottom: 22px; }
+  .landing-hero h1 { font-size: clamp(36px, 10.5vw, 46px); line-height: 1.08; max-width: 17ch; }
+  .landing-intro { font-size: 17px; margin-top: 22px !important; }
+  .landing-hero-links { margin-top: 24px; gap: 26px; }
+  .landing-proof { width: calc(100% + 40px); margin-inline: -20px; border-inline: 0; border-radius: 0; }
+  .landing-proof-heading { padding-inline: 20px; }
+  .landing-proof-steps { grid-template-columns: 1fr 1fr; gap: 16px; padding-inline: 20px; }
+  .landing-proof-steps li { flex-direction: row; gap: 10px; }
+  .landing-proof-image { margin-inline: 20px; height: clamp(180px, 45vw, 210px); position: relative; }
+  .landing-proof-image img { position: absolute; top: 0; left: 0; width: max(100%, 390px); height: auto; transform: translateY(-54%); }
+  .landing-proof-end { padding-inline: 20px; }
+  .landing-proof-link { margin-inline: 20px; }
+  .landing-section { padding-block: 32px 40px; scroll-margin-top: 16px; }
+  .landing-section-heading { gap: 14px; margin-bottom: 22px; }
+  .landing-section-heading h2 { font-size: 28px; gap: 12px; }
+  .landing-section-number { font-size: 12px; }
+  .landing-section-heading > a { font-size: 12px; }
+  .landing-project summary { grid-template-columns: 24px minmax(0, 1fr) 28px 16px; gap: 10px; padding-block: 18px; }
+  .landing-project-name { font-size: 25px; }
+  .landing-solidpixels .landing-project-name { font-size: 30px; }
+  .landing-project-role { grid-column: 2; grid-row: 2; font-size: 12px; }
+  .landing-project-kind { grid-column: 3; grid-row: 1; }
+  .landing-disclosure { grid-column: 4; grid-row: 1; }
+  .landing-project-detail { margin-left: 34px; padding-block: 0 24px; }
+  .landing-solidpixels-detail { display: block; }
+  .landing-solidpixels-contribution { font-size: 17px; }
+  .landing-project-detail dd { font-size: 14px; }
+  .landing-work-footnote { font-size: 12px; align-items: baseline; }
+  .landing-approach > p { font-size: 20px; line-height: 1.65; margin-left: 0; }
+  .landing-contact .landing-section-heading h2 { max-width: 230px; }
+  .landing-contact-grid { grid-template-columns: 1fr; margin-left: 0; gap: 36px; }
+  .landing-contact-intro { font-size: 17px; margin-bottom: 20px !important; }
+  .landing-email { font-size: 17px; }
+  .landing-form-row { grid-template-columns: 1fr; gap: 18px; }
+  .landing-footer { flex-direction: column; gap: 10px; }
+}
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { describe, expect, it } from 'vitest'
+import { CONTACT } from '../../content/systems'
+import { LandingPage } from './LandingPage'
+
+const render = () => renderToStaticMarkup(createElement(LandingPage))
+
+describe('static landing composition', () => {
+  it('has four semantic sections, approved headline and direct hero contact', () => {
+    const html = render()
+    expect(html.match(/<section /g)).toHaveLength(4)
+    expect(html).toContain('<h1>I build web platforms and the systems behind them.</h1>')
+    const hero = html.slice(html.indexOf('id="introduction"'), html.indexOf('id="work"'))
+    expect(hero).toContain('Hoang Viet To')
+    expect(hero).toContain('Software Developer')
+    expect(hero).toContain('href="#contact"')
+    expect(hero).toContain('At SolidPixels, I work across CMS, frontend, backend and third-party integrations; GameOnVB is my own full-stack product.')
+  })
+
+  it('shows an honest attendance end state with HTML descriptions of every step', () => {
+    const html = render()
+    expect(html).toContain('Reconstruction with demo data')
+    expect(html).toContain('Simulated bank input')
+    for (const step of ['Event opens', 'Player registers', 'Payment matched', 'Attendance resolved']) expect(html).toContain(step)
+    expect(html).toContain('The organizer records attendance against the same registration, with an audit entry.')
+    expect(html).toContain('aria-current="step"')
+    expect(html).toContain('<picture>')
+    expect(html).not.toMatch(/<canvas|<video|>Play<|>Pause</)
+  })
+
+  it('gives SolidPixels the first, expanded, text-only detail and all projects native disclosures', () => {
+    const html = render()
+    const work = html.slice(html.indexOf('id="work"'), html.indexOf('id="approach"'))
+    expect(work.match(/<details /g)).toHaveLength(4)
+    expect(work).toMatch(/<details[^>]*open=""[^>]*>[\s\S]*?SolidPixels/)
+    for (const name of ['SolidPixels', 'GameOnVB', 'Screen Switch', 'Goal Loop', 'Playground']) expect(work).toContain(name)
+    expect(work).toContain('the platform and the client sites are team work; my contribution is the frontend, backend and integration work within them.')
+    expect(work).not.toMatch(/<img|CHYBÍ|placeholder/i)
+    for (const href of ['/gameonvb', '/goal-loop', '/playground']) expect(work).toContain(`href="${href}"`)
+  })
+
+  it('retains approved contact text, accessible static fields and existing contact destinations', () => {
+    const html = render()
+    const contact = html.slice(html.indexOf('id="contact"'))
+    for (const link of CONTACT) expect(contact).toContain(`href="${link.href}"`)
+    expect(contact).toContain('Roles, collaborations or a difficult software problem. I usually reply within a few days.')
+    for (const label of ['Name', 'Email', 'Topic', 'Message']) expect(contact).toContain(label)
+    expect(contact).toContain('type="email"')
+    expect(contact).toContain('Static preview')
+    expect(contact).toMatch(/<button[^>]*disabled=""/)
+  })
+})
+# 025 — Static landing composition / T1
+
+Preview harness only. It mounts `src/home/landing/LandingPage.tsx`; no app routes are changed. Serve with the existing Vite setup and open `/sketches/025-landing/`. The standalone build uses this directory as its root.
+
+- Warm paper-dark ground, Georgia display and the repository's Arial/Helvetica text stack. A 60px desktop headline leaves room for responsibility and evidence. Pale sage is reserved for focus, selected disclosure numbers, selected form topic and the final lifecycle state.
+- Hero pairs a clear statement with one GameOnVB end-state proof. All four lifecycle labels and the reconstruction/simulated-bank labels are HTML. The supplied Czech screenshot is documentary evidence; the English end-state caption carries its meaning without relying on image text.
+- A ruled project index replaces cards. SolidPixels opens first, uses a larger title and a two-column text detail separating team context from personal contribution. Its unpublished example is omitted. No SolidPixels UI appears.
+- Mobile is composed separately: full-width proof panel, two-column lifecycle labels, a fixed attendance crop of the mobile source and native project disclosures. The crop shows the demo player and matched/arrived states; the less useful right edge can be clipped at 320px. The other three projects start collapsed.
+- Every section uses a left heading/right action baseline. Contact keeps the approved copy, existing email/CV links and familiar labelled fields. This static study disables submission and labels it as a preview; live form behavior is T5.
+
+No motion, timers, animation libraries, sticky/fixed navigation or nested scrolling. Disclosure changes use browser-native `<details>` with no transition; reduced motion has the same complete states. Keyboard focus is visible. Tests cover semantic content and proof honesty, not rendered geometry.
+
+Parent visual checks required at 1440×900, 1280×720, 768×1024, 390×844 and 320×640, including SolidPixels open (the initial state). Check natural overflow, the mobile crop and work-section density. No screenshots or browser checks were performed by this worker as instructed. Project links point to the application's existing routes, which the standalone harness does not mount. Root-relative CV files remain the existing app's responsibility; this sketch build does not copy the app public folder.
+# Společná pravidla pro všechny tickety (T1–T7)
+
+Platí pro každého Sol workera. Ticket je může jen zúžit, ne rozšířit.
+
+## Autorita a hranice
+- Žádný commit, push, deploy, instalace balíčků, spouštění dalších agentů.
+- Psát jen do souborů uvedených v ticketu v části „Smí měnit“. Vše ostatní read-only.
+- Necommitnutá práce majitele v repu (Light Table, sketches 009–024) se nesmí měnit, mazat ani stashovat.
+- Do `sketches/023-lunar-impact/` a ostatních lunárních studií nesahat.
+- Jen ověřená fakta: `src/content/projects.ts`, `src/content/homePosters.ts`, memory `portfolio-copy-facts`. Žádné vymyšlené metriky, klienti ani loga.
+- Slovo „AI“ v nadpisech ne. Tón profesionální, zdrženlivý.
+
+## Pravidla pohybu
+- Ve viditelné ploše nejvýše jedna dominantní animace. Vedle ní jen lokální odezva ovládání (fokus, podtržení, barva; 120–160 ms).
+- Nic se nehýbe samo. Dominantní pohyb spouští akce uživatele, nebo jednorázový vstup do viewportu.
+- Nová akce ukončí předchozí dominantní pohyb (žádné fronty).
+- Mimo viewport a při `document.hidden` se nepřehrává nic. Žádná trvalá rAF smyčka.
+- Animovat jen `transform`, `opacity`, `clip-path`.
+- Zakázáno: magnetické tlačítko souběžně s jiným pohybem, popisek pronásledující kurzor, tilt karet, falešné psaní, idle animace, parallax.
+- `prefers-reduced-motion: reduce`: přímé přepnutí mezi úplnými stavy, nulové přechody.
+- WebGL se nepoužívá.
+- Knihovny: jen nainstalované (React 19, GSAP 3.15 vč. ScrollTrigger/Flip/SplitText). Kde stačí CSS, použít CSS.
+
+## Přístupnost
+- Vše ovladatelné klávesnicí; viditelný fokus; logické pořadí.
+- Kontrast textu min. 4.5:1 (velký text 3:1).
+- Stav přehrávání a výměny obsahu oznámit přes `aria-live="polite"`, kde to dává smysl.
+- Obsah je v HTML, ne v obrázku nebo canvasu.
+
+## Viewporty pro kontrolu
+1440×900, 1280×720 (nízký desktop), 768×1024, 390×844, 320×640.
+
+## Umístění kódu
+Moduly žijí v `src/home/landing/<modul>/` (jen tam je čte `npm run check` a vitest `src/**/*.test.ts`). `sketches/025-landing/` je jen náhledový harness. Až T6 je připojí na `/`.
+
+## Kontroly (vždy)
+- `npm run check`
+- `npx vitest run <relevantní testy ticketu>`
+- Integrační tickety (T6, T7) navíc: `npm test` a `npm run build`.
+- Každá netriviální logika (stavový automat, časování, výběr) má aspoň jeden malý test.
+
+## Důkazy
+- Screenshoty z cmux (ne Chrome CDP) do run složky ticketu: `~/Documents/agent-runs/portfolio-2026/<datum>-landing-<ticket>/`.
+- Pozor: skryté cmux okno má `document.visibilityState === "hidden"` a rAF stojí. Před hodnocením pohybu to ověř.
+- Screenshot pohyb neověří: pro pohyb zapiš časovou osu stavů (eval s `performance.now()` a stavem) nebo krátký screencast.
+- Na konci `RESULT.md`: co se změnilo (seznam souborů), výsledky kontrol (výstup), co NEbylo ověřeno.
+
+## Hotovo znamená
+Všechna kritéria přijetí ticketu splněná a doložená. Report workera není důkaz; parent ověří diff a kontroly sám.
+docs/direction/homepage-hero-brainstorm/content/P1-FACTS.md
+docs/direction/homepage-hero-brainstorm/content/P1-SCRIPT.md
+
+codex
+Kompozice splňuje hlavní strukturu T1, ale mobilní přetékání porušuje přijímací kritérium. V CSS je konkrétní příčina: reset marginu přebíjí záporné odsazení rozšířeného panelu. P1 je poctivě označený, ale desktopový výřez je příliš zmenšený a mobil skrývá část důkazu. Pomlčka u Goal Loop naopak odpovídá schváleným textům.
+
+exec
+/bin/zsh -lc 'cat docs/direction/homepage-hero-brainstorm/content/P1-SCRIPT.md docs/direction/homepage-hero-brainstorm/content/P1-FACTS.md; nl -ba src/home/landing/landing.css | tail -65; rg --files docs/direction/homepage-hero-brainstorm/content' in /Users/vitek/Documents/agent-runs/portfolio-2026/2026-10-10-landing-t1/wt
+ succeeded in 0ms:
+# P1′ GameOnVB — from event to attendance (T0a, 2026-10-10)
+
+Stav: zachyceno z lokální izolované instance GameOnVB (SpacetimeDB modul `voleyevents-audit-p1demo`, Next.js admin + veřejná stránka) s jednorázovými demo daty. Jeden termín, jeden hráč ve všech krocích. Produkce nepoužita. Čeká na schválení majitelem.
+
+Trvalý štítek: **Reconstruction with demo data**. Fakta: [P1-FACTS.md](P1-FACTS.md).
+
+Demo data: termín „Čtvrteční volejbal — demo“ (22. 10. 2026 19:00, Demo hala, Praha, kapacita 12, 150 Kč), hráč „Demo Player“ (`demo-player@example.test`), organizátor `demo-organizer@example.test`. Účet příjemce v demo instanci přepsán na smyšlený `123456789/0100` (výchozí účet z repa se nesmí ukázat). Plátce `000000-1111111111/0300`.
+
+Poznámka k UI: screenshoty jsou česky (produkt je česky). Portfolio je anglicky — popisky kroků v panelu budou anglicky, screenshoty zůstávají originální.
+
+## Step 1 — Event opens
+
+- Assets: `p1-assets/step1-desktop.png`, `p1-assets/step1-mobile.png` (admin seznam akcí).
+- What the system does: “The organizer saves an event with capacity and an open registration state; the change is written to the audit log.” — P1-FACTS řádek 1 (`admin_create_event`, audit `event.create`).
+- Before → after: žádný termín → „Čtvrteční volejbal — demo“, kapacita 12, stav **Otevřeno**.
+- Nesmí tvrdit „recurring series“.
+
+## Step 2 — Player registers
+
+- Assets: `p1-assets/step2-before-desktop.png` (0 / 12), `p1-assets/step2-desktop.png`, `p1-assets/step2-crop.png`, `p1-assets/step2-mobile.png`.
+- What the system does: “Registration holds a place immediately and the public page updates occupancy.” — P1-FACTS řádek 2 (`create_checkout_batch`, `compute_occupied`).
+- Before → after: Kapacita **0 / 12** → **1 / 12**, „Rezervovaní — čeká na platbu (1): Demo Player“, místo drženo 24 h.
+
+## Step 3a — Payment instruction (součást kroku 2/3)
+
+- Assets: `p1-assets/step3a-crop.png` (+ QR a VS ve `step2-crop.png` / `step2-desktop.png`).
+- What the system does: “The player gets a QR payment with a unique variable symbol.” — P1-FACTS řádek 3a (`buildSpaydPayload`).
+- Stav: 150 Kč, VS **1000000002**, účet 123456789/0100 (demo).
+
+## Step 3 — Payment matched
+
+- Assets: `p1-assets/step3-payments-desktop.png`, `p1-assets/step3-payments-mobile.png` (Příchozí platby: DEMO PLAYER, 150 Kč, VS 1000000002, **Spárovaná**), `p1-assets/step3-event-desktop.png`, `p1-assets/step3-event-crop.png` (účastník **Spárováno**, Tržby 150 Kč banka).
+- What the system does: “An incoming bank transaction is matched to the registration by variable symbol and amount; the registration is confirmed.” — P1-FACTS řádek 3b (`ingest_bank_transaction`).
+- Štítek navíc: **Simulated bank input** (transakce `demo-fio-tx-0001` vložena přímo do skutečného reduceru `ingest_bank_transaction` místo Fio API; párování a potvrzení provedl skutečný kód).
+- Before → after: Příchozí platby prázdné → 1 spárovaná; registrace `confirmed`; Čeká na platbu 0.
+
+## Step 4 — Attendance resolved
+
+- Assets: `p1-assets/step4-desktop.png`, `p1-assets/step4-crop.png`, `p1-assets/step4-mobile.png`.
+- What the system does: “The organizer records attendance against the same registration, with an audit entry.” — P1-FACTS řádek 4 (`admin_set_attended`).
+- Before → after: Dorazili **0** → **1** (klik „Dorazil“ v check-in pohledu; `attended_at` uloženo).
+
+## Pro T3
+
+- Crop soubory jsou hrubé; finální výřezy pro panel (desktop i mobil) udělá T3 z plných screenshotů (2× DPR).
+- Na žádném screenshotu není skutečná osoba, e-mail ani účet. Kontrolováno textem stránky při snímání (hledán výchozí účet z repa).
+# P1′ GameOnVB lifecycle — ověřená fakta (T0a, 2026-10-10)
+
+Zdroj: read-only audit repa `/Users/vitek/main/GitHub/voleyevents` (Explore subagent), klíčové řádky ověřeny ručně (`ingest_bank_transaction`, `admin_create_event`, `admin_set_attended`, `compute_occupied`, `create_checkout_batch`). Cesty `M/` = `spacetimedb/voleyevents-module/src/`.
+
+Stack: SpacetimeDB 2.8.3 (Rust module), Astro site s React částmi (`site/`), Cloudflare Workers (fio-poller, magic-link, …). Legacy Next.js `src/app` volá stejné reducery.
+
+| Krok | Verdikt | Co dělá systém | Důkaz |
+|---|---|---|---|
+| 1. Event opens | PARTIAL — jednotlivé termíny, žádný model série | Organizátor uloží termín s kapacitou, rezervou a stavem Open/Closed; zapíše se audit `event.create`. „Opakování“ = kopie termínu na nové datum. | `M/reducers/admin.rs:887` `admin_create_event`, `:946` status, `:971` audit; `:1230` `admin_copy_event`; `M/tables/event.rs:30–33`; UI `site/src/lib/admin-events-browser.ts:352`, `/admin/events/new` |
+| 2. Player registers | EXISTS | Veřejná registrace vytvoří checkout batch, který hned drží místo; obsazenost = Pending/Claimed + Confirmed; veřejná stránka ukazuje „occupied / capacity“. | `M/reducers/user.rs:3070` `create_checkout_batch`; `M/capacity.rs:21` `compute_occupied`, `:188` capacity check; `M/views.rs:280` `public_event_occupancy`; `site/src/lib/detail-public-state.ts:72`; route `/r/:slug` |
+| 3a. QR instrukce | EXISTS | Hráč dostane SPAYD QR s variabilním symbolem pro batch / registraci. | `src/lib/spayd.ts:27` `buildSpaydPayload`; `site/src/components/RegistrationCheckoutView.tsx:273`; `M/payment_instruction.rs:446` |
+| 3b. Automatické párování | EXISTS | Worker `fio-poller` (cron) stahuje transakce z Fio API; reducer `ingest_bank_transaction` je idempotentně zapíše do append-only `bank_tx_log` a páruje podle VS + částky na batch / registraci / intent; nespárované jdou do admin fronty. | `workers/fio-poller/src/poll.ts:97,219`; `M/reducers/system.rs:864` `ingest_bank_transaction`, párování `:964–1148`, `insert_unmatched :1544` |
+| 3c. Ruční vyrovnání + audit | EXISTS | Admin může platbu vyrovnat i ručně; každá změna je idempotentní a v auditu. | `M/reducers/admin.rs:12284` `admin_mark_bank_paid`, `:5036` `admin_resolve_unmatched`; tabulky `admin_audit_log`, `bank_tx_log`, `payment_correction` |
+| 4. Attendance resolved | EXISTS | Organizátor označí docházku u registrace; uloží se `attended_at` a audit s předchozí hodnotou. | `M/reducers/admin.rs:8503` `admin_set_attended`, `:8089` transition, `:8103`, `:8127`; UI `site/src/lib/admin-roster-browser.ts:1526`, `/admin/events/:id/participants` |
+
+## Důsledky pro texty P1
+
+- Krok 1 NESMÍ říkat „recurring series“. Povoleno: „Organizer opens an event with capacity“; volitelně „…or copies a previous one to a new date“.
+- Krok 3 SMÍ říkat „automatically matched by variable symbol and amount“ — jen pokud demo použije skutečný `ingest_bank_transaction` (seed `scripts/seed-dev-scenarios.mjs:683` nebo fio-sim). Štítek „Simulated bank input“ povinný. Ruční `admin_mark_bank_paid` se nesmí vydávat za automatické párování.
+- Krok 4: „Attendance is recorded against the registration, with an audit entry.“
+
+## Lokální demo (bez produkce)
+
+- Izolovaný lokální modul: `bash scripts/dev-reseed.sh` (`voleyevents-audit-<runid>`, temp data dir, volný port); admin `scripts/dev-seed-user.mjs <email> --admin`; scénáře `scripts/seed-dev-scenarios.mjs`.
+- Seed skripty odmítnou Maincloud / `voleyevents-prod` bez `SEED_DESTRUCTIVE_APPROVAL`. Produkce se v tomto úkolu nepoužívá vůbec.
+    91	.landing-contact-form textarea { resize: vertical; min-height: 90px; }
+    92	.landing-contact-form fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+    93	.landing-contact-form legend { font-size: 13px; margin-bottom: 10px; }
+    94	.landing-topic-options { display: flex; gap: 20px; flex-wrap: wrap; }
+    95	.landing-topic-options label { display: flex; align-items: center; gap: 7px; min-height: 32px; }
+    96	.landing-topic-options input { accent-color: var(--landing-state); margin: 0; }
+    97	.landing-contact-form button { justify-self: start; cursor: not-allowed; background: transparent; color: var(--landing-muted) !important; border-color: var(--landing-line); }
+    98	.landing-footer { display: flex; justify-content: space-between; gap: 24px; padding-block: 26px; border-top: 1px solid var(--landing-line); font-size: 12px; color: var(--landing-muted); }
+    99	@media (min-width: 1000px) and (max-height: 760px) {
+   100	  .landing-hero { padding-block: 40px 48px; }
+   101	  .landing-hero h1 { font-size: 54px; }
+   102	}
+   103	@media (max-width: 1000px) {
+   104	  .landing-hero { grid-template-columns: 1fr; gap: 40px; padding-block: 48px; }
+   105	  .landing-hero-copy { max-width: 650px; }
+   106	  .landing-hero h1 { max-width: 20ch; font-size: 56px; }
+   107	  .landing-proof { max-width: 760px; }
+   108	  .landing-project summary { grid-template-columns: 32px minmax(0, 1fr) minmax(0, 190px) 40px 16px; gap: 12px; }
+   109	  .landing-project-detail, .landing-approach > p, .landing-contact-grid { margin-left: 44px; }
+   110	  .landing-solidpixels-detail { gap: 30px; }
+   111	  .landing-contact-grid { gap: 36px; }
+   112	}
+   113	@media (max-width: 600px) {
+   114	  .landing-page { padding-inline: 20px; font-size: 17px; }
+   115	  .landing-header { min-height: 76px; gap: 12px; }
+   116	  .landing-header-role { display: none; }
+   117	  .landing-header nav { gap: 20px; }
+   118	  .landing-header nav a { gap: 6px; }
+   119	  .landing-hero { padding-block: 36px 44px; gap: 36px; }
+   120	  .landing-hero-copy .landing-kicker { font-size: 12px; letter-spacing: .015em; margin-bottom: 22px; }
+   121	  .landing-hero h1 { font-size: clamp(36px, 10.5vw, 46px); line-height: 1.08; max-width: 17ch; }
+   122	  .landing-intro { font-size: 17px; margin-top: 22px !important; }
+   123	  .landing-hero-links { margin-top: 24px; gap: 26px; }
+   124	  .landing-proof { width: calc(100% + 40px); margin-inline: -20px; border-inline: 0; border-radius: 0; }
+   125	  .landing-proof-heading { padding-inline: 20px; }
+   126	  .landing-proof-steps { grid-template-columns: 1fr 1fr; gap: 16px; padding-inline: 20px; }
+   127	  .landing-proof-steps li { flex-direction: row; gap: 10px; }
+   128	  .landing-proof-image { margin-inline: 20px; height: clamp(180px, 45vw, 210px); position: relative; }
+   129	  .landing-proof-image img { position: absolute; top: 0; left: 0; width: max(100%, 390px); height: auto; transform: translateY(-54%); }
+   130	  .landing-proof-end { padding-inline: 20px; }
+   131	  .landing-proof-link { margin-inline: 20px; }
+   132	  .landing-section { padding-block: 32px 40px; scroll-margin-top: 16px; }
+   133	  .landing-section-heading { gap: 14px; margin-bottom: 22px; }
+   134	  .landing-section-heading h2 { font-size: 28px; gap: 12px; }
+   135	  .landing-section-number { font-size: 12px; }
+   136	  .landing-section-heading > a { font-size: 12px; }
+   137	  .landing-project summary { grid-template-columns: 24px minmax(0, 1fr) 28px 16px; gap: 10px; padding-block: 18px; }
+   138	  .landing-project-name { font-size: 25px; }
+   139	  .landing-solidpixels .landing-project-name { font-size: 30px; }
+   140	  .landing-project-role { grid-column: 2; grid-row: 2; font-size: 12px; }
+   141	  .landing-project-kind { grid-column: 3; grid-row: 1; }
+   142	  .landing-disclosure { grid-column: 4; grid-row: 1; }
+   143	  .landing-project-detail { margin-left: 34px; padding-block: 0 24px; }
+   144	  .landing-solidpixels-detail { display: block; }
+   145	  .landing-solidpixels-contribution { font-size: 17px; }
+   146	  .landing-project-detail dd { font-size: 14px; }
+   147	  .landing-work-footnote { font-size: 12px; align-items: baseline; }
+   148	  .landing-approach > p { font-size: 20px; line-height: 1.65; margin-left: 0; }
+   149	  .landing-contact .landing-section-heading h2 { max-width: 230px; }
+   150	  .landing-contact-grid { grid-template-columns: 1fr; margin-left: 0; gap: 36px; }
+   151	  .landing-contact-intro { font-size: 17px; margin-bottom: 20px !important; }
+   152	  .landing-email { font-size: 17px; }
+   153	  .landing-form-row { grid-template-columns: 1fr; gap: 18px; }
+   154	  .landing-footer { flex-direction: column; gap: 10px; }
+   155	}
+docs/direction/homepage-hero-brainstorm/content/COPY.md
+docs/direction/homepage-hero-brainstorm/content/p1-assets/step3-event-desktop.png
+docs/direction/homepage-hero-brainstorm/content/p1-assets/step2-desktop.png
+docs/direction/homepage-hero-brainstorm/content/p1-assets/step1-desktop.png
+docs/direction/homepage-hero-brainstorm/content/p1-assets/step3-payments-desktop.png
+docs/direction/homepage-hero-brainstorm/content/p1-assets/step4-desktop.png
+docs/direction/homepage-hero-brainstorm/content/p1-assets/step2-mobile.png
+docs/direction/homepage-hero-brainstorm/content/p1-assets/step2-before-desktop.png
+docs/direction/homepage-hero-brainstorm/content/p1-assets/step3-payments-mobile.png
+docs/direction/homepage-hero-brainstorm/content/p1-assets/step1-mobile.png
+docs/direction/homepage-hero-brainstorm/content/p1-assets/step4-mobile.png
+docs/direction/homepage-hero-brainstorm/content/p1-assets/step2-crop.png
+docs/direction/homepage-hero-brainstorm/content/p1-assets/step4-crop.png
+docs/direction/homepage-hero-brainstorm/content/p1-assets/step3a-crop.png
+docs/direction/homepage-hero-brainstorm/content/p1-assets/step3-event-crop.png
+docs/direction/homepage-hero-brainstorm/content/P1-FACTS.md
+docs/direction/homepage-hero-brainstorm/content/P1-SCRIPT.md
+
+codex
+**CHANGES_REQUIRED.** Základ je kultivovaný: dobrá typografická hierarchie, klidná paleta, přehledný rejstřík a správná dominance SolidPixels. H1 60/41 px funguje. Prémiovou úroveň zatím sráží nedotažený důkaz produktu: desktop ukazuje nečitelnou administraci, mobil nahodilý ořez. Právě přesná prezentace vlastní práce má dodat osobitost jinak poměrně známé kombinaci serifů a dělicích linek.
+
+Čtyři celky, textová odpovědnost, přímý kontakt a otevřený detail odpovídají T1. Rejstřík se podle screenshotu po vstupu do sekce vejde do 1440×900. Mobilní overflow porušuje explicitní akceptaci. Hodnotím dodané screenshoty, zdrojové podklady a kód; měření parenta jsem samostatně neopakoval.
+
+**Blokující opravy — před T2:**
+
+1. **Opravit geometrii mobilního panelu.** V [landing.css:124](/Users/vitek/Documents/agent-runs/portfolio-2026/2026-10-10-landing-t1/wt/src/home/landing/landing.css:124) reset `.landing-page :is(...figure...)` přebíjí `margin-inline: -20px`. Panel proto začíná na x=20 a končí mimo viewport. Použít například `.landing-page .landing-proof` pro mobilní přepis; zachovat šířku `calc(100% + 40px)`. Cíl: panel x=0 až šířka viewportu, obsah odsazený 20 px, **scrollWidth = clientWidth** na všech pěti rozměrech. Nepřekrývat chybu globálním `overflow-x:hidden`.
+
+2. **Zvětšit desktopový důkaz koncového stavu.** V `.landing-proof-image` a `assets/step4-crop.png` nahradit celkový přehled cíleným výřezem účastníka a výsledku. Současných 2048 zdrojových pixelů se vměstnává přibližně do 596 CSS px; rozhodující text je mikroskopický. Cíl: **jméno, „Spárováno“, „Dorazil“ nejméně 12 CSS px, ideálně 14 px**, čitelné při 100% zoomu také na 1280 a 768. Vynechat hledání, filtry a nerelevantní administrativní ovládání.
+
+3. **Nahradit mobilní posun skutečně komponovaným výřezem.** V [landing.css:128](/Users/vitek/Documents/agent-runs/portfolio-2026/2026-10-10-landing-t1/wt/src/home/landing/landing.css:128) odstranit závislost na `width:max(100%,390px)` a `translateY(-54%)`. Připravit výřez pro dostupných **350/280 px** při viewportu 390/320. Cíl: celé jméno a oba rozhodující stavy, text ≥12 px; rám přibližně **220–280 px vysoký**, podle obsahu. Destruktivní tlačítko „Odebrat“ nemá dominovat důkazu docházky.
+
+**Neblokující zlepšení:**
+
+- V `LandingPage.tsx` ponechat **jeden** Playground odkaz; doporučuji spodní řádek společně s vysvětlením hry.
+- Desktopový eyebrow zkrátit na roli; na mobilu zachovat roli, protože v hlavičce chybí. Opakování celého jména nepřidává informaci.
+- Pomlčka u Goal Loop **odpovídá COPY.md**, není implementační chyba. Raději skrýt prázdnou roli než vymýšlet nové tvrzení.
+- SolidPixels opakuje stejný rozsah práce několikrát. Při další obsahové revizi zkrátit opakování; chybějící zveřejnitelný příklad není blokér T1, protože COPY výslovně dovoluje jeho vynechání.
+
+**P1: věrohodný původ, nedostatečně čitelná prezentace.** P1-FACTS a P1-SCRIPT dokládají skutečný mechanismus; oba štítky jsou správně přítomné. Screenshot s uzavřenou „Historií (2)“ však sám neukazuje auditní záznam. Popisek vysvětluje děj, ale nenahrazuje čitelný důkaz.
+
+Doporučené výřezy pro následné kroky T3; T1 potřebuje pouze kvalitní krok 4:
+
+| Krok | Desktop | Mobil |
+|---|---|---|
+| 1 — Event opens | Řádek termínu: název, datum, kapacita 12, Otevřeno; bez navigace a správy. | Horní část skutečné karty termínu, bez akčních tlačítek. |
+| 2 — Player registers | Dva jasně oddělené výřezy: obsazenost 1/12 a rezervace Demo Player. | Tytéž detaily nad sebou; nezmenšovat celou dlouhou stránku ani QR. |
+| 3 — Payment matched | Transakce: DEMO PLAYER, 150 Kč, VS, Spárovaná; návaznost na registraci. | Úzké samostatné výřezy údajů; dodaný „mobile“ asset stále obsahuje široký layout. |
+| 4 — Attendance resolved | Demo Player + Spárováno + Dorazil; případně samostatný detail počítadla nebo auditu. | Stejná identita a stavy; na 320 případně dva výřezy nad sebou. |
+
+Měřítko všech kroků určovat podle výsledné čitelnosti **12–14 CSS px**, nikoli procenta celé obrazovky.
+
+```json
+{"verdict":"CHANGES_REQUIRED","blocking":["B1: Opravit specificitu mobilního marginu panelu; nulový overflow na všech viewports.","B2: Zvětšit desktopový výřez kroku 4; rozhodující text alespoň 12 CSS px.","B3: Nahradit mobilní procentní posun komponovaným výřezem pro 350/280 px bez ořezu stavů."],"nonblocking":["Ponechat jeden Playground odkaz.","Omezit opakování jména v eyebrow.","Skrýt prázdnou roli Goal Loop.","Při obsahové revizi zkrátit opakování v SolidPixels."]}
+```
+tokens used
+49 908
