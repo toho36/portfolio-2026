@@ -1,60 +1,14 @@
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type MouseEvent } from 'react'
+import { useRef, useState, type CSSProperties, type MouseEvent } from 'react'
 import { CONTACT } from '../content/systems'
 import { HOME_COPY, POSTERS } from '../content/homePosters'
 import { isClick } from '../home/sliderMath'
-import { sendContact, validateContact, type ContactErrors, type ContactTopic, type ContactValues } from '../home/contactForm'
+import { type ContactTopic } from '../home/contactForm'
+import { useContactForm } from '../home/useContactForm'
 
 const email = CONTACT[0].href.slice('mailto:'.length)
 
 function ContactPoster() {
-  const [values, setValues] = useState<ContactValues>({ name: '', email: '', topic: 'Project', message: '', _honey: '' })
-  const [errors, setErrors] = useState<ContactErrors>({})
-  const [sending, setSending] = useState(false)
-  const [sent, setSent] = useState(false)
-  const [submitError, setSubmitError] = useState<'send' | 'rate' | null>(null)
-  const sendingRef = useRef(false)
-  const nameRef = useRef<HTMLInputElement>(null)
-  const emailRef = useRef<HTMLInputElement>(null)
-  const messageRef = useRef<HTMLTextAreaElement>(null)
-  const successRef = useRef<HTMLParagraphElement>(null)
-
-  useEffect(() => { if (sent) successRef.current?.focus() }, [sent])
-
-  function update<K extends keyof ContactValues>(field: K, value: ContactValues[K]) {
-    setValues((current) => ({ ...current, [field]: value }))
-    setErrors((current) => ({ ...current, [field]: undefined }))
-    setSubmitError(null)
-  }
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (sendingRef.current) return
-    if (values._honey.trim()) { setSent(true); return }
-    const found = validateContact(values)
-    setErrors(found)
-    if (found.name || found.email || found.message) {
-      if (found.name) nameRef.current?.focus()
-      else if (found.email) emailRef.current?.focus()
-      else messageRef.current?.focus()
-      return
-    }
-    try {
-      if (Date.now() - Number(localStorage.getItem('portfolioContactSentAt')) < 60_000) {
-        setSubmitError('rate')
-        return
-      }
-    } catch { /* Storage is optional. */ }
-    sendingRef.current = true
-    setSending(true)
-    setSubmitError(null)
-    const success = await sendContact(values)
-    if (success) {
-      try { localStorage.setItem('portfolioContactSentAt', String(Date.now())) } catch { /* Storage is optional. */ }
-      setSent(true)
-    } else setSubmitError('send')
-    setSending(false)
-    sendingRef.current = false
-  }
+  const { values, errors, sending, sent, submitError, nameRef, emailRef, messageRef, successRef, update, submit } = useContactForm()
 
   return <div className="poster-contact">
     {sent ? <p className="poster-contact-success" ref={successRef} tabIndex={-1} aria-live="polite">Thanks — message sent. I'll reply within a few days.</p> :
