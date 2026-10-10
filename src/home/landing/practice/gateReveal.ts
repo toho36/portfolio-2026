@@ -6,8 +6,5 @@ export function mountGateReveal(section: HTMLElement, rail: HTMLElement, coordin
     pause() {},
     progress(value: number) { rail.style.transform = `scaleX(${value})` },
   }
-  const dispose = scrubReveal(section, timeline, coordinator)
-  // Keep the complete static rail if the optional animation runtime cannot load.
-  void dispose.ready.catch(() => { dispose(); timeline.progress(1) })
-  return dispose
+  return scrubReveal(section, timeline, coordinator)
 }

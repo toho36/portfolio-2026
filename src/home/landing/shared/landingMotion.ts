@@ -1,6 +1,4 @@
-import { importRelayMotion } from '../../../playground/loadRelayRuntime'
-
-/** Milliseconds; divide by 1000 when passing to GSAP. */
+/** Motion durations in milliseconds. */
 export const MOTION_MS = {
   P1_STEP: 240,
   INDEX_SWAP: 220,
@@ -103,100 +101,72 @@ export interface RevealTimeline {
 }
 export type ScrubDispose = Dispose & { readonly ready: Promise<void> }
 let nextReveal = 0
-let liveReveals = 0
-let scrollTriggerSuspended = false
-let tickerSleptByReveal = false
-
-/** Immediate disposer covers the async import. Await ready to handle load errors.
- * The paused timeline is driven directly by ScrollTrigger's bidirectional
- * progress (scrub:true, no smoothing), so it cannot keep playing offscreen.
- */
+/** Scroll events schedule one update; a mounted reveal has no idle frame loop. */
 export function scrubReveal(
   el: Element,
   timeline: RevealTimeline,
   coordinator = dominantMotion(),
 ): ScrubDispose {
-  if (typeof window === 'undefined' || typeof document === 'undefined') {
-    timeline.pause()
+  timeline.pause()
+  if (typeof window === 'undefined' || typeof document === 'undefined' || prefersReducedMotion()) {
     timeline.progress(1)
     return Object.assign(() => {}, { ready: Promise.resolve() })
   }
   const id = `landing-reveal-${++nextReveal}`
   let disposed = false
-  let trigger: { kill(): void } | undefined
-  let release: Dispose | undefined
-  const kill = () => {
-    trigger?.kill()
-    trigger = undefined
-    release?.()
-    release = undefined
+  let frame: number | undefined
+  let scrolling = false
+  const cancelFrame = () => {
+    if (frame !== undefined) cancelAnimationFrame(frame)
+    frame = undefined
+    scrolling = false
   }
-  const settle = () => {
-    unlisten()
+  const update = (duringScroll: boolean) => {
+    if (disposed || document.hidden) return
+    const rect = el.getBoundingClientRect()
+    const progress = Math.max(0, Math.min(1, (window.innerHeight - rect.top) / (window.innerHeight + rect.height)))
+    if (progress > 0 && progress < 1) {
+      const owner = coordinator.currentId()
+      if (duringScroll && owner !== undefined && owner !== id) return
+      if (duringScroll) coordinator.start(id, () => timeline.pause(), () => timeline.pause())
+    } else coordinator.stop(id)
+    timeline.progress(progress)
+  }
+  const schedule = (event: Event) => {
+    if (disposed || document.hidden) return
+    scrolling ||= event.type === 'scroll'
+    if (frame !== undefined) return
+    frame = requestAnimationFrame(() => {
+      frame = undefined
+      const duringScroll = scrolling
+      scrolling = false
+      update(duringScroll)
+    })
+  }
+  const visibility = () => {
+    if (!document.hidden) return
+    cancelFrame()
     coordinator.stop(id)
-    timeline.pause()
-    // GSAP progress() wakes its ticker; release globals after applying the endpoint.
-    timeline.progress(1)
-    kill()
   }
-  timeline.pause()
-  const unlisten = prefersReducedMotion((reduced) => { if (reduced) settle() })
   const dispose = () => {
     if (disposed) return
     disposed = true
+    window.removeEventListener('scroll', schedule)
+    window.removeEventListener('resize', schedule)
+    document.removeEventListener('visibilitychange', visibility)
     unlisten()
+    cancelFrame()
     coordinator.stop(id)
     timeline.pause()
-    kill()
   }
-  const ready = (async () => {
-    if (prefersReducedMotion()) { settle(); return }
-    const motion = await importRelayMotion()
-    if (disposed) return
-    if (prefersReducedMotion()) { settle(); return }
-    motion.gsap.registerPlugin(motion.ScrollTrigger)
-    if (scrollTriggerSuspended) {
-      motion.ScrollTrigger.enable()
-      scrollTriggerSuspended = false
-    }
-    if (tickerSleptByReveal) {
-      tickerSleptByReveal = false
-      motion.gsap.ticker.wake()
-    }
-    trigger = motion.ScrollTrigger.create({
-      trigger: el,
-      start: 'top bottom',
-      end: 'bottom top',
-      scrub: true,
-      onToggle(self) {
-        if (!self.isActive) { coordinator.stop(id); return }
-        if (disposed || document.hidden || prefersReducedMotion()) return
-        coordinator.start(id, () => timeline.pause(), () => timeline.pause())
-      },
-      onUpdate(self) {
-        if (disposed || document.hidden || prefersReducedMotion()) return
-        if (self.isActive) {
-          const owner = coordinator.currentId()
-          if (owner !== undefined && owner !== id) return
-          coordinator.start(id, () => timeline.pause(), () => timeline.pause())
-        } else coordinator.stop(id)
-        timeline.progress(Math.max(0, Math.min(1, self.progress)))
-      },
-    })
-    liveReveals++
-    release = () => {
-      liveReveals--
-      // getAll deliberately omits ScrollSmoother's trigger; preserve that owner too.
-      if (liveReveals || motion.ScrollTrigger.getAll().length || motion.ScrollTrigger.getById('ScrollSmoother')) return
-      // ScrollTrigger owns a separate rAF loop and interval, independent of the ticker.
-      motion.ScrollTrigger.disable()
-      scrollTriggerSuspended = true
-      // Never freeze foreign running or scheduled animations; GSAP wakes the ticker itself for new ones.
-      // Pending (delayed) tweens report isActive() false but still need the ticker.
-      if (motion.gsap.globalTimeline.getChildren(true, true, true).some((child) => !child.paused() && child.totalProgress() < 1)) return
-      tickerSleptByReveal = true
-      motion.gsap.ticker.sleep()
-    }
-  })()
-  return Object.assign(dispose, { ready })
+  const unlisten = prefersReducedMotion((reduced) => {
+    if (!reduced) return
+    dispose()
+    timeline.progress(1)
+  })
+  window.addEventListener('scroll', schedule, { passive: true })
+  window.addEventListener('resize', schedule, { passive: true })
+  document.addEventListener('visibilitychange', visibility)
+  update(false)
+  return Object.assign(dispose, { ready: Promise.resolve() })
 }

@@ -286,6 +286,7 @@ export default function App({ initialPath }: AppProps) {
           ))}
           {landing && <><a className="target-link" href="#work">Work</a><a className="target-link" href="#contact">Contact</a></>}
         </nav>
+        {landing && <span className="landing-nav-hint" aria-hidden="true">Scroll navigation →</span>}
       </header>
 
       <main id="main-content" tabIndex={-1} onClick={landing ? event => {

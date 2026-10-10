@@ -58,7 +58,7 @@ export function Hero({ coordinator, headline, introduction, lifecycle }: HeroPro
   }
   return <section className="landing-hero" id="introduction" aria-labelledby={`${id}-headline`}>
     <div className="landing-hero-copy">
-      <p className="landing-kicker">Hoang Viet To / Software Developer</p>
+      <p className="landing-kicker">Software Developer</p>
       <div id={`${id}-headline`}><h1>{headline}</h1></div>
       <p className="landing-intro">{introduction}</p>
       <div className="landing-hero-links"><a className="target-link landing-button" href="#work">Work <span aria-hidden="true">↓</span></a><a className="target-link landing-text-link" href="#contact">Contact <span aria-hidden="true">↗</span></a></div>

@@ -13,7 +13,7 @@ describe('integrated landing composition', () => {
     expect(html.match(/<section /g)).toHaveLength(4)
     expect(html).toContain('<h1>I build web platforms and the systems behind them.</h1>')
     const hero = html.slice(html.indexOf('id="introduction"'), html.indexOf('id="work"'))
-    expect(hero).toContain('Hoang Viet To / Software Developer')
+    expect(hero).toContain('<p class="landing-kicker">Software Developer</p>')
     expect(hero).toContain('href="#contact"')
     expect(hero).toContain('At SolidPixels, I work across CMS, frontend, backend and third-party integrations; GameOnVB is my own full-stack product.')
     expect(html).not.toMatch(/<header|<main|<footer/)

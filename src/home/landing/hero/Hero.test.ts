@@ -13,7 +13,7 @@ describe('Hero markup', () => {
     }))
     expect(html).toContain(HERO_HEADLINE)
     expect(html).toContain(HERO_INTRODUCTION)
-    expect(html).toContain('Hoang Viet To / Software Developer')
+    expect(html).toContain('<p class="landing-kicker">Software Developer</p>')
     expect(html).toContain('data-p1-step="1" data-p1-status="idle" data-p1-transitioning="false"')
     expect(html.match(/role="tab"/g)).toHaveLength(4)
     expect(html.match(/aria-selected="true"/g)).toHaveLength(1)

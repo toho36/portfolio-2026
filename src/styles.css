@@ -1748,10 +1748,25 @@ html[data-curtain='reveal']::after { animation: curtain-reveal .2s cubic-bezier(
 .landing-page .landing-button { padding: var(--landing-space-12) var(--landing-space-20); }
 .landing-page .landing-composition { max-width: 1280px; margin-inline: auto; }
 .route-home.landing-page footer { display: flex; }
+.landing-page .landing-footer .contact-nav { gap: var(--landing-space-8) var(--landing-space-20); margin-inline: 0; }
+.landing-nav-hint { display: none; }
 @media (max-width: 1000px) {
   .landing-page .site-nav { width: 100%; margin-left: 0; }
   .route-home.landing-page .site-header { gap: 0 var(--landing-space-20); padding-block: var(--landing-space-12); }
 }
-@media (max-width: 600px) {
+@media screen and (max-width: 760px) {
+  .landing-page .site-nav {
+    display: flex;
+    flex-wrap: nowrap;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .landing-page .site-nav a { flex: 0 0 auto; white-space: nowrap; }
+  .landing-page .site-nav a:focus-visible { outline-offset: -2px; }
   .landing-page .site-nav a[href="/"] { display: inline-flex; }
+}
+@media (max-width: 600px) {
+  .landing-page .landing-nav-hint { display: block; font-size: var(--landing-type-12); color: var(--landing-muted); }
 }
