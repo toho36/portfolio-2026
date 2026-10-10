@@ -4,6 +4,7 @@ import { PROJECT_STORIES } from '../../content/projects'
 import attendancePlayer from './assets/attendance-player.png'
 import attendancePayment from './assets/attendance-payment.png'
 import attendanceArrived from './assets/attendance-arrived.png'
+import './shared/tokens.css'
 import './landing.css'
 
 const contact = POSTERS.find((poster) => poster.id === 'contact')!
