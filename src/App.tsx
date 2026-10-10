@@ -19,6 +19,7 @@ import {
 import { flushSync } from 'react-dom'
 import { CONTACT } from './content/systems'
 import { LightTable } from './home/lightTable/LightTable.jsx'
+import { LandingPage } from './home/landing/LandingPage'
 import { PlaygroundPage } from './pages/Playground'
 
 interface AppProps {
@@ -111,7 +112,14 @@ export function selectHomeTransition(hasVisual: boolean, reducedMotion: boolean,
 
 export function isLightTablePair(from: string, to: string) {
   const source = normalizePathname(from), destination = normalizePathname(to)
-  return source !== destination && ['/', '/gameonvb', '/goal-loop'].includes(source) && ['/', '/gameonvb', '/goal-loop'].includes(destination)
+  return source !== destination && ['/gameonvb', '/goal-loop'].includes(source) && ['/gameonvb', '/goal-loop'].includes(destination)
+}
+
+export function restoreLandingHash(doc: Document, hash: string) {
+  if (!hash) return
+  try {
+    doc.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView({ behavior: 'instant' })
+  } catch { /* An invalid fragment has no target. */ }
 }
 
 export default function App({ initialPath }: AppProps) {
@@ -126,8 +134,8 @@ export default function App({ initialPath }: AppProps) {
     ),
   )
 
-  const onNavigate = useCallback((event: MouseEvent<HTMLAnchorElement>) => {
-    const anchor = event.currentTarget
+  const onNavigate = useCallback((event: MouseEvent<HTMLElement>, navigationAnchor?: HTMLAnchorElement) => {
+    const anchor = navigationAnchor ?? event.currentTarget as HTMLAnchorElement
     const destination = getRouteNavigationUrl({
       href: anchor.getAttribute('href') ?? '',
       currentUrl: window.location.href,
@@ -185,6 +193,10 @@ export default function App({ initialPath }: AppProps) {
   }, [])
 
   useEffect(() => {
+    if (route.path === '/' && !unknownPath) restoreLandingHash(document, window.location.hash)
+  }, [route.path, unknownPath])
+
+  useEffect(() => {
     if (unknownPath) {
       document.title = 'Page not found — Hoang Viet To'
       document.querySelector('meta[name="description"]')?.setAttribute('content', "This page doesn't exist.")
@@ -192,6 +204,7 @@ export default function App({ initialPath }: AppProps) {
   }, [route, unknownPath])
 
   useEffect(() => {
+    if (route.path === '/' && !unknownPath) return
     const root = document.documentElement
     const media = window.matchMedia('(prefers-reduced-motion: reduce)')
     let removeMotion = () => root.classList.remove('motion-ready')
@@ -221,12 +234,14 @@ export default function App({ initialPath }: AppProps) {
       media.removeEventListener('change', applyMotionPreference)
       removeMotion()
     }
-  }, [route.path])
+  }, [route.path, unknownPath])
 
   let routeContent: ReactNode
   if (unknownPath) routeContent = <section className="not-found"><p className="poster-kicker">404 / Not found</p><h1>This page doesn't exist.</h1><a className="target-link" href="/" onClick={onNavigate}>Back home <span aria-hidden="true">↗</span></a></section>
   else switch (route.path) {
     case '/':
+      routeContent = <LandingPage />
+      break
     case '/gameonvb':
     case '/goal-loop':
       routeContent = <LightTable pathname={route.path} onNavigate={onNavigate} />
@@ -240,13 +255,15 @@ export default function App({ initialPath }: AppProps) {
     }
   }
 
+  const landing = route.path === '/' && !unknownPath
+
   return (
-    <div id="top" className={`site-shell route-${route.id}`}>
+    <div id="top" className={`site-shell route-${route.id}${landing ? ' landing-page' : ''}`}>
       <a className="skip-link target-link" href="#main-content">
         Skip to content
       </a>
 
-      <header className="site-header">
+      <header className={`site-header${landing ? ' landing-header' : ''}`}>
         <RouteLink
           className="brand"
           currentPath={unknownPath ? undefined : route.path}
@@ -267,12 +284,16 @@ export default function App({ initialPath }: AppProps) {
               {item.label}
             </RouteLink>
           ))}
+          {landing && <><a className="target-link" href="#work">Work</a><a className="target-link" href="#contact">Contact</a></>}
         </nav>
       </header>
 
-      <main id="main-content" tabIndex={-1}>{routeContent}</main>
+      <main id="main-content" tabIndex={-1} onClick={landing ? event => {
+        const anchor = (event.target as Element).closest<HTMLAnchorElement>('a')
+        if (anchor && event.currentTarget.contains(anchor)) onNavigate(event, anchor)
+      } : undefined}>{routeContent}</main>
 
-      <footer>
+      <footer className={landing ? 'landing-footer' : undefined}>
         <p>
           Hoang Viet To <span aria-hidden="true">/</span> Software Developer
         </p>

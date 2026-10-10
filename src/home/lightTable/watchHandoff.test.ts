@@ -11,8 +11,8 @@ import { getRouteNavigationUrl, normalizePathname, pushRouteNavigation } from '.
 
 const source = readFileSync(new URL('./LightTable.jsx', import.meta.url), 'utf8')
 const appSource = readFileSync(new URL('../../App.tsx', import.meta.url), 'utf8')
-const appStart = appSource.indexOf('    const anchor = event.currentTarget')
-const appNavigation = appSource.slice(appStart, appSource.indexOf('\n  }, [])', appStart)).replace('querySelector<HTMLElement>', 'querySelector')
+const appStart = appSource.indexOf('    const anchor = navigationAnchor')
+const appNavigation = appSource.slice(appStart, appSource.indexOf('\n  }, [])', appStart)).replace('querySelector<HTMLElement>', 'querySelector').replace(' as HTMLAnchorElement', '')
 const run = (code: string, context: Record<string, any>) => new Function('context', `with(context){${code}}`)(context)
 const ref = (current: any) => ({ current })
 
@@ -78,7 +78,7 @@ function harness(cold = false) {
   const style = () => ({ cssText: 'original inline style', setProperty(k: string, v: string) { (this as any)[k] = v } })
   const focus: string[] = []
   const makeHost = (name: string) => {
-    const cta = { hidden: false, focus: () => focus.push(name), getBoundingClientRect: () => ({ top: 660, bottom: 700 }) }
+    const cta = { hidden: false, closest: () => null, focus: () => focus.push(name), getBoundingClientRect: () => ({ top: 660, bottom: 700 }) }
     const band = {}, sheet = { clientTop: 1, parentElement: {}, closest: () => null, getBoundingClientRect: () => ({ top: 200, bottom: 700 }), querySelector: (q: string) => q === '.sheet-bottom' ? band : cta }
     const image = { style: style(), dataset: {} }, surface: any = { style: style(), clientWidth: 600, clientHeight: 500, querySelector: () => image, getBoundingClientRect: () => ({ x: 201.25, y: 200.75 }) }
     const host: any = { dataset: { runtime: 'webgl', sourcePose: JSON.stringify({ x: .2, y: -.3, time: 9 }) }, closest: () => sheet, append(s: any) { s.parentElement = this }, dispatchEvent() {} }
@@ -104,9 +104,9 @@ function harness(cold = false) {
     ballDialogRef: ref(ballDialog), ballDesiredRef: ref(false), ballSourceRef: ref(ball.cta), ballScrollRef: ref(850), ballRestoreRef: ref(null), coldRef: ref(false), backRef: ref(ball.cta),
     deckRef: ref(deck), assistRef: ref({ cancel() {} }), innerWidth: 1440, innerHeight: 1000, scrollY: cold ? 0 : 13,
     location: new URL(cold ? '/goal-loop' : '/', 'https://portfolio.test/'), history: { state: null, back: vi.fn() }, getRouteNavigationUrl, onNavigate: vi.fn(),
-    document: { hidden: false, body: { style: { overflow: 'scroll' } }, createElement: () => ({ style: style(), remove() {} }) },
+    document: { hidden: false, visibilityState: 'visible', getElementById: () => null, body: { style: { overflow: 'scroll' } }, createElement: () => ({ style: style(), remove() {} }) },
     addEventListener() {}, removeEventListener() {},
-    window: { scrollTo({ top }: { top: number }) { context.scrollY = top } }, scrollStoryAnchor() {},
+    window: { matchMedia: () => ({ matches: false }), scrollTo({ top }: { top: number }) { context.scrollY = top } }, scrollStoryAnchor() {},
     DOMMatrix: class { a = .83; b = -.05; c = .05; d = .83; e = 0; f = 0 }, Event: class {}, ResizeObserver: class { observe() {} disconnect() {} },
     getComputedStyle: (o: any) => o === fan ? { width: '602px', height: '502px', left: '501px', top: '451px' } : o === ball.sheet.parentElement || o === watch.sheet.parentElement ? { width: '602px', height: '502px', transform: 'matrix', transformOrigin: '301px 251px' } : o === ball.band ? { top: '450px', height: '44px', paddingTop: '12px', paddingBottom: '0px', borderTopWidth: '0px', borderBottomWidth: '0px' } : { width: '600', height: '500' },
     createWatchFlow, BALL_DURATION, createBallChoreography, captureBallOrientation, ballEase, ballEntryPresentation, ballContactLayout, staticLanding, staticStepImage, deckPosition,
@@ -148,7 +148,7 @@ function navigation(h: ReturnType<typeof harness>) {
     replaceState(state: unknown, _unused: string, url: string) { entries[index] = { url, state }; c.location.href = url },
   }
   Object.assign(c.window, { location: c.location, history: c.history })
-  Object.assign(c, { normalizePathname, pushRouteNavigation, isLightTablePair, selectHomeTransition,
+  Object.assign(c, { navigationAnchor: undefined, normalizePathname, pushRouteNavigation, isLightTablePair, selectHomeTransition,
     setUnknownPath() {}, setRoute(route: { path: string }) { h.path(route.path) },
   })
   const navigate = new Function('event', 'context', `with(context){${appNavigation}}`)
@@ -474,4 +474,21 @@ it.each(['load', 'pageshow'])('cold real watch fragment waits for paint after %s
     h.tick(); c.desiredRef.current = false; h.tick()
     expect(target.scrollIntoView).toHaveBeenCalledTimes(2); staleCleanup()
   } finally { cleanup(); h.cleanup() }
+})
+
+
+it.each(['/goal-loop', '/gameonvb'])('%s mounted cold from the landing returns to its marked history entry', path => {
+  const h = harness(), c = h.context, n = navigation(h)
+  try {
+    n.enter(path)
+    // The route split mounts LightTable cold, even for an in-app landing click.
+    c.watchColdRef.current = path === '/goal-loop'
+    c.coldRef.current = path === '/gameonvb'
+    c.history.back.mockClear()
+    c.onNavigate.mockClear()
+    n.exit(path, false)
+    expect(c.history.state.lightTableFromHome).toBe(true)
+    expect(c.history.back).toHaveBeenCalledOnce()
+    expect(c.onNavigate).not.toHaveBeenCalled()
+  } finally { n.cleanup(); h.cleanup() }
 })

@@ -119,7 +119,7 @@ export function LightTable({pathname,onNavigate}) {
     if(!destination)return
     if(!desiredRef.current){event.preventDefault();return}
     desiredRef.current=false;setDesired(false)
-    if(!watchColdRef.current&&!location.hash&&history.state?.lightTableFromHome===true){event.preventDefault();history.back()}
+    if(!location.hash&&history.state?.lightTableFromHome===true){event.preventDefault();history.back()}
     else onNavigate(event)
   }
   function ballBack(event){
@@ -128,7 +128,7 @@ export function LightTable({pathname,onNavigate}) {
     if(!destination)return
     if(!ballDesiredRef.current){event.preventDefault();return}
     ballDesiredRef.current=false;setBallDesired(false)
-    if(!coldRef.current&&!location.hash&&history.state?.lightTableFromHome===true){event.preventDefault();history.back()}
+    if(!location.hash&&history.state?.lightTableFromHome===true){event.preventDefault();history.back()}
     else onNavigate(event)
   }
   useLayoutEffect(()=>{

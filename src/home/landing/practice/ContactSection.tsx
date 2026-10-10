@@ -11,9 +11,9 @@ export function ContactSection() {
   const { values, errors, sending, sent, submitError, nameRef, emailRef, messageRef, successRef, update, submit } = useContactForm()
 
   return <section className="landing-contact landing-section landing-practice-contact" id="contact" aria-labelledby="landing-contact-title">
-    <div className="landing-section-heading"><h2 id="landing-contact-title"><span className="landing-section-number">03</span>{contact.heading}</h2><a href={CONTACT[0].href}>Email <span aria-hidden="true">↗</span></a></div>
+    <div className="landing-section-heading"><h2 id="landing-contact-title"><span className="landing-section-number">03</span>{contact.heading}</h2><a className="target-link" href={CONTACT[0].href}>Email <span aria-hidden="true">↗</span></a></div>
     <div className="landing-contact-grid">
-      <div><p className="landing-contact-intro">{contact.body}</p><a className="landing-email" href={CONTACT[0].href}>{email}</a><nav className="landing-contact-links" aria-label="Contact and CV">{CONTACT.slice(1).map((link) => <a key={link.label} href={link.href} download={link.download}>{link.label} ↗</a>)}</nav></div>
+      <div><p className="landing-contact-intro">{contact.body}</p><a className="target-link landing-email" href={CONTACT[0].href}>{email}</a><nav className="landing-contact-links" aria-label="Contact and CV">{CONTACT.slice(1).map((link) => <a className="target-link" key={link.label} href={link.href} download={link.download}>{link.label} ↗</a>)}</nav></div>
       {sent ? <p className="landing-contact-success" ref={successRef} tabIndex={-1} aria-live="polite">Thanks — message sent. I'll reply within a few days.</p> :
         <form className="landing-contact-form" noValidate onSubmit={submit} aria-busy={sending}>
           <div className="landing-form-row">
@@ -25,7 +25,7 @@ export function ContactSection() {
           <div className="landing-contact-honey" aria-hidden="true"><label htmlFor="landing-honey">Leave this field empty</label><input id="landing-honey" name="_honey" tabIndex={-1} autoComplete="off" value={values._honey} onChange={(event) => update('_honey', event.target.value)} /></div>
           <button className="landing-button" type="submit" disabled={sending}>{sending ? 'Sending…' : HOME_COPY.contactCta} <span aria-hidden="true">↗</span></button>
           <span className="landing-contact-status" aria-live="polite">{sending ? 'Sending your message…' : ''}</span>
-          {submitError === 'send' && <p className="landing-contact-error" role="alert">Couldn't send. Email me directly at <a href={CONTACT[0].href}>{email}</a></p>}
+          {submitError === 'send' && <p className="landing-contact-error" role="alert">Couldn't send. Email me directly at <a className="target-link" href={CONTACT[0].href}>{email}</a></p>}
           {submitError === 'rate' && <p className="landing-contact-error" role="alert">Please wait a minute before sending another message.</p>}
         </form>}
     </div>

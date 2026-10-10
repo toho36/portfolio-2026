@@ -43,10 +43,12 @@ export function createDominantMotion() {
     if (active.pause) active.pause()
     else clear()
   }
-  doc?.addEventListener('visibilitychange', visibility)
+  let listening = false
   return {
     start(id: string, cancel: Dispose, pause?: Dispose): boolean {
       if (doc?.hidden) return false
+      // Lazy registration survives React StrictMode cleanup/re-setup without render-time listeners.
+      if (!listening) { doc?.addEventListener('visibilitychange', visibility); listening = true }
       if (active?.id === id) return true
       clear()
       active = { id, cancel, pause }
@@ -58,6 +60,7 @@ export function createDominantMotion() {
     },
     dispose() {
       doc?.removeEventListener('visibilitychange', visibility)
+      listening = false
       clear()
     },
   }

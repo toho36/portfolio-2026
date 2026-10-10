@@ -61,7 +61,7 @@ export function Hero({ coordinator, headline, introduction, lifecycle }: HeroPro
       <p className="landing-kicker">Hoang Viet To / Software Developer</p>
       <div id={`${id}-headline`}><h1>{headline}</h1></div>
       <p className="landing-intro">{introduction}</p>
-      <div className="landing-hero-links"><a className="landing-button" href="#work">Work <span aria-hidden="true">↓</span></a><a className="landing-text-link" href="#contact">Contact <span aria-hidden="true">↗</span></a></div>
+      <div className="landing-hero-links"><a className="target-link landing-button" href="#work">Work <span aria-hidden="true">↓</span></a><a className="target-link landing-text-link" href="#contact">Contact <span aria-hidden="true">↗</span></a></div>
     </div>
     <figure ref={panel} className="landing-proof p1-proof" aria-labelledby={`${id}-title`} data-p1-step={state.step + 1} data-p1-status={state.status} data-p1-transitioning={state.transitioning}>
       <figcaption className="landing-proof-heading"><p id={`${id}-title`}>GameOnVB — from event to attendance</p><span className="landing-proof-label">{lifecycle.reconstructionLabel}</span></figcaption>
@@ -82,7 +82,7 @@ export function Hero({ coordinator, headline, introduction, lifecycle }: HeroPro
       <div className="p1-controls"><button type="button" onClick={() => state.status === 'playing' ? player.current?.pause() : player.current?.play()}>{state.status === 'playing' ? 'Pause' : state.status === 'paused' ? 'Resume' : state.status === 'done' ? 'Replay' : 'Play'}</button><span>{state.status === 'done' ? 'Complete' : state.status === 'paused' ? 'Paused' : state.status === 'playing' ? 'Playing' : 'Explore each step'}</span></div>
       <p className="p1-live" aria-live="polite" aria-atomic="true">Step {state.step + 1} of 4: {lifecycle.steps[state.step]}. {state.status === 'done' ? 'Complete.' : state.status === 'paused' ? 'Paused.' : ''}</p>
       {state.status === 'done' && <ol className="p1-summary" aria-label="Lifecycle summary">{lifecycle.steps.map((step, index) => <li key={step}><strong>{step}</strong><span>{STEP_DETAILS[index].after}</span>{index === 2 && <span>{lifecycle.bankInputLabel}</span>}</li>)}</ol>}
-      <a className="landing-proof-link" href="/gameonvb">View project <span aria-hidden="true">↗</span></a>
+      <a className="target-link landing-proof-link" href="/gameonvb">View project <span aria-hidden="true">↗</span></a>
     </figure>
   </section>
 }

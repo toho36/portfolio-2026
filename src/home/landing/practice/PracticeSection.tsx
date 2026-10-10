@@ -12,7 +12,7 @@ export function PracticeSection({ introduction, gates, coordinator }: PracticePr
   }, [coordinator])
 
   return <section className="landing-approach landing-section landing-practice" id="approach" aria-labelledby="landing-approach-title" ref={sectionRef}>
-    <div className="landing-section-heading"><h2 id="landing-approach-title"><span className="landing-section-number">02</span>How I work</h2><a href="/goal-loop">Goal Loop <span aria-hidden="true">↗</span></a></div>
+    <div className="landing-section-heading"><h2 id="landing-approach-title"><span className="landing-section-number">02</span>How I work</h2><a className="target-link" href="/goal-loop">Goal Loop <span aria-hidden="true">↗</span></a></div>
     <p>{introduction}</p>
     <div className="landing-practice-gates">
       <span className="landing-practice-rail" aria-hidden="true"><span ref={railRef} /></span>

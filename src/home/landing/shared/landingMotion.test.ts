@@ -72,6 +72,20 @@ describe('landing motion', () => {
     coordinator.dispose()
     expect(cancel).toHaveBeenCalledOnce()
   })
+  it('registers no render-time listener and restores hidden cancellation after StrictMode cleanup', () => {
+    const add = vi.spyOn(doc, 'addEventListener')
+    const coordinator = createDominantMotion()
+    expect(add).not.toHaveBeenCalled()
+    coordinator.start('first', vi.fn())
+    coordinator.dispose()
+    const cancel = vi.fn()
+    coordinator.start('second', cancel)
+    doc.hidden = true
+    doc.dispatchEvent(new Event('visibilitychange'))
+    expect(cancel).toHaveBeenCalledOnce()
+    expect(add).toHaveBeenCalledTimes(2)
+    coordinator.dispose()
+  })
   it('tracks preference changes and returns zero durations', () => {
     const changed = vi.fn()
     const unlisten = prefersReducedMotion(changed)

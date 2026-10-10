@@ -63,8 +63,8 @@ it('keeps caption and wrapping native chapter links in one normal flow stack', (
   expect(/class="ball-entry-copy"><div class="ball-entry-caption">[\s\S]*?<\/div><nav class="ball-story-links"[\s\S]*?<\/nav><\/div>/.test(html)).toBe(true)
   for (const id of ['event-opens', 'player-registers', 'payment-matches', 'attendance-resolves']) expect(html).toContain(`href="#${id}"`)
 })
-it('renders three real-path fan sheets with native supporting content', () => {
-  const html = render('/')
+it('renders three real-path fan sheets with native supporting content on project routes', () => {
+  const html = render('/gameonvb')
   expect([...html.matchAll(/data-sheet="([^"]+)"/g)].map(m => m[1])).toEqual(['goal-loop', 'gameonvb', 'intro'])
   expect(html).toContain('href="/#introduction"')
   expect(html).toContain('href="/gameonvb"')

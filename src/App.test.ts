@@ -1,7 +1,7 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
-import App, { applyRouteMetadata, installRevealMotion, isLightTablePair, selectHomeTransition } from './App'
+import App, { applyRouteMetadata, installRevealMotion, isLightTablePair, restoreLandingHash, selectHomeTransition } from './App'
 import { readFileSync } from 'node:fs'
 import { getRouteNavigationUrl, normalizePathname, pushRouteNavigation, ROUTES, resolveRoute, routeMetadata } from './content/routes'
 
@@ -19,9 +19,9 @@ function createClassList() {
   }
 }
 
-describe('light-table homepage shell', () => {
+describe('landing and project shells', () => {
   it('renders the approved fan and all source-safe supporting sections in order', () => {
-    const markup = render()
+    const markup = render('/gameonvb')
     expect(markup).toContain('New tools.')
     expect(markup).toContain('Old standards.')
     expect([...markup.matchAll(/data-poster="([^"]+)"/g)].map((m) => m[1])).toEqual([
@@ -34,13 +34,13 @@ describe('light-table homepage shell', () => {
   })
 
   it('links approved projects and keeps SolidPixels and Small tools non-link', () => {
-    const markup = render()
+    const markup = render('/gameonvb')
     expect(markup).toContain('href="/gameonvb"')
     expect(markup).toContain('href="/goal-loop"')
     expect(markup).toContain('href="/playground"')
     const solid = markup.slice(markup.indexOf('data-poster="solidpixels"'), markup.indexOf('data-poster="goal-loop"'))
     expect(solid).not.toContain('<a ')
-    const tools = markup.slice(markup.indexOf('data-poster="tools"'), markup.indexOf('data-poster="contact"'))
+    const tools = markup.slice(markup.indexOf('data-poster="tools"'), markup.indexOf('id="contact"'))
     expect(tools).toContain('Screen Switch, a native macOS menu-bar utility that exchanges windows between displays.')
     expect(tools).not.toContain('<a ')
   })
@@ -66,7 +66,7 @@ describe('light-table homepage shell', () => {
     expect(markup).toContain('<nav aria-label="Primary"')
     expect(markup).toContain('<nav aria-label="Contact and CV"')
     expect(markup).toContain('href="mailto:tohoangviet1998@gmail.com"')
-    const contact = markup.slice(markup.indexOf('data-poster="contact"'))
+    const contact = markup.slice(markup.indexOf('id="contact"'))
     expect(contact).not.toContain('class="target-link poster-email"')
     expect(contact).not.toContain('>Copy</button>')
     expect(contact).not.toContain('aria-hidden="true">tohoangviet1998@gmail.com')
@@ -253,8 +253,8 @@ describe('reveal enhancement', () => {
 // Execute App's real click/navigation body; only its querySelector type argument is erased.
 function provenanceNavigation(path = '/', state: Record<string, unknown> | null = null, newEntryKeys = {}) {
   const source = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8')
-  const start = source.indexOf('    const anchor = event.currentTarget')
-  const code = source.slice(start, source.indexOf('\n  }, [])', start)).replace('querySelector<HTMLElement>', 'querySelector')
+  const start = source.indexOf('    const anchor = navigationAnchor')
+  const code = source.slice(start, source.indexOf('\n  }, [])', start)).replace('querySelector<HTMLElement>', 'querySelector').replace(' as HTMLAnchorElement', '')
   const location = new URL(path, 'https://portfolio.test/')
   const entries = [{ url: location.href, state }]
   let index = 0
@@ -267,15 +267,20 @@ function provenanceNavigation(path = '/', state: Record<string, unknown> | null 
     }),
     replaceState: vi.fn((state: Record<string, unknown>, _unused: string, url: string) => { entries[index] = { url, state } }),
   }
-  const context = { window: { location, history, matchMedia: () => ({ matches: false }), scrollTo() {} },
+  const anchorForDelegation = { getAttribute: () => '/gameonvb', target: '', hasAttribute: () => false, closest: () => null }
+  const context = { navigationAnchor: undefined as typeof anchorForDelegation | undefined, window: { location, history, matchMedia: () => ({ matches: false }), scrollTo() {} },
     document: { visibilityState: 'visible', getElementById: () => null },
     getRouteNavigationUrl, normalizePathname, pushRouteNavigation, isLightTablePair, selectHomeTransition,
     setUnknownPath() {}, setRoute: vi.fn(),
   }
   const navigate = new Function('event', 'context', `with(context){${code}}`)
-  return { entries, history, location, click(href: string, change = {}) {
+  return { entries, history, location, click(href: string, change = {}, delegated = false) {
     const event = { button: 0, defaultPrevented: false, altKey: false, ctrlKey: false, metaKey: false, shiftKey: false,
       currentTarget: { getAttribute: () => href, target: '', hasAttribute: () => false, closest: () => null }, preventDefault: vi.fn(), ...change }
+    if (delegated) {
+      context.navigationAnchor = { ...anchorForDelegation, getAttribute: () => href }
+      event.currentTarget.getAttribute = () => ''
+    }
     navigate(event, context)
     return event
   } }
@@ -321,4 +326,64 @@ describe('App per-entry light-table provenance', () => {
       expect(n.history.pushState).not.toHaveBeenCalled(); expect(n.history.replaceState).not.toHaveBeenCalled()
     }
   })
+})
+
+
+describe('landing route integration', () => {
+  it('mounts only the new four-section composition on home, with one shell', () => {
+    const html = render('/')
+    expect(html.match(/<header[ >]/g)).toHaveLength(1)
+    expect(html.match(/<main[ >]/g)).toHaveLength(1)
+    expect(html.match(/<footer[ >]/g)).toHaveLength(1)
+    expect(html).toContain('I build web platforms and the systems behind them.')
+    expect(html).toContain('data-p1-status="idle"')
+    expect(html).toContain('data-work-select')
+    expect(html).toContain('Goal Loop verification gates')
+    for (const id of ['introduction', 'work', 'approach', 'contact']) expect(html).toContain(`id="${id}"`)
+    for (const hash of ['work', 'contact']) expect(html).toContain(`href="#${hash}"`)
+    expect(html).not.toMatch(/data-light-table-shell|data-sheet=|data-poster=|Scroll to deal/)
+  })
+  it.each(['/gameonvb', '/goal-loop'])('retains the cold project dialog on %s', path => {
+    const html = render(path)
+    expect(html).toContain('data-light-table-shell="true"')
+    const dialogClass = path === '/gameonvb' ? 'ball-entry' : 'goal-entry'
+    expect(html).toContain(`<dialog class="${dialogClass}" open=""`)
+    expect(html).not.toContain('landing-composition')
+  })
+  it('leaves landing fragments native and distinguishes the retained Light Table pair', () => {
+    for (const href of ['#work', '#contact']) {
+      const n = provenanceNavigation()
+      expect(n.click(href).preventDefault).not.toHaveBeenCalled()
+      expect(n.history.pushState).not.toHaveBeenCalled()
+    }
+    expect(isLightTablePair('/', '/gameonvb')).toBe(false)
+    expect(isLightTablePair('/goal-loop', '/')).toBe(false)
+    expect(isLightTablePair('/goal-loop', '/gameonvb')).toBe(true)
+  })
+})
+
+
+it('restores landing fragments after cold mount or history returns from a project', () => {
+  const scrollIntoView = vi.fn()
+  const getElementById = vi.fn((id: string) => ['work', 'contact'].includes(id) ? { scrollIntoView } : null)
+  const doc = { getElementById } as unknown as Document
+  for (const hash of ['#work', '#contact', '#%63ontact']) restoreLandingHash(doc, hash)
+  expect(scrollIntoView).toHaveBeenCalledTimes(3)
+  expect(scrollIntoView).toHaveBeenLastCalledWith({ behavior: 'instant' })
+  restoreLandingHash(doc, '#missing')
+  restoreLandingHash(doc, '#%')
+  restoreLandingHash(doc, '')
+  expect(scrollIntoView).toHaveBeenCalledTimes(3)
+})
+
+
+it.each(['/gameonvb', '/goal-loop', '/playground'])('uses the clicked landing anchor for delegated navigation to %s', path => {
+  const n = provenanceNavigation()
+  const event = n.click(path, {}, true)
+  expect(event.preventDefault).toHaveBeenCalledOnce()
+  expect(n.location.pathname).toBe(path)
+  expect(n.history.pushState).toHaveBeenCalledOnce()
+  const modified = provenanceNavigation()
+  expect(modified.click(path, { metaKey: true }, true).preventDefault).not.toHaveBeenCalled()
+  expect(modified.history.pushState).not.toHaveBeenCalled()
 })

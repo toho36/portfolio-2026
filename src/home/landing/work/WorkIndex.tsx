@@ -41,7 +41,7 @@ function Detail({ item }: { item: WorkItem }) {
   const story = item.id === 'gameonvb' ? PROJECT_STORIES.voleyevents : item.id === 'screen-switch' ? PROJECT_STORIES['screen-switch'] : undefined
   return <><dl>{story && <><div><dt>Constraint</dt><dd>{story.constraint}</dd></div><div><dt>Decision</dt><dd>{story.decision}</dd></div></>}
     {item.evidence && <div><dt>Evidence</dt><dd>{item.evidence}</dd></div>}</dl>
-    <div className="landing-detail-links">{(item.href === '/gameonvb' || item.href === '/goal-loop') && <a href={item.href}>View project ↗</a>}{item.id === 'gameonvb' && <a href={PROJECT_STORIES.gameonvb.verifiedUrl}>gameonvb.cz ↗</a>}</div></>
+    <div className="landing-detail-links">{(item.href === '/gameonvb' || item.href === '/goal-loop') && <a className="target-link" href={item.href}>View project ↗</a>}{item.id === 'gameonvb' && <a className="target-link" href={PROJECT_STORIES.gameonvb.verifiedUrl}>gameonvb.cz ↗</a>}</div></>
 }
 
 export function WorkIndex({ items, coordinator, screenSwitchDemo }: SelectedWorkProps) {
@@ -110,6 +110,6 @@ export function WorkIndex({ items, coordinator, screenSwitchDemo }: SelectedWork
       {sticky && panel}
     </div>
     <p className="work-announcement" aria-live="polite" aria-atomic="true">Selected: {selected.title}.</p>
-    <div className="landing-work-footnote"><span>A real-time 3D skill game.</span><a href="/playground">Playground <span aria-hidden="true">↗</span></a></div>
+    <div className="landing-work-footnote"><span>A real-time 3D skill game.</span><a className="target-link" href="/playground">Playground <span aria-hidden="true">↗</span></a></div>
   </section>
 }
