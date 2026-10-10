@@ -1,11 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type MouseEvent } from 'react'
 import { CONTACT } from '../content/systems'
 import { HOME_COPY, POSTERS } from '../content/homePosters'
-import { createLoader } from '../home/loader'
-import { loadPosterBridge, type PosterRuntime } from '../home/posterBridge'
-import { bendFromVelocity, isClick } from '../home/sliderMath'
-import { createSliderController } from '../home/sliderController'
-import { createCursorFollow } from '../home/cursorFollow'
+import { isClick } from '../home/sliderMath'
 import { sendContact, validateContact, type ContactErrors, type ContactTopic, type ContactValues } from '../home/contactForm'
 
 const email = CONTACT[0].href.slice('mailto:'.length)
@@ -122,119 +118,15 @@ function GoalLoopVisual() {
 }
 
 export function HomePage({ onNavigate }: { readonly onNavigate: (event: MouseEvent<HTMLAnchorElement>) => void }) {
-  const trackRef = useRef<HTMLOListElement>(null)
-  const hostRef = useRef<HTMLDivElement>(null)
-  const cursorRef = useRef<HTMLDivElement>(null)
-  const followRef = useRef<ReturnType<typeof createCursorFollow> | null>(null)
-  const runtimeRef = useRef<PosterRuntime | null>(null)
-  const smoothRef = useRef<MediaQueryList | null>(null)
-  const [state, setState] = useState<'static' | 'loading' | 'ready'>('static')
-  const [progress, setProgress] = useState(0)
-  const [active, setActive] = useState(0)
-  const [announcement, setAnnouncement] = useState('')
-
-  useEffect(() => {
-    const track = trackRef.current
-    const host = hostRef.current
-    if (!track || !host) return
-    let canceled = false
-    let runtime: PosterRuntime | undefined
-    let runtimeReady = false
-    let firstFrameReady = false
-    const showRuntime = () => { if (!canceled && runtimeReady && firstFrameReady) setState('ready') }
-    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
-    const controller = createSliderController(track, { reducedMotion, announce: setAnnouncement })
-    const removeChange = controller.onChange((index, velocity) => {
-      setActive(index)
-      runtime?.setActive(index)
-      runtime?.setBend(reducedMotion ? 0 : bendFromVelocity(velocity))
-    })
-    const loader = createLoader({
-      steps: ['fonts', 'three', 'firstFrame'],
-      onProgress: setProgress,
-      onDone: () => { if (!canceled) setState(runtimeReady && firstFrameReady ? 'ready' : 'static') },
-    })
-    if (!reducedMotion) setState('loading')
-    void (document.fonts?.ready ?? Promise.resolve()).then(() => loader.mark('fonts'))
-    void loadPosterBridge({
-      host,
-      slots: Array.from(track.querySelectorAll<HTMLElement>('.poster-visual')),
-      accents: POSTERS.map((poster) => poster.accent),
-      reducedMotion,
-      isCanceled: () => canceled,
-      onFirstFrame: () => { firstFrameReady = true; loader.mark('firstFrame'); showRuntime() },
-    }).then((result) => {
-      if (canceled) { if (result.status === 'created') result.runtime.destroy(); return }
-      if (result.status === 'created') {
-        runtime = result.runtime
-        runtimeRef.current = runtime
-        runtimeReady = true
-        runtime.setActive(controller.index)
-        showRuntime()
-      } else {
-        loader.mark('firstFrame')
-      }
-      loader.mark('three')
-    })
-    return () => {
-      canceled = true
-      removeChange()
-      controller.destroy()
-      loader.destroy()
-      runtime?.destroy()
-      runtimeRef.current = null
-    }
-  }, [])
-
-  useEffect(() => {
-    const cursor = cursorRef.current
-    if (!cursor) return
-    const smooth = matchMedia('(pointer: fine) and (prefers-reduced-motion: no-preference)')
-    smoothRef.current = smooth
-    const follow = createCursorFollow(cursor, () => smooth.matches)
-    followRef.current = follow
-    return () => { follow.stop(); followRef.current = null }
-  }, [])
-
-  function setPointer(main: HTMLElement, x: number, y: number) {
-    main.style.setProperty('--px', x.toFixed(3))
-    main.style.setProperty('--py', y.toFixed(3))
-    runtimeRef.current?.setPointer(x, y)
-  }
-
-  function moveCursor(event: MouseEvent<HTMLElement>) {
-    const cursor = cursorRef.current
-    if (!cursor) return
-    followRef.current?.move(event.clientX, event.clientY)
-    if (smoothRef.current?.matches) setPointer(event.currentTarget, event.clientX / innerWidth * 2 - 1, event.clientY / innerHeight * 2 - 1)
-    cursor.dataset.label = (event.target as Element).closest('input, textarea, label') ? '' : (event.target as Element).closest('.screen-switch-hit') ? 'Switch' : (event.target as Element).closest('button') ? 'Send' : (event.target as Element).closest('a') ? 'Open' : 'Drag'
-  }
-
-  return (
-    <main id="main-content" tabIndex={-1} className="home-slider" data-home-state={state} data-active={POSTERS[active].id} onMouseMove={moveCursor} onMouseLeave={(event) => { followRef.current?.stop(); setPointer(event.currentTarget, 0, 0); if (cursorRef.current) cursorRef.current.dataset.label = '' }}>
-      <div className="poster-canvas-host" ref={hostRef} aria-hidden="true" />
-      <div className="home-loader" role="status" aria-label={HOME_COPY.loader}><span>{HOME_COPY.loader}</span><strong>{String(progress).padStart(3, '0')} %</strong></div>
-      <div className="home-counter" aria-hidden="true">{POSTERS[active].index} / 06</div>
-      <ol className="poster-track" ref={trackRef} aria-label="Selected work">
-        {POSTERS.map((poster, index) => <li key={poster.id}>
-          <article className="poster" data-poster={poster.id} data-index={poster.index} data-label={poster.label} style={{ '--accent': poster.accent } as CSSProperties}>
-            <div className="poster-top"><span>{poster.label}</span></div>
-            <div className="poster-visual" aria-hidden={poster.id === 'tools' || poster.id === 'goal-loop' ? undefined : true}>{poster.id === 'tools' ? <ScreenSwitch /> : poster.id === 'goal-loop' ? <GoalLoopVisual /> : <div className="poster-static-mark" />}</div>
-            <div className="poster-copy">
-              <div className="poster-title-mask">
-                {index === 0 ? <h1 tabIndex={-1}><span>New tools.</span>{' '}<span>Old standards.</span></h1> : <h2 tabIndex={-1}>{poster.heading}</h2>}
-              </div>
-              <p className="poster-body">{poster.body}</p>
-              {index === 0 ? <p className="poster-positioning">{HOME_COPY.positioning}</p> : null}
-              {poster.href ? <a className="target-link poster-cta" href={poster.href} onClick={onNavigate}>{HOME_COPY.cta}<span aria-hidden="true">↗</span></a> : null}
-              {poster.id === 'contact' ? <ContactPoster /> : null}
-            </div>
-          </article>
-        </li>)}
-      </ol>
-      <p className="poster-hint"><span>{HOME_COPY.hintDesktop}</span><span>{HOME_COPY.hintTouch}</span><span aria-hidden="true"> ↓</span></p>
-      <div className="home-cursor" ref={cursorRef} aria-hidden="true" style={{ '--cursor-accent': POSTERS[active].accent } as CSSProperties} />
-      <p className="visually-hidden" aria-live="polite">{announcement}</p>
-    </main>
-  )
+  return <div className="home-supporting">
+    {POSTERS.map((poster, index) => <section id={poster.id === 'hero' ? 'introduction' : poster.id === 'contact' ? 'contact' : undefined} data-poster={poster.id} key={poster.id}>
+      <p className="eyebrow">{poster.label}</p>
+      <h2>{poster.heading}</h2>
+      <p>{poster.body}</p>
+      {index === 0 ? <p>{HOME_COPY.positioning}</p> : null}
+      {poster.id === 'goal-loop' ? <GoalLoopVisual /> : poster.id === 'tools' ? <ScreenSwitch /> : null}
+      {poster.href ? <a className="target-link" href={poster.href} onClick={onNavigate}>{HOME_COPY.cta}<span aria-hidden="true">↗</span></a> : null}
+      {poster.id === 'contact' ? <ContactPoster /> : null}
+    </section>)}
+  </div>
 }

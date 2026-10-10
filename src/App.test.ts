@@ -1,9 +1,9 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
-import App, { applyRouteMetadata, installRevealMotion, selectHomeTransition } from './App'
+import { describe, expect, it, vi } from 'vitest'
+import App, { applyRouteMetadata, installRevealMotion, isLightTablePair, selectHomeTransition } from './App'
 import { readFileSync } from 'node:fs'
-import { ROUTES, resolveRoute, routeMetadata } from './content/routes'
+import { getRouteNavigationUrl, normalizePathname, pushRouteNavigation, ROUTES, resolveRoute, routeMetadata } from './content/routes'
 
 function render(path = '/') {
   return renderToStaticMarkup(createElement(App, { initialPath: path }))
@@ -19,15 +19,17 @@ function createClassList() {
   }
 }
 
-describe('poster homepage shell', () => {
-  it('renders the approved hero and all seven posters in order', () => {
+describe('light-table homepage shell', () => {
+  it('renders the approved fan and all source-safe supporting sections in order', () => {
     const markup = render()
     expect(markup).toContain('New tools.')
     expect(markup).toContain('Old standards.')
     expect([...markup.matchAll(/data-poster="([^"]+)"/g)].map((m) => m[1])).toEqual([
       'hero', 'gameonvb', 'solidpixels', 'goal-loop', 'playground', 'tools', 'contact',
     ])
-    expect(markup).toContain('data-home-state="static"')
+    expect([...markup.matchAll(/data-sheet="([^"]+)"/g)].map(m => m[1])).toEqual(['goal-loop', 'gameonvb', 'intro'])
+    expect(markup).toContain('data-light-table-shell="true"')
+    expect(markup).not.toMatch(/poster-track|poster-canvas-host/)
     expect(markup).toContain('>Homepage</a>')
   })
 
@@ -245,5 +247,78 @@ describe('reveal enhancement', () => {
     expect(disconnected).toBe(true)
     expect(rootClasses.contains('motion-ready')).toBe(false)
     expect(revealClasses.contains('is-settled')).toBe(false)
+  })
+})
+
+// Execute App's real click/navigation body; only its querySelector type argument is erased.
+function provenanceNavigation(path = '/', state: Record<string, unknown> | null = null, newEntryKeys = {}) {
+  const source = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8')
+  const start = source.indexOf('    const anchor = event.currentTarget')
+  const code = source.slice(start, source.indexOf('\n  }, [])', start)).replace('querySelector<HTMLElement>', 'querySelector')
+  const location = new URL(path, 'https://portfolio.test/')
+  const entries = [{ url: location.href, state }]
+  let index = 0
+  const history = {
+    get state() { return entries[index].state },
+    pushState: vi.fn((state: Record<string, unknown> | null, _unused: string, path: string) => {
+      entries.splice(++index)
+      location.href = new URL(path, location.href).href
+      entries[index] = { url: location.href, state: Object.keys(newEntryKeys).length ? { ...state, ...newEntryKeys } : state }
+    }),
+    replaceState: vi.fn((state: Record<string, unknown>, _unused: string, url: string) => { entries[index] = { url, state } }),
+  }
+  const context = { window: { location, history, matchMedia: () => ({ matches: false }), scrollTo() {} },
+    document: { visibilityState: 'visible', getElementById: () => null },
+    getRouteNavigationUrl, normalizePathname, pushRouteNavigation, isLightTablePair, selectHomeTransition,
+    setUnknownPath() {}, setRoute: vi.fn(),
+  }
+  const navigate = new Function('event', 'context', `with(context){${code}}`)
+  return { entries, history, location, click(href: string, change = {}) {
+    const event = { button: 0, defaultPrevented: false, altKey: false, ctrlKey: false, metaKey: false, shiftKey: false,
+      currentTarget: { getAttribute: () => href, target: '', hasAttribute: () => false, closest: () => null }, preventDefault: vi.fn(), ...change }
+    navigate(event, context)
+    return event
+  } }
+}
+
+describe('App per-entry light-table provenance', () => {
+  it.each(['/goal-loop', '/gameonvb'])('stamps a new Home -> %s entry, including a header link, preserving new-entry keys', path => {
+    const n = provenanceNavigation('/', { homeKey: 'home' }, { entryKey: 'preserved' })
+    n.click(path)
+    expect(n.location.pathname).toBe(path)
+    expect(n.history.state).toEqual({ entryKey: 'preserved', lightTableFromHome: true })
+    expect(n.entries[0].state).toEqual({ homeKey: 'home' })
+    expect(n.history.replaceState).toHaveBeenCalledExactlyOnceWith(n.history.state, '', n.location.href)
+  })
+
+  it.each(['/goal-loop', '/gameonvb'])('keeps cold and sibling %s entries unmarked and same-route state unchanged', path => {
+    const cold = provenanceNavigation(path, { entryKey: 'cold' })
+    cold.click(path)
+    expect(cold.history.state).toEqual({ entryKey: 'cold' })
+    expect(cold.history.pushState).not.toHaveBeenCalled(); expect(cold.history.replaceState).not.toHaveBeenCalled()
+    const n = provenanceNavigation()
+    n.click(path); const state = n.history.state
+    n.click(path)
+    expect(n.history.state).toBe(state); expect(n.history.pushState).toHaveBeenCalledOnce(); expect(n.history.replaceState).toHaveBeenCalledOnce()
+    const sibling = path === '/goal-loop' ? '/gameonvb' : '/goal-loop'
+    n.click(sibling)
+    expect(n.location.pathname).toBe(sibling); expect(n.history.state).toBeNull()
+    expect(n.history.replaceState).toHaveBeenCalledOnce()
+    n.click('/')
+    expect(n.location.pathname).toBe('/'); expect(n.history.state).toBeNull()
+    expect(n.history.replaceState).toHaveBeenCalledOnce()
+  })
+
+  it('leaves modified clicks and same-document fragments unstamped and browser-owned', () => {
+    for (const href of ['/goal-loop', '/gameonvb']) {
+      for (const change of [{ button: 1 }, { metaKey: true }, { ctrlKey: true }, { altKey: true }, { shiftKey: true }, { defaultPrevented: true }, { currentTarget: { getAttribute: () => href, target: '_blank', hasAttribute: () => false } }, { currentTarget: { getAttribute: () => href, target: '', hasAttribute: () => true } }]) {
+        const n = provenanceNavigation(), event = n.click(href, change)
+        expect(event.preventDefault).not.toHaveBeenCalled()
+        expect(n.history.pushState).not.toHaveBeenCalled(); expect(n.history.replaceState).not.toHaveBeenCalled()
+      }
+      const n = provenanceNavigation(href), event = n.click(`${href}#story`)
+      expect(event.preventDefault).not.toHaveBeenCalled()
+      expect(n.history.pushState).not.toHaveBeenCalled(); expect(n.history.replaceState).not.toHaveBeenCalled()
+    }
   })
 })

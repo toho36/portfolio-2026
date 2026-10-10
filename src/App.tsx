@@ -18,10 +18,8 @@ import {
 } from './content/routes'
 import { flushSync } from 'react-dom'
 import { CONTACT } from './content/systems'
-import { HomePage } from './pages/Home'
-import { GoalLoopPage } from './pages/GoalLoop'
+import { LightTable } from './home/lightTable/LightTable.jsx'
 import { PlaygroundPage } from './pages/Playground'
-import { VoleyEventsPage } from './pages/VoleyEvents'
 
 interface AppProps {
   readonly initialPath?: string
@@ -111,6 +109,11 @@ export function selectHomeTransition(hasVisual: boolean, reducedMotion: boolean,
   return hasViewTransitions ? 'shared' : 'curtain'
 }
 
+export function isLightTablePair(from: string, to: string) {
+  const source = normalizePathname(from), destination = normalizePathname(to)
+  return source !== destination && ['/', '/gameonvb', '/goal-loop'].includes(source) && ['/', '/gameonvb', '/goal-loop'].includes(destination)
+}
+
 export default function App({ initialPath }: AppProps) {
   const [unknownPath, setUnknownPath] = useState(() => {
     const path = normalizePathname(initialPath ?? (typeof window === 'undefined' ? '/' : window.location.pathname))
@@ -141,12 +144,21 @@ export default function App({ initialPath }: AppProps) {
     if (!destination) return
 
     event.preventDefault()
+    const livePair = isLightTablePair(window.location.pathname, new URL(destination, window.location.href).pathname)
     const navigate = () => {
       setUnknownPath(false)
-      setRoute(pushRouteNavigation(destination, window.location.href, window.history))
-      document.getElementById('main-content')?.focus({ preventScroll: true })
-      window.scrollTo({ top: 0, behavior: 'instant' })
+      const sourcePath = normalizePathname(window.location.pathname)
+      const nextRoute = pushRouteNavigation(destination, window.location.href, window.history)
+      if (sourcePath === '/' && (nextRoute.path === '/goal-loop' || nextRoute.path === '/gameonvb')) {
+        window.history.replaceState({ ...window.history.state, lightTableFromHome: true }, '', window.location.href)
+      }
+      setRoute(nextRoute)
+      if (!livePair) {
+        document.getElementById('main-content')?.focus({ preventScroll: true })
+        window.scrollTo({ top: 0, behavior: 'instant' })
+      }
     }
+    if (livePair) { navigate(); return }
     const visual = anchor.closest('.poster')?.querySelector<HTMLElement>('.poster-visual')
     const transition = selectHomeTransition(!!visual, window.matchMedia('(prefers-reduced-motion: reduce)').matches, document.visibilityState === 'visible', !!document.startViewTransition)
     if (transition === 'shared' && visual) {
@@ -215,15 +227,9 @@ export default function App({ initialPath }: AppProps) {
   if (unknownPath) routeContent = <section className="not-found"><p className="poster-kicker">404 / Not found</p><h1>This page doesn't exist.</h1><a className="target-link" href="/" onClick={onNavigate}>Back home <span aria-hidden="true">↗</span></a></section>
   else switch (route.path) {
     case '/':
-      routeContent = (
-        <HomePage onNavigate={onNavigate} />
-      )
-      break
     case '/gameonvb':
-      routeContent = <VoleyEventsPage onNavigate={onNavigate} />
-      break
     case '/goal-loop':
-      routeContent = <GoalLoopPage onNavigate={onNavigate} />
+      routeContent = <LightTable pathname={route.path} onNavigate={onNavigate} />
       break
     case '/playground':
       routeContent = <PlaygroundPage onNavigate={onNavigate} />
@@ -264,7 +270,7 @@ export default function App({ initialPath }: AppProps) {
         </nav>
       </header>
 
-      {route.path === '/' && !unknownPath ? routeContent : <main id="main-content" tabIndex={-1}>{routeContent}</main>}
+      <main id="main-content" tabIndex={-1}>{routeContent}</main>
 
       <footer>
         <p>

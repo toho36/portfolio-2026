@@ -57,7 +57,7 @@ describe('accessible typography-led styles', () => {
     )
   })
 
-  it('uses the live GameOnVB purple and yellow palette', () => {
+  it('uses the approved GameOnVB stone and warm-edge palette without changing other worlds', () => {
     const gameOnTheme = worlds.slice(
       worlds.indexOf('.route-voleyevents {'),
       worlds.indexOf('}', worlds.indexOf('.route-voleyevents {')) + 1,
@@ -66,8 +66,8 @@ describe('accessible typography-led styles', () => {
     expect(styles).toMatch(
       /\.route-voleyevents a:focus-visible,[\s\S]*outline-color:\s*oklch\(87\.7% \.176 92\.7\)/,
     )
-    expect(worlds).toContain('--ink: oklch(16.4% .045 295.7)')
-    expect(worlds).toContain('--signal: oklch(87.7% .176 92.7)')
+    expect(gameOnTheme).toContain('--ink: #111211')
+    expect(gameOnTheme).toContain('--signal: #d6b652')
     expect(gameOnTheme).not.toMatch(/#1246d3|#0c32a7|#d5f73b/)
   })
 

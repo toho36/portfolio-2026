@@ -1,0 +1,415 @@
+Reading prompt from stdin...
+OpenAI Codex v0.160.1
+--------
+workdir: /Users/vitek/main/GitHub/portfolio-2026
+model: gpt-6-astra
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1225f-d0c2-77f2-b808-7af3c260fe06
+--------
+user
+You are a senior web art director and design critic. Read-only review. Do not edit any file. Answer in Czech.
+
+Context: portfolio of Hoang Viet To (Vítek), software developer. Audience: HR, hiring managers, tech leads. He must read as an experienced engineer, not a "vibecoder", but also as someone who adopts new tools early. Tone: professional, restrained, senior. No puns. No "AI" in headings. Confirmed fact: works alone and in teams; at SolidPixels does CMS, frontend, backend and third-party integrations.
+
+Homepage rules from the owner: simple, minimal, clean structure. Little motion; one main motion per view, which then gets full attention. Premium craft at award-site level. Sliders, overlapping layouts and transitions are welcome. Playful chaos belongs on /playground, not the homepage. Mobile and desktop equally good. Mandatory reduced-motion and static no-WebGL fallback. Banned: the lunar / Moon direction and any sphere divided into plates, tiles or cells.
+
+Read:
+- docs/direction/homepage-hero-brainstorm/BRAINSTORM.md (the proposal list K1–K8 and the audit)
+- screenshots in docs/direction/homepage-hero-brainstorm/audit/ (head-0 = committed poster slider; wip-0, wip-2, wip-m = uncommitted Light Table homepage)
+- optionally docs/direction/opening-brainstorm-and-astra-critique.md (your earlier critique of failed Form/Signature studies; do not let it repeat)
+
+Task:
+1. Is the 5-point audit correct? Anything important missing?
+2. For each concept K1–K8: verdict KEEP / REWORK / DROP, one main objection, and what would make it genuinely distinctive rather than a template.
+3. Pick the best 3 for this audience and rules, ranked. For each, state the single most important design constraint before any sketch.
+4. Say plainly if all eight are weak. Honest rejection beats rubber-stamping. You may propose one better concept of your own if it clearly beats the list.
+
+Keep it under ~900 words. End with a JSON line: {"top3":["Kx","Ky","Kz"],"drop":[...]}.
+
+codex
+Přečtu návrhy i audit a porovnám je s přiloženými snímky. Použiji postup pro práci se skilly; hodnocení zůstane čistě read-only.
+
+exec
+/bin/zsh -lc 'cat /Users/vitek/.agents/skills/superpowers/using-superpowers/SKILL.md' in /Users/vitek/main/GitHub/portfolio-2026
+ succeeded in 0ms:
+---
+name: using-superpowers
+description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+---
+
+<EXTREMELY-IMPORTANT>
+If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
+
+IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
+
+This is not negotiable. This is not optional. You cannot rationalize your way out of this.
+</EXTREMELY-IMPORTANT>
+
+## How to Access Skills
+
+**In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
+
+**In other environments:** Check your platform's documentation for how skills are loaded.
+
+# Using Skills
+
+## The Rule
+
+**Invoke relevant or requested skills BEFORE any response or action.** Even a 1% chance a skill might apply means that you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
+
+```dot
+digraph skill_flow {
+    "User message received" [shape=doublecircle];
+    "About to EnterPlanMode?" [shape=doublecircle];
+    "Already brainstormed?" [shape=diamond];
+    "Invoke brainstorming skill" [shape=box];
+    "Might any skill apply?" [shape=diamond];
+    "Invoke Skill tool" [shape=box];
+    "Announce: 'Using [skill] to [purpose]'" [shape=box];
+    "Has checklist?" [shape=diamond];
+    "Create TodoWrite todo per item" [shape=box];
+    "Follow skill exactly" [shape=box];
+    "Respond (including clarifications)" [shape=doublecircle];
+
+    "About to EnterPlanMode?" -> "Already brainstormed?";
+    "Already brainstormed?" -> "Invoke brainstorming skill" [label="no"];
+    "Already brainstormed?" -> "Might any skill apply?" [label="yes"];
+    "Invoke brainstorming skill" -> "Might any skill apply?";
+
+    "User message received" -> "Might any skill apply?";
+    "Might any skill apply?" -> "Invoke Skill tool" [label="yes, even 1%"];
+    "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
+    "Invoke Skill tool" -> "Announce: 'Using [skill] to [purpose]'";
+    "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
+    "Has checklist?" -> "Create TodoWrite todo per item" [label="yes"];
+    "Has checklist?" -> "Follow skill exactly" [label="no"];
+    "Create TodoWrite todo per item" -> "Follow skill exactly";
+}
+```
+
+## Red Flags
+
+These thoughts mean STOP—you're rationalizing:
+
+| Thought | Reality |
+|---------|---------|
+| "This is just a simple question" | Questions are tasks. Check for skills. |
+| "I need more context first" | Skill check comes BEFORE clarifying questions. |
+| "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
+| "I can check git/files quickly" | Files lack conversation context. Check for skills. |
+| "Let me gather information first" | Skills tell you HOW to gather information. |
+| "This doesn't need a formal skill" | If a skill exists, use it. |
+| "I remember this skill" | Skills evolve. Read current version. |
+| "This doesn't count as a task" | Action = task. Check for skills. |
+| "The skill is overkill" | Simple things become complex. Use it. |
+| "I'll just do this one thing first" | Check BEFORE doing anything. |
+| "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
+| "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
+
+## Skill Priority
+
+When multiple skills could apply, use this order:
+
+1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
+2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
+
+"Let's build X" → brainstorming first, then implementation skills.
+"Fix this bug" → debugging first, then domain-specific skills.
+
+## Auto-Loading Guardrails
+
+Auto-load these guardrails when they apply:
+
+- **caveman** — auto-load at session start for normal coding conversations to keep responses terse and token-efficient. Respect caveman opt-out config: if `CAVEMAN_DEFAULT_MODE=off` or `~/.config/caveman/config.json` sets `"defaultMode": "off"`, do not auto-load it. If the user asks for normal prose or says "stop caveman" / "normal mode", do not invoke it.
+- **simplicity-guard** — auto-load for net-new code or feature implementation work.
+- **surgical-editing** — auto-load for modifications to existing code.
+- **Neither simplicity-guard nor surgical-editing** — for pure analysis, explanation, or read-only questions.
+
+## Skill Types
+
+**Rigid** (TDD, debugging): Follow exactly. Don't adapt away discipline.
+
+**Flexible** (patterns): Adapt principles to context.
+
+The skill itself tells you which.
+
+## User Instructions
+
+Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+
+exec
+/bin/zsh -lc 'cat docs/direction/homepage-hero-brainstorm/BRAINSTORM.md' in /Users/vitek/main/GitHub/portfolio-2026
+ succeeded in 0ms:
+# Homepage hero: brainstorm (2026-10-09)
+
+Stav: jen návrhy. Nic není vybrané ani schválené k implementaci. Produkční kód se neměnil. Lunární směr (023, koule z desek) je vyřazený a tady se neobjevuje.
+
+## 0. Pozor: co je „současná homepage“
+
+Zadání říká, že současný stav je poster slider. To platí jen pro poslední commit (`ed9df3c`). V pracovní kopii je necommitnutá jiná homepage: **Light Table** (`src/home/lightTable/`, Oct 3). Tři listy na tmavém stole (Goal Loop s 3D hodinkami, GameOnVB s 3D míčem, Intro). Scroll listy rozdává. Audit pokrývá obě verze.
+
+Screenshoty (lokální vite, cmux, 1440×900 a 390×844):
+
+- `audit/head-0.png`: commitnutý poster slider, úvodní poster.
+- `audit/wip-0.png`: Light Table, první stav.
+- `audit/wip-2.png`: Light Table, třetí list (Intro).
+- `audit/wip-m.png`: Light Table, mobil 390 px.
+
+## 1. Audit v 5 bodech
+
+1. **Funguje: sdělení.** „New tools. Old standards.“ je krátké, seniorní a sedí na publikum (HR, hiring, tech lead). Jméno a role jsou hned čitelné v HTML. Tohle chci zachovat.
+2. **Funguje: řemeslo Light Table.** Skutečný materiál (papír, tmavý stůl), vějíř a jeden pohyb (rozdání listu scrollem) působí prémiově. Statické fallbacky a reduced-motion jsou hotové a otestované.
+3. **Nefunguje: hrdina neříká nic o mně.** První pohled v Light Table jsou hodinky („Precision, in motion.“). Návštěvník vidí produktový snímek hodinek, ne vývojáře. To, co dělám (CMS, frontend, backend, integrace, sólo i v týmu), se v prvním pohledu neobjeví. Poster slider má naopak silnou typografii, ale působí jako šablona: Helvetica na černé, prázdná pravá polovina, důkaz řemesla až po scrollu.
+4. **Nefunguje: chyby a duplicity.** Nadpis „New tools. Old standards.“ je na Light Table dvakrát (vlevo nahoře i na třetím listu, `wip-2.png`). Na mobilu přetéká navigace přes nadpis a karta přesahuje pravý okraj (`wip-m.png`). Instrukce „Scroll to deal. Reverse to collect.“ je znak, že interakce není samozřejmá.
+5. **Nefunguje: pohybový rozpočet.** Na jednom pohledu běží sledování kurzoru, naklánění listů, idle rotace míče a rozdávání scrollem. To jsou čtyři pohyby místo jednoho. Hero navíc nese plný Three.js renderer kvůli sdělení, které unese typografie.
+
+Závěr: zachovat text a kvalitu materiálu. Změnit předmět hera (já a moje práce, ne hodinky) a snížit počet pohybů na jeden.
+
+## 2. Koncepty
+
+Společná pravidla pro všechny: jméno a role v HTML od prvního snímku, žádný loader, jeden hlavní pohyb na pohled, reduced-motion = finální kompozice bez pohybu, bez WebGL = stejný layout jako statický obrázek nebo čisté HTML. Slovo „AI“ v nadpisu ne.
+
+### K1. Korektura (čistě typografický)
+
+- **Co říká:** Dotahuju věci do konce, i ty, které začaly rychle.
+- **Pohyb:** Nadpis „New tools. Old standards.“ se při načtení objeví jako hrubý sazební nátisk: špatný řez, nerovné mezery, korektorské značky na okraji. Během cca 1,2 s se sazba srovná do finální podoby (variabilní font: váha, šířka, prostrkání) a značky zmizí. Uživatel nic dělat nemusí. Po doběhnutí je klid.
+- **Mobil:** Stejné. Dva řádky nadpisu, značky jen vpravo v okraji.
+- **Riziko laciného dojmu:** Střední. Když přechod není přesný, vypadá jako chyba načtení fontu (FOUT). Musí být zjevně autorský: čitelné korektorské značky, jasný konec.
+- **Pracnost:** S.
+
+### K2. Rejstřík (editoriální, bez 3D)
+
+- **Co říká:** Mám šíři práce a umím ji uspořádat.
+- **Pohyb:** Hero je velký sazební obsah: jméno, krátká věta, pod ní 5 řádků (GameOnVB, SolidPixels, Goal Loop, Screen Switch, Playground) ve velkém serifu s rolí vpravo („Product / solo“, „CMS + client sites / team“…). Najetí na řádek vysune maskou jeden náhled projektu do volného sloupce. Jen jeden náhled naráz.
+- **Mobil:** Seznam bez hoveru. Tap rozbalí řádek s náhledem pod ním (nativní `<details>`).
+- **Riziko:** Vysoké, že bude vypadat jako běžná „hover list“ šablona. Pomůže jen výjimečná typografie a skutečné obrazy projektů.
+- **Pracnost:** S–M.
+
+### K3. Vrstvené listy (bez 3D, CSS)
+
+- **Co říká:** Pracuju na více plochách naráz (CMS, web, aplikace) a držím je v jednom systému.
+- **Pohyb:** Velké panely projektů se překrývají s posunem jako stoh listů. Scroll nebo drag přetáhne další panel přes předchozí s `clip-path` odhalením. Nadpis zůstane na místě a mění se maskovaným posunem řádku. Jediný pohyb: příchod dalšího panelu.
+- **Mobil:** Svislý swipe. Panely na celou šířku, posun jen v ose y.
+- **Riziko:** Vysoké, že to je jen hezčí poster slider. Musí mít jasný rozdíl: překrytí a hloubku papíru, ne střídání plných obrazovek.
+- **Pracnost:** M.
+
+### K4. Spára (2,5D materiál, WebGL plocha)
+
+- **Co říká:** Solidní základ pod povrchem. Bere si to, co se líbilo na 020 (materiál, světlo, žhavá spára), ale bez koule.
+- **Pohyb:** Celoobrazovková deska tmavého kamene s vyrytým jménem. Při načtení se přes desku jednou rozžhaví tenká spára a deska se v ní o kousek rozestoupí. Ve spáře je vidět nadpis. Pak spára chladne a zůstane jen jemná linka. Ukazatel jen posouvá tečné světlo po povrchu (doplněk, ne druhá animace).
+- **Mobil:** Spára vodorovně v horní třetině. Světlo se neposouvá, jen jeden průchod při načtení.
+- **Riziko:** Vysoké. Tmavý „luxusní“ kámen umí vypadat jako agenturní šablona nebo herní menu. Tematicky slabá vazba na software.
+- **Pracnost:** L.
+
+### K5. Rozložený pohled (3D)
+
+- **Co říká:** Spojuju části (CMS, frontend, backend, integrace) do jedné funkční věci.
+- **Pohyb:** Jeden přesně obrobený objekt (blok z několika dílů) se při načtení jednou složí do celku s krátkým zacvaknutím. Najetí na objekt ho jemně rozloží, popisky dílů se objeví v HTML vedle.
+- **Mobil:** Objekt složený, rozložení na tap.
+- **Riziko:** Vysoké. Doslovná metafora, popisky na dílech připomínají infografiku. Blízko Goal Loop „shape and hole“ metafory.
+- **Pracnost:** L.
+
+### K6. Rys → hotová sazba (bez 3D)
+
+- **Co říká:** Nejdřív struktura, potom detail. Engineer, který rozumí i layoutu.
+- **Pohyb:** Hero se objeví jako technický výkres layoutu: tenké mřížky, rámečky textových bloků, kóty v mono písmu. Za cca 1,5 s se rámečky „naplní“ finální sazbou a výkres zeslábne na jemnou mřížku v pozadí. Uživatel nic nedělá. Kóty volitelně znovu ukáže podržení klávesy nebo tlačítko „Show grid“ (ne hover).
+- **Mobil:** Stejné, s mřížkou o 4 sloupcích.
+- **Riziko:** Střední. Může působit jako „under construction“ nebo devtools klišé. Výkres musí být krásný sám o sobě.
+- **Pracnost:** S–M.
+
+### K7. Sám / v týmu (bez 3D)
+
+- **Co říká:** Potvrzený fakt: pracuju samostatně i v týmech a obojí stejně dobře.
+- **Pohyb:** Obrazovka rozdělená na dvě poloviny. Vlevo „Alone“: vlastní produkty (GameOnVB, Screen Switch). Vpravo „With a team“: SolidPixels (CMS, klientské weby, integrace). Uživatel táhne svislý dělič. Polovina se rozšíří a ukáže víc. Jediný pohyb je jeho tah.
+- **Mobil:** Dělič je vodorovný, tah nahoru a dolů. Alternativně dvě záložky.
+- **Riziko:** Střední až vysoké. Porovnávací slider je známý widget. Popisky „Alone / Team“ mohou znít neohrabaně.
+- **Pracnost:** M.
+
+### K8. Zaostření (typografický, bez 3D)
+
+- **Co říká:** Nové nástroje jsou šum, dokud je nedržíš standardem.
+- **Pohyb:** Při načtení je za nadpisem rozmazaná vrstva slov a tvarů (rozmazané úlomky projektů). Kamera „přeostří“: pozadí zůstane rozmazané, popředí s nadpisem a jménem se zaostří. Jednou a hotovo.
+- **Mobil:** Stejné. Méně vrstev kvůli výkonu.
+- **Riziko:** Střední. Blur je na mobilu drahý. Seznam nástrojů v pozadí by vypadal jako buzzword cloud, proto jen tvary a úlomky, ne názvy.
+- **Pracnost:** S.
+
+## 3. Inspirace (zdroje)
+
+- Awwwards Portfolio a Typography kategorie, říjen 2026 (např. twks, Maria Vasilyeva, Odyssée by NIGHTJAR): https://www.awwwards.com/websites/portfolio/ , https://www.awwwards.com/websites/typography/ , https://www.awwwards.com/websites/minimal/
+- By-Kin a Mat Voyce jako příklad zdrženlivosti a kinetické typografie: https://www.hontran.dev/blog/best-award-winning-websites-2026
+- Variabilní fonty a kinetická sazba jako hero místo obrázku: https://www.fontfabric.com/blog/10-design-trends-shaping-the-visual-typographic-landscape-in-2026/ , https://elements.envato.com/learn/web-design-trends
+- WebGL drag slider s deformací (G. Colombel): https://www.awwwards.com/inspiration/webgl-slider-drag-g-colombel-portfolio-2024
+
+Zdroje jsou jen pro měřítko kvality. Neověřoval jsem výkon ani detail interakcí těchto webů. Nic nekopírovat.
+
+## 4. Kritika Astry a zúžení
+
+Viz `astra-review/` a sekci 5 níže (doplněno po review).
+
+exec
+/bin/zsh -lc 'cat docs/direction/opening-brainstorm-and-astra-critique.md' in /Users/vitek/main/GitHub/portfolio-2026
+ succeeded in 0ms:
+# Úvod portfolia: brainstorm a kritika Astry
+
+Stav: návrhy, žádný směr není majitelem zvolený ani schválený k implementaci. Odmítnuté Form/Signature studie jsou historie, ne kandidáti k dalšímu leštění. Produkční kód se při tomto brainstormu neměnil.
+
+Pořadí: parent Sol vytvořil brainstorm v1, GPT-6 Astra jej následně kritizovala jako senior designer se skutečnými snímky homepage, obou odmítnutých studií a NASA/Durham sekvence. Ověřený runtime: gpt-6-astra, openai, read-only, high; proces skončil 0. Kritika platí pro tento návrh v1, nikoli pro budoucí přepracování.
+
+Výsledek: A Lunar Genesis = REWORK; B klidný Earth/Moon portrét = DROP; C první projektový list = REWORK. Astra doporučuje C pro další výtvarnou práci, ale pro realizaci blokuje všechny tři směry. Její preference nepřebíjí původní přání majitele po výrazném wow efektu ani sama neschvaluje změnu směru. A zachovává původní motiv vzniku Měsíce; C má nejsilnější vazbu na vlastní projekty, ale nesmí skončit jako obyčejný rotate-in současných karet.
+
+Další možné rozhodnutí majitele: výtvarně rozpracovat A, nebo výrazně autorské C. Před novým kódem musí být posouzené opening/payoff/settled kompozice a samostatný mobilní obraz. Nesmí se automaticky zmenšit ambice na kartový reveal ani zaměnit pěkný vygenerovaný still za důkaz hotového rendereru.
+
+## Přesný brainstorm v1 předložený kritikovi
+
+# Portfolio opening, brainstorm v1
+
+Status: proposals for design critique, no implementation approval. The owner rejected both Form and Signature as unprofessional. The current job is brainstorm first, then GPT-6 Astra as senior-design critic. The owner, not a technical test or model verdict, chooses the final visual direction.
+
+## What failed
+
+Form became an anonymous cut cuff with orange trim. It had neither a recognisable subject nor a compelling reason to exist. Signature became an oversized, tightly tracked default-serif name with a wipe, ordinary typography masquerading as material craft. More camera tuning, shadows, particles or easing will not repair those concepts. Do not resuscitate either candidate.
+
+## Common brief
+
+Primary audience: people exploring an authored developer portfolio, not people doing an admin task. Desired first reaction: a confident, immediately understandable visual that makes the visitor curious. One expressive opening beat, then a quiet hero. Native scroll reveals the existing project-card deck. Identity stays readable in HTML, not baked into a video. No wait screen, forced interaction, autoplay audio, star wallpaper, generic glowing orb, new gameplay or lorem-ipsum claims. Preserve current project content and card/detail motion. A proposal must not quietly become a homepage rebuild.
+
+Opening runs once per session, not on return from a project. Scroll can leave it immediately; reduced motion shows the final composition. These are behaviour constraints, not evidence that an unbuilt concept already works. The next approval artifact should show opening, payoff and settled composition, including mobile, before a new coded candidate.
+
+## A. Lunar Genesis, the original big gesture
+
+Visual subject: a clearly recognisable proto-Earth and an emerging Moon. Use the NASA/Durham Moon-formation sequence as choreography reference, not a borrowed finished portfolio asset or a runtime physics solver. It depicts a Moon-origin hypothesis, not the creation of Earth.
+
+First frame: large, cropped, shadowed planetary body. We enter just AFTER contact, not from two tiny balls flying at each other. One broad incandescent material tongue already links the main body and smaller remnant. No fireworks or particle fog.
+
+Opening proposal, approximately 4 seconds: the material tongue stretches, necks and separates; the smaller remnant settles into an unmistakable satellite relationship. Orange illumination recedes. This is a deliberately compressed artistic sequence, not a claim of scientific timescale or a physically proved simulation. No sudden lava-to-blue-ocean transformation.
+
+Settled hero: graphite/muted-mineral planet with visible land-like relief rather than contemporary bright-blue Earth, warm terminator and a distinctly smaller rocky satellite. Subject fills roughly two thirds of the screen; identity and short positioning occupy one small quiet reading zone. Desaturated palette bridges to ivory/orange/dark-green project cards. Normal present-day Earth is a different final-art option, not silently equivalent to the proto-Earth motif.
+
+Scroll handoff: the whole space composition goes above the viewport as the existing deck enters from below. The world does not morph into a watch or pretend to have birthed software projects.
+
+Why it could stand out: actual causal transformation, recognisable phenomenon and clear arrival state. Why it could fail: four seconds may still be too much for an intelligible separation; mediocre fluid/material work would look like a game cinematic, and the astronomy theme has no established personal connection. Big quality and thematic risk. Pick it only if the owner wants a cosmic signature, not simply because the render is possible.
+
+## B. Earth / Moon, a cinematic orbital portrait
+
+Visual subject: contemporary Earth and Moon, treated like an extremely disciplined photographic composition, not a sci-fi dashboard.
+
+First frame: close curved Earth horizon with a thin, physically lit atmospheric edge and recognisable cloud/continental structure. Never an empty black screen. Earth initially extends beyond the bottom/right frame. Name is already present at modest scale, not the cinematic reward.
+
+Opening proposal, approximately 2.5 seconds: a modest camera reveal establishes Earth's curvature. The rocky Moon emerges from Earth's occlusion into negative space. One light direction, restrained contrast, no lens flare, debris, neon outline or gratuitous stars. This is a reveal, NOT a simulation of formation.
+
+Settled hero: identifiable globe and satellite held in an asymmetrical, near-monochrome portrait. Moon orbit is exceptionally slow and localized, while camera and copy stop. Muted ocean blues and warm off-white light, not an orange recoloring of Earth to match a card. Blue can stay local to this opening; preserve the existing card colors rather than forcing every subject into one literal palette. No extra pointer tilt.
+
+Type: a compact, deliberate sans-serif identity block, real name plus Software developer. No giant Welcome, duplicated billboard name, fake availability badge or marketing paragraph. Sparse is not permission to leave an empty anonymous viewport.
+
+Scroll handoff: a consistent dark ground bridges the portrait into the existing paper deck. The object leaves with the hero; no glowing background behind every subsequent project. On mobile, show a deliberately composed horizon and readable Moon, not the desktop scene blindly cropped in half.
+
+Why it could stand out: monumental scale, disciplined lighting and an immediately legible relationship. Why it could fail: Earth/Moon is already a common visual theme; beauty alone does not prove originality. It can become a premium stock wallpaper above unrelated cards. The reference quality is a demanding target, not a promise about current renderer assets.
+
+My provisional preference: B over A, because it retains the owner's actual initial subject while removing the least feasible and most chaotic part. It is not selected or approved.
+
+## C. The first sheet, portfolio as a authored photographic surface
+
+Visual subject: recognisable ivory paper and actual project work, no extra space metaphor or arbitrary sculpture.
+
+First frame: a monumental crop of a real thick ivory sheet under raking studio light. Its edge and slight physical bend are legible immediately. A small fixed identity block sits in the dark margin. This is a full-screen material shot, not a little mockup rectangle.
+
+Opening proposal, approximately 2 seconds: the sheet turns once from its edge toward the visitor. Its print/artwork becomes visible as the angle opens, revealing the current Goal Loop watch composition without a fake loading animation. A narrow glimpse of orange and dark-green sheets establishes the actual existing project stack. The payoff is authored work, not a mysterious reveal with nothing behind it.
+
+Settled hero: one dominant, shallow-perspective work sheet and just enough of the remaining deck to signal breadth. Watch is a project illustration, not a claim that the owner is a watchmaker. The introduction identifies a software developer independently of that project. No oversized serif wordmark, repeating Next controls or UI resembling a luxury watch store.
+
+Scroll handoff: the VERY SAME deck continues into its existing dealing motion. No new grid below, replacement cards or duplicated scene. Intro and deck are one continuous surface. This is proposed hero/deck continuity, not automatic permission to edit the already working transitions.
+
+Why it could stand out: subject, material and content all belong to the portfolio; less thematic disconnection, strong continuity. Why it could fail: the current homepage already opens with a fan of cards, so this may amount to polishing the entrance rather than delivering the new wow scene the owner asked for. It should be dropped if the distinction is only a slightly nicer rotate-in.
+
+## What the critic must decide
+
+Does any proposal have enough visual and authorial specificity to avoid repeating the failed candidates? Can the proposed opening, settled hero and real cards be one coherent experience? Which should be discarded, and why? Does the provisional preference for B dodge the creation-animation request too much? Do not accept B simply because the assistant proposed it last. Honest ALL BLOCKED is preferable to a rubber-stamped third mediocre render.
+
+## Přesná kritika Astry
+
+Brainstorm správně pojmenoval selhání, ale zatím nabízí spíš scénáře pohybu než přesvědčivé obrazové kompozice. **B nemá automaticky náskok tím, že je méně riskantní než A.** Může být snazší vyrobit a přitom méně osobité.
+
+**Pitva odmítnutých návrhů**
+
+- **Form:** Objekt působí jako rozříznutá manžeta nebo vzorek průmyslového těsnění. Oranžový pás, olivový lem a šedé tělo nemají čitelnou konstrukční logiku ani přitažlivou siluetu. Horní oblouk zasahuje do navigace, zatímco dole zůstává velká nevyužitá plocha. Vlevo je konvenční slogan, vpravo nesrozumitelný exponát. Jejich sousedství nevytváří význam. Materiály a osvětlení navíc připomínají pracovní 3D náhled.
+- **Signature:** Jméno je velké, ale nemá vlastní typografický charakter. Těsné rozestupy, téměř slepené „VIET TO“ a tvrdý černý stín vytvářejí těžký blok. Drobná identita v navigaci, popisek nad jménem a slogan pod ním opakují informace bez jasné potřeby. Prázdná pravá část kompozici nevyvažuje. Samotné zvětšení serifu zde nahrazuje výtvarné rozhodnutí.
+
+Moje předchozí doporučení anonymního objektu a velkého serifu tyto výsledky neobhajuje. Oba směry v této podobě selhaly.
+
+**A. Lunar Genesis: REWORK**
+
+Ze tří návrhů má nejsilnější skutečnou událost: hmota se rozdělí a vznikne nový vztah. Contact sheet ale ukazuje, že její působivost stojí na dlouhém, nepravidelném proudu materiálu a výrazném přeskupování těles. Zkrácení na uhlazený čtyřsekundový přechod může odstranit právě to podstatné.
+
+Hlavní námitka: **slibovaná identita Earth/Moon se v navrženém výsledku ztrácí.** Grafitové těleso s „land-like relief“ může být libovolná fantasy planeta. Tematická vazba na autora zůstává neprokázaná a barevná příbuznost s kartami ji nenahradí. Odjezd kosmu nahoru je korektní oddělení sekcí, nikoli přesvědčivá návaznost.
+
+**B. Earth / Moon: DROP**
+
+V tomto brainstormu bych jej vyřadil. Odstranil nejspecifičtější část původního přání, vznik a proměnu, a ponechal nejběžnější motiv: krásnou Zemi na tmavém pozadí.
+
+Hlavní námitka: **návrh zatím popisuje prémiovou space tapetu.** Odhalení horizontu a výstup Měsíce ze zákrytu nemají vlastní autorský detail. Kompaktní sans-serif identita tuto zaměnitelnost ještě posiluje. Společné tmavé pozadí s následnými kartami nestačí. Ani zákaz hvězd a lens flare sám nevytváří originalitu.
+
+**C. The first sheet: REWORK**
+
+Má nejvěrohodnější vztah k tomu, co portfolio skutečně obsahuje, a jedinou konkrétní kontinuitu: tentýž list pokračuje do existujícího balíčku.
+
+Hlavní námitka: **otočení papíru není samo o sobě nový wow moment.** Současný homepage už nabízí výrazný vějíř listů. Navíc zvětšení současných hodinek odhalí jejich schematická ozubená kola a jednoduché materiály; nelze na nich bez dalšího vystavět přesvědčivou fotografickou monumentalitu. Luxusně nasvícený papír tento nesoulad neopraví.
+
+**Pro další art-direction krok doporučuji C. Pro realizaci jsou všechny směry zatím blokované.** Je to doporučení posunout ambici od kosmické události k výraznému vstupu do vlastní práce. Majitel takovou změnu dosud neschválil.
+
+Před dalšími obrázky bych pro C závazně určil:
+
+1. **Hrdinou bude kompozice celého potištěného listu**, nikoli makro hodinek ani dlouhý záběr anonymní hrany. Projekt musí být rozpoznatelný už v opening moodframu.
+2. **Jeden pohyb, jeden skutečný balíček.** Odhalení musí skončit v přesně navazující poloze současných karet. Žádné druhé rozehrání stejného gesta při scrollu.
+3. **Identita zůstane v klidném tmavém okraji; serif ponese projektový obsah.** Opening, settled a samostatně komponovaný mobil musí prokázat hierarchii i návaznost.
+
+Teprve tyto moodframy umožní posoudit návrh. Výběr směru a schválení realizace patří majiteli.
+codex
+**Nejsilnější jsou K2 → K3 → K7. Žádný ale zatím nepředstavuje hotový autorský směr.** Seznam příliš často zaměňuje koncept za efekt při načtení. Pro zkušeného vývojáře musí být působivá především výsledná kompozice a konkrétní práce; animace jim může dát důraz.
+
+**Audit je směrově správný, ale místy příliš benevolentní.**
+
+1. **Sdělení funguje jako postoj, nikoli jako představení.** „New tools. Old standards.“ má dobrý rytmus, ale mohl by ho použít téměř kdokoli. „Old standards“ navíc může znamenat i zastaralé postupy. Zachovat lze, potřebuje však bezprostředně konkrétní oporu: co Vítek vyvíjí a za co odpovídá.
+
+2. **Light Table má materiálovou soudržnost, prémiovost ještě neprokazuje.** Papír, barvy a překrytí vytvářejí přesvědčivější charakter než původní poster. Hodinky však působí jako stylizovaný model; jejich dominantní velikost slibuje produktovou prezentaci, kterou obsah nenaplní. Tvrzení o otestovaných fallbackách ze snímků ověřit nelze.
+
+3. **Záměna vývojáře za produktový exponát je hlavní problém.** Souhlasím. U původního posteru ale není samotná prázdná pravá polovina závadou. Vadí, že velká plocha ani obrovský slogan nepřinášejí dost konkrétní informace nebo výrazný autorský detail.
+
+4. **Kolize a duplicity jsou správně pojmenované.** Na mobilu navigace překrývá nadpis; ve třetím desktopovém stavu nadpis také zajíždí pod hlavičku. Přesah zadních listů může být záměrný, nesmí však zhoršit čtení a ovládání. Instrukce ke scrollu sama není důkaz špatné interakce; „reverse to collect“ zbytečně učí návštěvníka mechanismus prezentace.
+
+5. **Pohybový rozpočet je správná výhrada, technický závěr je příliš zkratkovitý.** Popsané souběžné pohyby soutěží o pozornost; ze statických snímků jejich průběh nepotvrdím. Three.js není automaticky chyba. Chyba je, pokud jeho vizuální přínos nevyváží náklady a komplikace.
+
+Chybí hlavně **hierarchie důkazů a cesta návštěvníka**: co během prvního pohledu pochopí HR, kde tech lead najde skutečný rozsah práce a jak rychle oba otevřou relevantní projekt. „View project“ na autobiografickém listu ukazuje, že strukturu řídí šablona karty místo významu obsahu. Senioritu neprokáže materiál ani slogan, ale přesně popsaný vlastní příspěvek, rozhodnutí a doložený výsledek. Statická varianta přitom musí být plnohodnotná kompozice, ne pouze zastavená animace.
+
+**Verdikty K1–K8**
+
+- **K1 Korektura — DROP.** Hlavní námitka: úmyslně špatný první dojem předvádí opravu typografie, nikoli inženýrskou kvalitu. Osobitost by vyžadovala skutečný příklad Vítkova rozhodnutí a jeho dopadu; tím by se koncept zásadně změnil. Korektorské značky jsou vypůjčená identita grafického designéra.
+
+- **K2 Rejstřík — KEEP.** Hlavní námitka: známý seznam s náhledem na hover snadno skončí jako agenturní šablona. Odlišit jej může důsledná redakční práce: skutečné výstupy, přesný vlastní podíl a kontrast samostatné a týmové práce. SolidPixels musí mít odpovídající váhu; Playground nemusí být rovnocenným důkazem zkušenosti.
+
+- **K3 Vrstvené listy — REWORK.** Hlavní námitka: zatím jde o Light Table s jinou technikou přechodu. Osobitost musí vzniknout uvnitř listů: každý bude rozpoznatelnou kompozicí skutečného projektu, jeho kontextu a Vítkova příspěvku. Papír má obsah organizovat, nikoli nahrazovat hodinkami či jiným symbolem.
+
+- **K4 Spára — DROP.** Hlavní námitka: kámen a žhavá spára nemají doloženou vazbu na autora ani práci. Navíc světlo sledující kurzor je další pohyb, i když ho návrh nazve doplňkem. Osobitost by potřebovala konkrétní osobní nebo projektový původ materiálu; jemnější shader zaměnitelnost nevyřeší.
+
+- **K5 Rozložený pohled — DROP.** Hlavní námitka: anonymní obrobený objekt opakuje selhání Form. Popisky „frontend/backend“ mu dodatečně přidělují význam. Výjimečnost by vyžadovala podobu odvozenou z konkrétního systému a skutečných vztahů jeho částí; takový rozbor patří spíš do případové studie.
+
+- **K6 Rys → hotová sazba — REWORK.** Hlavní námitka: animuje stavbu stránky, ne podstatu Vítkovy práce; kóty snadno předstírají technickou hloubku. Osobitý může být pouze skutečný konstrukční princip sdílený celým portfoliem. Dekorativní rozměry a tlačítko „Show grid“ bych odstranil.
+
+- **K7 Sám / v týmu — REWORK.** Hlavní námitka: porovnávací dělič staví dvě doplňující se zkušenosti proti sobě a ukrývá obsah. Distinktivní je samotná obsahová osa: konkrétní odpovědnost v obou prostředích. Ne tvrzení „obojí stejně dobře“ — potvrzená je zkušenost, nikoli srovnatelná kvalita výsledků.
+
+- **K8 Zaostření — DROP.** Hlavní námitka: jde o univerzální vstupní efekt bez vlastního tématu. Rozmazané fragmenty navíc znehodnocují právě důkazy práce. Osobitost by vyžadovala čitelný vztah konkrétního detailu a výsledného produktu; neurčité tvary ji nevytvoří.
+
+**Pořadí a závazná podmínka před skicou**
+
+1. **K2:** Bez hoveru musí být okamžitě čitelné, co Vítek vytvořil a jakou měl odpovědnost. Náhled pouze prohlubuje informaci.
+2. **K3:** První statický list musí sám představit vývojáře prostřednictvím skutečné práce; žádný další list nesmí být nutný k pochopení identity.
+3. **K7:** Obě pracovní zkušenosti musí zůstat srozumitelné bez tažení děliče, také na mobilu.
+
+Všech osm není slabých. **K2 má nosnou strukturu, K3 využitelný vizuální jazyk a K7 relevantní obsahovou myšlenku.** Zbývající návrhy převážně hledají způsob, jak něco odhalit, aniž určují, proč má odhalený obraz patřit právě Vítkovi.
+
+{"top3":["K2","K3","K7"],"drop":["K1","K4","K5","K8"]}
+tokens used
+18 098

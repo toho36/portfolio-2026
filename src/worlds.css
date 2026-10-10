@@ -16,13 +16,13 @@
 }
 
 .route-voleyevents {
-  --ink: oklch(16.4% .045 295.7);
-  --paper: oklch(97.5% .014 299.8);
-  --muted: oklch(76.4% .066 301.1);
-  --line: oklch(30.7% .101 295.4);
-  --signal: oklch(87.7% .176 92.7);
-  --focus: oklch(87.7% .176 92.7);
-  --world-accent: oklch(54.1% .247 293);
+  --ink: #111211;
+  --paper: #ece7db;
+  --muted: #b7afa0;
+  --line: #454137;
+  --signal: #d6b652;
+  --focus: #e6d296;
+  --world-accent: #d6b652;
   color-scheme: dark;
 }
 
@@ -142,26 +142,6 @@
 /* Court story: the interactive field owns motion, HTML owns the product. */
 .route-voleyevents .voleyevents { --court-chalk: var(--ink); --court-ink: var(--paper); --court-blue: var(--signal); --court-orange: var(--world-accent); --court-line: var(--line); background: none; }
 .route-voleyevents main { width: 100%; }
-.court-entry { width: 100%; margin: 0; padding: 0; color: var(--paper); }
-.court-entry-grid { position: relative; display: grid; min-height: calc(100svh - 5.5rem); overflow: hidden; isolation: isolate; }
-.court-entry-grid::after { content: ''; z-index: 2; grid-area: 1 / 1; pointer-events: none; background: linear-gradient(90deg, color-mix(in srgb, var(--ink) 92%, transparent) 0, color-mix(in srgb, var(--ink) 58%, transparent) 40%, transparent 68%); }
-.court-entry-grid > * { grid-area: 1 / 1; min-width: 0; }
-.court-entry .playable-court { z-index: 0; }
-.court-entry-copy { z-index: 3; width: min(47rem, 58vw); align-self: center; padding: clamp(2rem, 6vw, 7rem); pointer-events: none; }
-.court-entry-copy .target-link { pointer-events: auto; }
-.court-entry h1 { margin: 0 0 1.5rem; font-size: clamp(4.4rem, 9.8vw, 9.6rem); letter-spacing: -0.085em; line-height: 0.82; font-weight: 900; text-shadow: 0 .08em .25em rgba(3, 19, 69, .16); }
-.court-entry h1 span { color: var(--signal); }
-.court-entry-copy > p { max-width: 34ch; font-size: 1.05rem; line-height: 1.55; color: var(--muted); }
-.court-entry-copy .eyebrow { color: var(--signal); }
-.court-entry .target-link { padding-left: 0; color: var(--paper); font-size: 0.75rem; text-underline-offset: 5px; }
-.gameonvb-kinetic-wordmark { z-index: 1; align-self: end; margin: 0 -0.06em -0.08em auto; color: color-mix(in srgb, var(--paper) 8%, transparent); font-size: clamp(8rem, 25vw, 24rem); font-weight: 900; letter-spacing: -.12em; line-height: .72; pointer-events: none; transform: translate3d(3vw, 0, 0); }
-.gameonvb-kinetic-wordmark span { color: color-mix(in srgb, var(--world-accent) 26%, transparent); }
-@keyframes gameonvb-copy-arrive { from { opacity: 0; transform: translate3d(0, 3rem, 0); } }
-@keyframes gameonvb-wordmark-drift { to { transform: translate3d(-2vw, -1.5rem, 0); } }
-@media (prefers-reduced-motion: no-preference) {
-  .court-entry-copy { animation: gameonvb-copy-arrive 720ms cubic-bezier(.2, .8, .2, 1) both; }
-  .gameonvb-kinetic-wordmark { animation: gameonvb-wordmark-drift 6s ease-in-out infinite alternate; }
-}
 .voleyevents .case-section, .voleyevents .case-pair, .voleyevents .lifecycle, .voleyevents .case-navigation { width: min(86rem, calc(100% - clamp(2rem, 6vw, 7rem))); margin-inline: auto; }
 .voleyevents .case-section, .voleyevents .lifecycle { padding-block: 3.5rem; }
 .voleyevents .case-pair section { padding-block: 3rem; }
@@ -175,10 +155,10 @@
 
 /* Goal Loop illustration and reference */
 .route-goal-loop .goal-loop { --run-field: var(--ink); --run-ink: var(--paper); --run-muted: var(--muted); --run-line: var(--line); --run-evidence: var(--signal); background: none; overflow: visible; }
-.shape-meaning { display: grid; grid-template-columns: 1fr 1fr; gap: 9vw; padding: 4rem 5.5%; border-block: 1px solid var(--line); }
-.shape-meaning h2 { margin: 0; font-size: clamp(1.8rem, 3.6vw, 3rem); line-height: 1.07; letter-spacing: -.06em; }
-.shape-meaning p { margin: 0 0 1.1rem; max-width: 65ch; color: var(--muted); font-size: .9rem; line-height: 1.55; }
-.shape-meaning a { color: var(--paper); font-size: .8rem; }
+.calibre-meaning { display: grid; grid-template-columns: 1fr 1fr; gap: 9vw; padding: 4rem 5.5%; border-block: 1px solid var(--line); }
+.calibre-meaning h2 { margin: 0; font-size: clamp(1.8rem, 3.6vw, 3rem); line-height: 1.07; letter-spacing: -.06em; }
+.calibre-meaning p { margin: 0 0 1.1rem; max-width: 65ch; color: var(--muted); font-size: .9rem; line-height: 1.55; }
+.calibre-meaning a { color: var(--paper); font-size: .8rem; }
 .goal-loop .run-section, .goal-loop .run-tape, .goal-loop .run-pair, .goal-loop .run-navigation { margin-inline: 0; }
 .goal-loop .run-section, .goal-loop .run-tape { padding-block: 3rem; }
 .goal-loop .run-section h2, .goal-loop .run-tape h2 { font-size: clamp(2rem, 4vw, 3.6rem); }
@@ -213,7 +193,7 @@
 }
 
 @media (max-width: 760px) {
-  .shape-meaning { grid-template-columns: 1fr; gap: 1.5rem; padding: 2.5rem 6%; }
+  .calibre-meaning { grid-template-columns: 1fr; gap: 1.5rem; padding: 2.5rem 6%; }
   .site-header { min-height: 72px; }
   .site-header .brand { font-size: 0.66rem; letter-spacing: -0.02em; }
   .site-nav a { font-size: 0.72rem; letter-spacing: 0; }
@@ -236,15 +216,7 @@
   .world-section h2 { font-size: 2.1rem; }
   .world-positioning { font-size: 0.95rem; }
   .world-project-list .world-number { flex: 0 0 29px; margin-right: 0.3rem; }
-  .court-entry-grid { min-height: calc(100svh - 7.75rem); }
-  .court-entry-grid::after { background: linear-gradient(180deg, color-mix(in srgb, var(--ink) 94%, transparent) 0, color-mix(in srgb, var(--ink) 68%, transparent) 47%, transparent 72%); }
-  .court-entry-copy { width: 100%; align-self: start; padding: 1.5rem 1rem; }
-  .court-entry-copy .eyebrow { margin-bottom: .75rem; }
-  .court-entry h1 { max-width: 8ch; font-size: clamp(3.7rem, 18vw, 6.5rem); margin-bottom: 1rem; }
-  .court-entry-copy > p { max-width: 29ch; font-size: 0.82rem; }
-  .court-entry-copy .demo-note,
-  .court-entry-copy .hero-jump { display: none; }
-  .gameonvb-kinetic-wordmark { margin-bottom: 10rem; font-size: 35vw; }
+
   .voleyevents .case-section, .voleyevents .lifecycle { padding-block: 2rem; }
   .voleyevents .case-pair section { padding-block: 2rem; }
   .voleyevents .lifecycle-track { grid-template-columns: 1fr; }
@@ -260,6 +232,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .world-portal, .portal-object, .display-window { transition: none; }
-  .court-entry-copy, .gameonvb-kinetic-wordmark { animation: none; }
+
   .portal-object { transform: none; }
 }

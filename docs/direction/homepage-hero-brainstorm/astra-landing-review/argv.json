@@ -1,0 +1,23 @@
+[
+  "/Users/vitek/.local/bin/codex",
+  "exec",
+  "--ignore-user-config",
+  "--disable",
+  "fast_mode",
+  "--disable",
+  "multi_agent",
+  "-m",
+  "gpt-6-astra",
+  "-c",
+  "model_provider=\"openai\"",
+  "-c",
+  "model_reasoning_effort=\"high\"",
+  "-s",
+  "read-only",
+  "--ephemeral",
+  "-C",
+  "/Users/vitek/main/GitHub/portfolio-2026",
+  "-o",
+  "/Users/vitek/main/GitHub/portfolio-2026/docs/direction/homepage-hero-brainstorm/astra-landing-review/REVIEW.md",
+  "-"
+]

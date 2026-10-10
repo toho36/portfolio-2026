@@ -1,8 +1,11 @@
-import { type MouseEvent, type ReactNode } from 'react'
-import { PlayableCourt } from '../components/PlayableCourt'
+import { useState, type MouseEvent, type ReactNode } from 'react'
+import { Staircase } from '../components/Staircase'
 import { VOLEYEVENTS } from '../content/voleyevents'
+import { STORY_CHAPTERS } from '../gameonvb/stairStory'
+import type { LandingIndex } from '../gameonvb/stairBall'
 
 interface VoleyEventsPageProps {
+  readonly hero?: ReactNode
   readonly onNavigate: (event: MouseEvent<HTMLAnchorElement>) => void
 }
 
@@ -28,29 +31,23 @@ function RouteAnchor({
   )
 }
 
-export function VoleyEventsPage({ onNavigate }: VoleyEventsPageProps) {
+export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
+  const [landing, setLanding] = useState<LandingIndex>(0)
+  const highlighted = STORY_CHAPTERS[landing].stages.map(stage => stage.id)
   return (
-    <article className="voleyevents">
-      <section
-        className="court-entry"
+    <article className="voleyevents staircase-case">
+      {hero ?? <section
+        className="staircase-entry"
         aria-labelledby="voleyevents-title"
       >
-        <div className="court-entry-grid">
-          <PlayableCourt />
-          <div className="court-entry-copy">
-            <p className="eyebrow">{VOLEYEVENTS.hero.eyebrow}</p>
-            <h1 id="voleyevents-title">
-              LESS <br />ADMIN. <br /><span className="lime">MORE <br />PLAY.</span>
-            </h1>
-            <p>{VOLEYEVENTS.hero.title}</p>
-            <p className="demo-note">A playable demo, not a live event. The story is below.</p>
-            <a className="target-link hero-jump" href="#lifecycle">
-              Follow one registration <span aria-hidden="true">↓</span>
-            </a>
-          </div>
-          <div className="gameonvb-kinetic-wordmark" aria-hidden="true">GAME<span>ON</span>VB</div>
+        <div className="staircase-intro">
+          <p className="eyebrow">{VOLEYEVENTS.hero.eyebrow}</p>
+          <h1 id="voleyevents-title">Gravity, by hand.</h1>
+          <p>Catch. Pull. Let go.</p>
         </div>
-      </section>
+        <Staircase landing={landing} onLanding={setLanding} />
+        <p className="staircase-summary">{VOLEYEVENTS.hero.title}</p>
+      </section>}
 
       <section
         className="case-section case-problem"
@@ -81,6 +78,7 @@ export function VoleyEventsPage({ onNavigate }: VoleyEventsPageProps) {
         id="lifecycle"
         className="lifecycle"
         aria-labelledby="lifecycle-title"
+        data-active={landing}
       >
         <div className="lifecycle-heading" data-reveal>
           <p className="eyebrow">One registration / one operational record</p>
@@ -89,7 +87,7 @@ export function VoleyEventsPage({ onNavigate }: VoleyEventsPageProps) {
           </h2>
           <p>
             Follow one participant through four connected states. The complete
-            operational story is here, whether or not you play with the court.
+            operational story is here, whether or not you play with the ball.
           </p>
         </div>
 
@@ -99,6 +97,8 @@ export function VoleyEventsPage({ onNavigate }: VoleyEventsPageProps) {
               className="lifecycle-stage"
               id={stage.id}
               key={stage.id}
+              data-lifecycle-stage={stage.id}
+              data-highlighted={highlighted.includes(stage.id) ? 'true' : undefined}
               data-reveal
             >
               <div className="stage-heading">

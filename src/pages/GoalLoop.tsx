@@ -1,5 +1,5 @@
 import type { CSSProperties, MouseEvent, ReactNode } from 'react'
-import { ShapeAndHole } from '../components/ShapeAndHole'
+import { Calibre } from '../components/Calibre'
 import {
   GOAL_LOOP,
   GOAL_LOOP_HISTORY,
@@ -18,6 +18,7 @@ type HistoryRowStyle = CSSProperties & {
 }
 
 interface GoalLoopPageProps {
+  readonly hero?: ReactNode
   readonly onNavigate: (event: MouseEvent<HTMLAnchorElement>) => void
 }
 
@@ -43,15 +44,14 @@ function RouteAnchor({
   )
 }
 
-export function GoalLoopPage({ onNavigate }: GoalLoopPageProps) {
+export function GoalLoopPage({ onNavigate, hero }: GoalLoopPageProps) {
   return (
     <article className="goal-loop">
-      <ShapeAndHole />
-      <section className="shape-meaning" aria-labelledby="shape-meaning-title">
-        <h2 id="shape-meaning-title">The same brief.<br />Three different questions.</h2>
+      {hero ?? <Calibre titleId="goal-loop-title" />}
+      <section className="calibre-meaning" aria-labelledby="calibre-meaning-title">
+        <h2 id="calibre-meaning-title">A bounded system.<br />Open to inspection.</h2>
         <div>
-          <p>Critique compares the light plan with the opening. Build makes a solid object. Check drops a weight on it at the table. Review compares the solid object with the opening.</p>
-          <p>A failed plan returns before Build. A cracked object and a wrong shape each return to Build and use one repair piece.</p>
+          <p>The movement is an illustration of coordinated parts, not a software run. Explore its anatomy freely; the delivery roles and maintained evidence remain in the reference below.</p>
           <p>{GOAL_LOOP.hero.lede}</p>
           <a className="target-link" href="#run-tape">Read the full run trace ↓</a>
         </div>

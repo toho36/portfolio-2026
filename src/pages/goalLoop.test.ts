@@ -46,20 +46,20 @@ describe('Goal Loop Run Anatomy case study', () => {
     const markup = render()
     const route = ROUTES.find(({ path }) => path === '/goal-loop')
     const hero = markup.slice(
-      markup.indexOf('class="shape-and-hole"'),
+      markup.indexOf('data-watch-hero'),
       markup.indexOf('class="run-section run-problem"'),
     )
 
-    expect(hero).toContain('Make it')
-    expect(hero).toContain('fit.')
-    expect(hero).toContain('ONE BRIEF. ONE SHAPE. TWO REPAIRS.')
+    expect(hero).toContain('Precision,')
+    expect(hero).toContain('in motion.')
+    expect(hero).toContain('A system, made visible.')
     expect(hero).not.toMatch(/MAKE\.|CHECK\.|FINISH\.|REPEAT\./)
-    expect(hero).toContain('class="shape-scene"')
-    expect(hero).toContain('id="drawing"')
-    expect(hero).toContain('Make it fit')
-    expect(hero).toContain('REPAIR PIECES')
+    expect(hero).toContain('The same skeleton wristwatch, enlarged')
+    expect(markup.match(/class="watch-view"/g)).toHaveLength(1)
+    expect(markup).not.toMatch(/data-calibre|class="calibre"/)
+    expect(hero).not.toMatch(/REPAIR PIECES|Make it fit|ONE BRIEF/)
     expect(hero).not.toMatch(/instrument-stepper|instrument-stage-panel|Simulate failed check/)
-    expect(hero).toContain('Interactive metaphor, not a live run')
+    expect(hero).toContain('Illustration, not a live Goal Loop run')
     expect(hero).toContain('No agents, project tests or deployments execute')
     expect(hero).toContain(
       'Goal Loop turns a software goal into a bounded delivery run with separated roles, explicit evidence and a stop condition.',

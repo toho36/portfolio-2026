@@ -2,6 +2,20 @@
 
 Status: playable-worlds implementation verified locally; this document describes the selected presentation, not deployment state.
 
+## Local GameOnVB staircase amendment
+
+The owner's continuation after the verified `sketches/009-staircase` study selects its directly manipulable, fixed-camera stone staircase for local `/gameonvb` integration. This supersedes only this document's pixel-court presentation and CSS/SVG-only court boundary, not the other routes or the retired rally contract. Preserve the approved panelled ball, deep treads, ordinary scroll, capture-loss-safe dragging, keyboard controls, complete semantic story and source-safe claims. Three is lazy-loaded through the new route-local `src/gameonvb/loadStaircaseView.ts` seam; reduced motion and unavailable WebGL retain instant SVG placement and HTML content. Three real landings highlight event + registration, payment + audit, attendance + resolution; all four original lifecycle stages and anchors remain readable without playing. No backend operation or score is implied.
+
+React route cleanup must cancel pending loading, stop RAF and remove listeners/observers/canvas, disposing GPU resources once. Home, Goal Loop and Playground remain unchanged. This amendment authorizes local implementation only. Commit, push, deployment, owner taste acceptance and physical-phone GPU evidence remain separate gates.
+
+## Local Goal Loop calibre amendment
+
+The owner explicitly selects the reviewed `sketches/012-calibre` anatomy viewer for local portfolio `/goal-loop` integration. This supersedes only the former shape-and-hole presentation, its toy controls and its exclusive explanatory copy. The calibre is a goal-free illustrated exhibit, not a run simulation: no objective, repair, score, delivery reducer, PASS/FAIL or operational telemetry is bound to viewer input. Preserve the semantic case study, all six sourced stage definitions, audited history/provenance, current route metadata, header/footer and navigation.
+
+Use warm museum paper, satin silver, muted brass, darker steel and small ruby accents. The movement is immediately visible and alive; orbit/inertia, bounded wheel/pinch zoom, reversible opening and optional part inspection are presentation-only. Detached train gears rest while the intact balance unit may move. Native controls, visible focus, 44px targets and ordinary scroll remain available. Reduced motion initially loads no Three and uses an editable static anatomy; no-WebGL/context loss retains assembly and inspection.
+
+React owns permanent route cleanup and pending mount cancellation. Keep renderer/controller/SVG/CSS lookup component-scoped, with route-local lazy Three/OrbitControls import closure and no production dependency on sketches. Cached pagehide suspends and releases GPU resources without destroying resumable controller state; persisted pageshow restores one renderer, view and mechanism phase. SPA unmount/non-cached departure performs full cleanup. Controller-owned presentation graders may replace explicitly retired toy literals, but every reducer invariant, disclaimer, source-safe initial HTML, six disclosures and audited-history assertion remains protected. Local implementation only; commit, push and deployment remain separate gates.
+
 ## Decision
 
 Promote the direction explored in `sketches/001-playable-worlds`, `002-court`, and `003-instrument` into the four existing React routes. The main action is exploring and operating the work, not reading a résumé. Sparse composition; priorities: a recognizable object/mechanic, one clear action, concise sourced context.

@@ -18,7 +18,7 @@ describe('GameOnVB Match Operations case study', () => {
     const markup = render()
     const route = ROUTES.find(({ path }) => path === '/gameonvb')
     const hero = markup.slice(
-      markup.indexOf('class="court-entry"'),
+      markup.indexOf('class="staircase-entry light-table-hero"'),
       markup.indexOf('class="case-section'),
     )
 
@@ -89,7 +89,7 @@ describe('GameOnVB Match Operations case study', () => {
     )
 
     expect(lifecycle).toContain('<ol class="lifecycle-track">')
-    expect(lifecycle.match(/<li class="lifecycle-stage"/g)).toHaveLength(4)
+    expect(lifecycle.match(/<li class="lifecycle-stage(?:\s[^"]*)?"/g)).toHaveLength(4)
     for (const stage of VOLEYEVENTS_LIFECYCLE) {
       expect(lifecycle).toContain(`id="${stage.id}"`)
       expect(lifecycle).toContain(`<h3>${stage.label}</h3>`)
@@ -99,35 +99,20 @@ describe('GameOnVB Match Operations case study', () => {
     expect(lifecycle).not.toMatch(/<h3[^>]*aria-hidden|<p[^>]*aria-hidden/)
   })
 
-  it('offers the playable court before the complete story without gating it', () => {
+  it('offers the transferred upper-tread hero before the complete ungated story', () => {
     const markup = render()
-    const hero = markup.slice(
-      markup.indexOf('class="court-entry"'),
-      markup.indexOf('class="case-section'),
-    )
-
-    expect(hero).toContain('class="court-entry-grid"')
-    expect(hero).toContain('class="court-entry-copy"')
-    expect(hero).toContain('class="gameonvb-kinetic-wordmark"')
-    expect(hero).toContain('GAME<span>ON</span>VB')
-    expect(hero).toMatch(/<h1 id="voleyevents-title">LESS\s*<br\/>\s*ADMIN\.\s*<br\/>\s*<span class="lime">MORE\s*<br\/>\s*PLAY\.<\/span><\/h1>/)
-    expect(hero.match(/class="playable-court"/g)).toHaveLength(1)
-    expect(hero.match(/class="playable-court__energy-ring"/g)).toHaveLength(3)
-    expect(hero).toContain('class="playable-court__streaks"')
-    expect(hero).toMatch(/<img(?=[^>]*src="\/assets\/gameonvb-ball\.png")(?=[^>]*aria-hidden="true")[^>]*>/)
-    expect(hero).toContain('aria-label="Interactive volleyball court"')
-    expect(hero).toContain('aria-label="Volleyball: drag to throw, or press Enter or Space to serve"')
-    expect(hero).toMatch(/<button[^>]*>Serve the ball /)
-    expect(hero).toMatch(/<button[^>]*>Reset /)
-    expect(hero).toContain('data-contacts="0"')
-    expect(hero).toContain('Court contacts')
-    expect(hero).toContain('This session · toy only')
-    expect(hero).toContain('href="#lifecycle"')
-    expect(hero).toContain('Follow one registration')
-    expect(markup).not.toContain('Scroll follows one participant')
+    const hero = markup.slice(markup.indexOf('class="staircase-entry light-table-hero"'), markup.indexOf('class="case-section'))
+    expect(hero).toContain('More time on court.')
+    expect(hero.match(/data-ball-hero="true"/g)).toHaveLength(1)
+    expect(hero).toContain('data-cold-ball-fallback="true"')
+    expect(hero).toContain('The same volleyball landing on the upper stone tread')
+    expect(hero).toContain('assets/ball-preview.png')
+    expect(hero).not.toMatch(/data-stair-root|Release the ball|Catch\. Pull\.|Reset /)
+    for (const stage of VOLEYEVENTS_LIFECYCLE) expect(hero).toContain(`href="#${stage.id}"`)
+    expect(markup).not.toMatch(/playable-court|Scroll follows one participant|Separate full case|landing prototype/)
   })
 
-  it('reuses the court without canvas or retired rally imports', () => {
+  it('keeps the page free of eager graphics imports and retired rally code', () => {
     const markup = render()
     const source = readFileSync(
       new URL('./VoleyEvents.tsx', import.meta.url),
@@ -135,7 +120,7 @@ describe('GameOnVB Match Operations case study', () => {
     )
 
     expect(markup).not.toMatch(/<canvas|data-rally-|class="rally-/)
-    expect(source).toContain("import { PlayableCourt } from '../components/PlayableCourt'")
+    expect(source).toContain("import { Staircase } from '../components/Staircase'")
     expect(source).not.toMatch(
       /\b(?:gsap|three|canvas|requestAnimationFrame)\b|rally|RuntimeBoundary/i,
     )
@@ -170,7 +155,12 @@ describe('GameOnVB Match Operations case study', () => {
     expect(content).not.toMatch(
       /customer quote|testimonial|players|payments total/i,
     )
-    expect(markup).not.toMatch(/<canvas|<video|data:image|dashboard screenshot/i)
-    expect(markup.match(/<img/g)).toHaveLength(1)
+    const story = markup.slice(markup.indexOf('class="case-section'))
+    expect(story).not.toMatch(/<canvas|<video|data:image|dashboard screenshot|<img/i)
+    expect(markup).not.toMatch(/<canvas|<video|dashboard screenshot/i)
+    const images = [...markup.matchAll(/<img[^>]*src="([^"]+)"/g)].map(m => m[1])
+    expect(images).toHaveLength(2)
+    expect(images[0]).toMatch(/^data:image\/svg\+xml,/)
+    expect(images[1]).toMatch(/\/assets\/ball-preview\.png$/)
   })
 })

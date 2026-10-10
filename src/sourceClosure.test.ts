@@ -1,13 +1,15 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
-const sourceModules = import.meta.glob('./**/*.{ts,tsx}', {
+const sourceModules = import.meta.glob('./**/*.{ts,tsx,js,jsx}', {
   query: '?raw',
   import: 'default',
   eager: true,
 }) as Record<string, string>
 
 const retiredModulePaths = [
+  '/components/ShapeAndHole.tsx',
+  '/goal-loop/shapeAndHole.ts',
   '/machine/',
   '/loops/',
   '/hooks/',
@@ -19,6 +21,10 @@ const retiredModulePaths = [
   '/content/projectDiscovery.test.ts',
   '/content/cartridges.ts',
   '/content/cartridges.test.ts',
+  '/components/PlayableCourt.tsx',
+  '/components/Volleyball.tsx',
+  '/voleyevents/courtBall.ts',
+  '/voleyevents/courtBall.test.ts',
   ...[
     'loadRallyRuntime',
     'loadRallyMotion',
@@ -40,7 +46,7 @@ const ROUTE_SCOPED_DEPENDENCIES = [
   'three',
 ] as const
 
-const ROUTE_SCOPED_ROOTS = ['./playground/', './home/'] as const
+const ROUTE_SCOPED_ROOTS = ['./playground/', './home/', './gameonvb/', './goal-loop/calibre/'] as const
 
 const ABSENT_DEPENDENCIES = [
   ...GLOBALLY_FORBIDDEN_DEPENDENCIES,
@@ -169,7 +175,14 @@ describe('retired source closure', () => {
       .filter(([path]) => path !== './sourceClosure.test.ts' && !path.endsWith('.test.ts'))
       .filter(([, source]) => importsRetiredDependency(source, 'three'))
       .map(([path]) => path)
-    expect(importingModules.sort()).toEqual(['./home/loadPosterRuntime.ts', './playground/loadWireRuntime.ts'])
+    expect(importingModules.sort()).toEqual(['./gameonvb/loadStaircaseView.ts', './goal-loop/calibre/loadView.ts', './home/lightTable/Volleyball.jsx', './home/lightTable/Watch.jsx', './home/loadPosterRuntime.ts', './playground/loadWireRuntime.ts'])
+    for (const wrapper of ['./home/lightTable/Volleyball.jsx', './home/lightTable/Watch.jsx']) {
+      expect(sourceModules[wrapper].match(/import\(['"]three['"]\)/g)).toHaveLength(1)
+      expect(sourceModules[wrapper]).not.toMatch(/\bfrom\s*['"]three|\brequire\s*\(['"]three/)
+    }
+    expect(sourceModules['./goal-loop/calibre/loadView.ts'].match(/import\(['"]three['"]\)/g)).toHaveLength(1)
+    expect(sourceModules['./goal-loop/calibre/loadView.ts'].match(/import\(['"]three\/addons\/controls\/OrbitControls\.js['"]\)/g)).toHaveLength(1)
+    expect(sourceModules['./gameonvb/loadStaircaseView.ts'].match(/import\(['"]three['"]\)/g)).toHaveLength(1)
     expect(sourceModules['./home/loadPosterRuntime.ts'].match(/import\(['"]three['"]\)/g)).toHaveLength(1)
     expect(sourceModules['./playground/loadWireRuntime.ts'].match(/import\(['"]three['"]\)/g)).toHaveLength(1)
     for (const [path, source] of Object.entries(sourceModules))
