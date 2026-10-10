@@ -1,0 +1,26 @@
+.landing-practice-gates { margin: var(--landing-space-30) 0 0 var(--landing-space-60); }
+.landing-practice-rail { display: block; height: 1px; background: var(--landing-line); }
+.landing-practice-rail > span { display: block; width: 100%; height: 100%; background: var(--landing-state); transform-origin: left; }
+.landing-practice-gates ol { list-style: none; padding: var(--landing-space-18) 0 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--landing-space-16); }
+.landing-practice-gates li { display: grid; align-content: start; gap: var(--landing-space-8); min-width: 0; }
+.landing-practice-gate-label { font-size: var(--landing-type-15); }
+.landing-practice-evidence { color: var(--landing-muted); font-size: var(--landing-type-12); overflow-wrap: anywhere; }
+.landing-practice-contact .landing-contact-form button { cursor: pointer; background: var(--landing-paper); color: var(--landing-ink) !important; border-color: var(--landing-paper); }
+.landing-practice-contact .landing-contact-form button:disabled { cursor: wait; background: transparent; color: var(--landing-muted) !important; border-color: var(--landing-line); }
+.landing-contact-error { color: var(--landing-paper); font-size: var(--landing-type-13); }
+.landing-practice-contact [aria-invalid='true'] { border-color: var(--landing-paper); }
+.landing-contact-honey { display: none; }
+.landing-contact-success { color: var(--landing-state); }
+.landing-contact-success:focus { outline: 2px solid var(--landing-state); outline-offset: 5px; }
+.landing-contact-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@media (max-width: 1000px) {
+  .landing-practice-gates { margin-left: var(--landing-space-44); }
+}
+@media (max-width: 600px) {
+  .landing-practice-gates { margin-left: 0; }
+  .landing-practice-gates ol { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--landing-space-20) var(--landing-space-12); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-practice *, .landing-practice-contact * { animation: none !important; transition: none !important; }
+  .landing-practice-rail > span { transform: scaleX(1) !important; }
+}
