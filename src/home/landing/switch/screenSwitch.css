@@ -1,0 +1,98 @@
+.landing-switch {
+  margin-block: var(--landing-space-24);
+  padding: var(--landing-space-20);
+  border: 1px solid var(--landing-line);
+  border-radius: var(--landing-radius-panel);
+  background: var(--landing-panel);
+  color: var(--landing-paper);
+  font-family: var(--landing-font-body);
+  max-width: 760px;
+}
+.landing-switch-label {
+  color: var(--landing-muted);
+  font-size: var(--landing-type-12);
+  margin-bottom: var(--landing-space-20) !important;
+}
+.landing-switch-scene { position: relative; aspect-ratio: 2.6; }
+.landing-switch-display {
+  position: absolute;
+  top: 0;
+  width: 46%;
+  height: 88%;
+  border: 1px solid var(--landing-muted);
+  border-radius: var(--landing-radius-panel);
+  background: var(--landing-ink);
+}
+.landing-switch-display-0 { left: 0; }
+.landing-switch-display-1 { left: 54%; }
+.landing-switch-display-name {
+  display: block;
+  padding: var(--landing-space-8) var(--landing-space-12);
+  color: var(--landing-muted);
+  font-size: var(--landing-type-12);
+  overflow-wrap: anywhere;
+}
+.landing-switch-stand { position: absolute; top: 100%; left: 45%; width: 10%; height: 9%; border-inline: 1px solid var(--landing-muted); }
+.landing-switch-stand::after { content: ''; position: absolute; bottom: 0; left: -100%; width: 300%; border-bottom: 1px solid var(--landing-muted); }
+.landing-switch-window {
+  position: absolute;
+  top: 24%;
+  width: 32%;
+  height: 50%;
+  border: 1px solid var(--landing-paper);
+  border-radius: var(--landing-radius-control);
+  background: var(--landing-panel);
+  overflow: hidden;
+}
+.landing-switch-window-a { left: 7%; }
+.landing-switch-window-b { left: 61%; border-color: var(--landing-state); }
+.landing-switch[data-swapped='true'] .landing-switch-window-a { left: 61%; }
+.landing-switch[data-swapped='true'] .landing-switch-window-b { left: 7%; }
+.landing-switch-titlebar {
+  display: flex;
+  align-items: center;
+  gap: var(--landing-space-8);
+  padding: var(--landing-space-6) var(--landing-space-8);
+  border-bottom: 1px solid var(--landing-line);
+  font-size: var(--landing-type-12);
+  line-height: 1.4;
+}
+.landing-switch-window-b .landing-switch-titlebar { color: var(--landing-state); }
+.landing-switch-dots { display: flex; gap: 3px; }
+.landing-switch-dots i { width: 3px; height: 3px; border-radius: 50%; background: var(--landing-muted); }
+.landing-switch-window-content { display: grid; gap: var(--landing-space-8); padding: var(--landing-space-12); }
+.landing-switch-window-content span { height: 1px; background: var(--landing-muted); width: 80%; }
+.landing-switch-window-content span:nth-child(2) { width: 55%; }
+.landing-switch-window-content span:last-child { width: 68%; }
+.landing-switch-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--landing-space-28);
+  min-height: 44px;
+  margin-top: var(--landing-space-20);
+  padding: var(--landing-space-10) var(--landing-space-16);
+  border: 1px solid var(--landing-paper);
+  border-radius: var(--landing-radius-control);
+  background: var(--landing-paper);
+  color: var(--landing-ink);
+  font: inherit;
+  font-size: var(--landing-type-13);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.landing-switch-button:hover { border-color: var(--landing-state); background: var(--landing-state); }
+.landing-switch-button:focus-visible { outline: 2px solid var(--landing-state); outline-offset: 4px; }
+.landing-switch-status { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 600px) {
+  .landing-switch { padding: var(--landing-space-14); }
+  .landing-switch-scene { aspect-ratio: .85; max-width: 360px; margin-inline: auto; }
+  .landing-switch-display { width: 100%; height: 39%; left: 0; }
+  .landing-switch-display-1 { top: 56%; }
+  .landing-switch-window { width: 72%; height: 24%; left: 14%; top: 9%; }
+  .landing-switch-window-b { top: 65%; }
+  .landing-switch[data-swapped='true'] .landing-switch-window-a { left: 14%; top: 65%; }
+  .landing-switch[data-swapped='true'] .landing-switch-window-b { left: 14%; top: 9%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-switch *, .landing-switch *::before, .landing-switch *::after { animation: none !important; transition: none !important; }
+}
