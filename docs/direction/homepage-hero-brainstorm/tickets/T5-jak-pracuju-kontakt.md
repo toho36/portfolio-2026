@@ -18,3 +18,6 @@ Závisí na: T2, T0. Paralelně s T3, T4, T5a jen v nezávislém klonu.
 
 ## Kontroly
 `npm run check`, `npx vitest run src/home/landing/practice src/home/contactForm.test.ts`.
+
+## Doplněk 2026-10-10 (HorizonX analýza)
+- Řada bran Goal Loop se vykresluje scrollem přes `scrubReveal` z T2 (obousměrně), místo jednorázového vykreslení při vstupu. Stále jediný dominantní pohyb sekce.

@@ -23,3 +23,7 @@ Společný základ, aby moduly T3–T5a šly stavět nezávisle.
 
 ## Kontroly
 `npm run check`, `npx vitest run src/home/landing/shared`.
+
+## Doplněk 2026-10-10 (HorizonX analýza)
+- `motion.ts` navíc: `scrubReveal(el, timeline)` přes GSAP ScrollTrigger `scrub` — obousměrné (scroll zpět = čistý návrat), registrované v `createDominantMotion`, reduced-motion = koncový stav bez ScrollTriggeru.
+- Test: reduced-motion nevytvoří ScrollTrigger; dispose odstraní trigger.
