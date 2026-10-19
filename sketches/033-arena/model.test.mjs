@@ -295,8 +295,8 @@ test('lab paragraph band exceeds 4.5:1 even over pure black; copy preserves owne
  const ratio = (luminance([darkestBand,darkestBand,darkestBand])+.05)/(luminance(text)+.05);
  assert.ok(ratio >= 4.5,`worst-case band contrast ${ratio}`);
  const html = readFileSync(new URL('./index.html',import.meta.url),'utf8');
- assert.ok(html.includes('Software delivery, run as a bounded system.'));
- assert.ok(html.includes('One run. Check found a crack, Build used 1 of 2 repair pieces, the same Check passed, Review confirmed the fit.'));
+ assert.ok(html.includes('Several models build, critique and review the work, and every result passes explicit checks or is blocked.'));
+ assert.ok(html.includes('Check found a crack. Build used one of the two repair pieces, the same Check passed, and Review confirmed the fit.'));
 });
 
 test('leaving the hero by native scrolling pauses without stealing focus', async () => {
@@ -376,7 +376,7 @@ test('segD completion decodes stop4, restores factual copy and preloads E; rever
  assert.equal(p.nodes.get('#film').src,'./media/desktop/segE.mp4');
  assert.equal(p.nodes.get('#following').focused,undefined);
  const html = readFileSync(new URL('./index.html',import.meta.url),'utf8');
- assert.match(html, /data-stop="4" hidden><h2\b[^>]*>.*?<\/h2><p class="tagline">[^<]+<\/p><p>A native macOS menu-bar utility that exchanges eligible windows between displays\.<\/p>/);
+ assert.match(html, /data-stop="4" hidden><h2\b[^>]*>.*?<\/h2><p class="tagline">[^<]+<\/p><p>A native macOS menu-bar utility that swaps eligible windows between displays\.<\/p>/);
  assert.match(html, /aria-label="Six chapters"/);
  assert.match(html, /<title>[^<]*Screen Switch and Playground<\/title>/);
 });
@@ -502,7 +502,7 @@ test('segE completes only after poster5 decode, restores Playground copy, revers
  assert.equal(p.nodes.get('#following').focused,true);
  assert.equal(p.nodes.get('#following').scrolled,true);
  const html = readFileSync(new URL('./index.html',import.meta.url),'utf8');
- assert.match(html, /data-stop="5" hidden><h2>Playground<\/h2><p class="tagline">[^<]+<\/p><p>Interactive experiments: Hot Wire and Giant Impact[^<]*<\/p><a class="more" href="\/playground">/);
+ assert.match(html, /data-stop="5" hidden><h2>Playground<\/h2><p class="tagline">[^<]+<\/p><p>Two interactive experiments: Hot Wire[^<]*Giant Impact[^<]*<\/p><a class="more" href="\/playground">/);
  assert.match(html, /aria-label="Six chapters"/);
  assert.match(html, /01 \/ 06/);
 });
