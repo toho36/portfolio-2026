@@ -170,12 +170,18 @@ describe('retired source closure', () => {
     expect(sourceModules['./home/loadPosterRuntime.ts'].match(/import\(['"]gsap['"]\)/g)).toHaveLength(1)
   })
 
-  it('loads Three only through the wire seam and no source imports Rapier', () => {
+  it('loads Three only through explicit route-local seams and lazy runtimes; no source imports Rapier', () => {
     const importingModules = Object.entries(sourceModules)
       .filter(([path]) => path !== './sourceClosure.test.ts' && !path.endsWith('.test.ts'))
       .filter(([, source]) => importsRetiredDependency(source, 'three'))
       .map(([path]) => path)
-    expect(importingModules.sort()).toEqual(['./gameonvb/loadStaircaseView.ts', './goal-loop/calibre/loadView.ts', './home/lightTable/Volleyball.jsx', './home/lightTable/Watch.jsx', './home/loadPosterRuntime.ts', './playground/loadWireRuntime.ts'])
+    expect(importingModules.sort()).toEqual(['./gameonvb/loadStaircaseView.ts', './goal-loop/calibre/loadView.ts', './home/lightTable/Volleyball.jsx', './home/lightTable/Watch.jsx', './home/loadPosterRuntime.ts', './playground/giantImpact/main.js', './playground/giantImpact/motion.js', './playground/giantImpact/terrain.js', './playground/loadWireRuntime.ts'])
+    expect(sourceModules['./playground/GiantImpact.tsx'].match(/import\(['"]\.\/giantImpact\/main\.js['"]\)/g)).toHaveLength(1)
+    expect(sourceModules['./playground/GiantImpact.tsx']).not.toMatch(/import\s+(?!type\b)[^\n]*\bfrom\s*['"]\.\/giantImpact\/main\.js['"]|\brequire\s*\(/)
+    for (const [path, source] of Object.entries(sourceModules)) {
+      if (path.endsWith('.test.ts')) continue
+      expect(source, `${path} imports a sketch`).not.toMatch(/\b(?:from\s*|import\s*\(\s*)['"][^'"]*sketches\//)
+    }
     for (const wrapper of ['./home/lightTable/Volleyball.jsx', './home/lightTable/Watch.jsx']) {
       expect(sourceModules[wrapper].match(/import\(['"]three['"]\)/g)).toHaveLength(1)
       expect(sourceModules[wrapper]).not.toMatch(/\bfrom\s*['"]three|\brequire\s*\(['"]three/)

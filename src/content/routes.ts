@@ -27,9 +27,9 @@ export const ROUTES = [
     id: 'playground',
     path: '/playground',
     label: 'Playground',
-    title: 'System Field Playground — Hoang Viet To',
+    title: 'Playground — Hoang Viet To',
     description:
-      'An interactive field: send a pulse, fold its surface and rewind it with native scroll.',
+      'Interactive experiments: Hot Wire and Giant Impact, an artistic study of Moon formation.',
   },
 ] as const
 

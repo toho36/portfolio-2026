@@ -58,9 +58,9 @@ describe('route records', () => {
         canonical: 'https://portfolio-pied-eight-38.vercel.app/goal-loop',
       },
       {
-        title: 'System Field Playground — Hoang Viet To',
+        title: 'Playground — Hoang Viet To',
         description:
-          'An interactive field: send a pulse, fold its surface and rewind it with native scroll.',
+          'Interactive experiments: Hot Wire and Giant Impact, an artistic study of Moon formation.',
         canonical: 'https://portfolio-pied-eight-38.vercel.app/playground',
       },
     ])

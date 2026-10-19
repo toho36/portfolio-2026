@@ -19,7 +19,7 @@ import {
 import { flushSync } from 'react-dom'
 import { CONTACT } from './content/systems'
 import { LightTable } from './home/lightTable/LightTable.jsx'
-import { LandingPage } from './home/landing/LandingPage'
+import { ArenaIntro } from './home/arena/ArenaIntro'
 import { PlaygroundPage } from './pages/Playground'
 
 interface AppProps {
@@ -112,14 +112,7 @@ export function selectHomeTransition(hasVisual: boolean, reducedMotion: boolean,
 
 export function isLightTablePair(from: string, to: string) {
   const source = normalizePathname(from), destination = normalizePathname(to)
-  return source !== destination && ['/gameonvb', '/goal-loop'].includes(source) && ['/gameonvb', '/goal-loop'].includes(destination)
-}
-
-export function restoreLandingHash(doc: Document, hash: string) {
-  if (!hash) return
-  try {
-    doc.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView({ behavior: 'instant' })
-  } catch { /* An invalid fragment has no target. */ }
+  return source !== destination && ['/', '/gameonvb', '/goal-loop'].includes(source) && ['/', '/gameonvb', '/goal-loop'].includes(destination)
 }
 
 export default function App({ initialPath }: AppProps) {
@@ -133,6 +126,14 @@ export default function App({ initialPath }: AppProps) {
         (typeof window === 'undefined' ? '/' : window.location.pathname),
     ),
   )
+  // The arena intro opens only on a fresh homepage load, never after in-app navigation.
+  const [introOpen, setIntroOpen] = useState(() => route.path === '/' && !unknownPath)
+  const showIntro = introOpen && route.path === '/' && !unknownPath
+  const closeIntro = useCallback((focusMain = true) => {
+    // Commit first so the main landmark is no longer inert when it takes focus.
+    flushSync(() => setIntroOpen(false))
+    if (focusMain) document.getElementById('main-content')?.focus({ preventScroll: true })
+  }, [])
 
   const onNavigate = useCallback((event: MouseEvent<HTMLElement>, navigationAnchor?: HTMLAnchorElement) => {
     const anchor = navigationAnchor ?? event.currentTarget as HTMLAnchorElement
@@ -150,6 +151,8 @@ export default function App({ initialPath }: AppProps) {
     })
 
     if (!destination) return
+
+    if (anchor.closest('.site-header') && ['/gameonvb', '/goal-loop'].includes(new URL(destination, window.location.href).pathname)) return
 
     event.preventDefault()
     const livePair = isLightTablePair(window.location.pathname, new URL(destination, window.location.href).pathname)
@@ -193,10 +196,6 @@ export default function App({ initialPath }: AppProps) {
   }, [])
 
   useEffect(() => {
-    if (route.path === '/' && !unknownPath) restoreLandingHash(document, window.location.hash)
-  }, [route.path, unknownPath])
-
-  useEffect(() => {
     if (unknownPath) {
       document.title = 'Page not found — Hoang Viet To'
       document.querySelector('meta[name="description"]')?.setAttribute('content', "This page doesn't exist.")
@@ -204,7 +203,6 @@ export default function App({ initialPath }: AppProps) {
   }, [route, unknownPath])
 
   useEffect(() => {
-    if (route.path === '/' && !unknownPath) return
     const root = document.documentElement
     const media = window.matchMedia('(prefers-reduced-motion: reduce)')
     let removeMotion = () => root.classList.remove('motion-ready')
@@ -240,8 +238,6 @@ export default function App({ initialPath }: AppProps) {
   if (unknownPath) routeContent = <section className="not-found"><p className="poster-kicker">404 / Not found</p><h1>This page doesn't exist.</h1><a className="target-link" href="/" onClick={onNavigate}>Back home <span aria-hidden="true">↗</span></a></section>
   else switch (route.path) {
     case '/':
-      routeContent = <LandingPage />
-      break
     case '/gameonvb':
     case '/goal-loop':
       routeContent = <LightTable pathname={route.path} onNavigate={onNavigate} />
@@ -255,15 +251,13 @@ export default function App({ initialPath }: AppProps) {
     }
   }
 
-  const landing = route.path === '/' && !unknownPath
-
   return (
-    <div id="top" className={`site-shell route-${route.id}${landing ? ' landing-page' : ''}`}>
-      <a className="skip-link target-link" href="#main-content">
+    <div id="top" className={`site-shell route-${route.id}`}>
+      <a className="skip-link target-link" href="#main-content" inert={showIntro || undefined}>
         Skip to content
       </a>
 
-      <header className={`site-header${landing ? ' landing-header' : ''}`}>
+      <header className="site-header" inert={showIntro || undefined} hidden={!unknownPath && (route.path === '/gameonvb' || route.path === '/goal-loop')}>
         <RouteLink
           className="brand"
           currentPath={unknownPath ? undefined : route.path}
@@ -284,17 +278,12 @@ export default function App({ initialPath }: AppProps) {
               {item.label}
             </RouteLink>
           ))}
-          {landing && <><a className="target-link" href="#work">Work</a><a className="target-link" href="#contact">Contact</a></>}
         </nav>
-        {landing && <span className="landing-nav-hint" aria-hidden="true">Scroll navigation →</span>}
       </header>
 
-      <main id="main-content" tabIndex={-1} onClick={landing ? event => {
-        const anchor = (event.target as Element).closest<HTMLAnchorElement>('a')
-        if (anchor && event.currentTarget.contains(anchor)) onNavigate(event, anchor)
-      } : undefined}>{routeContent}</main>
+      <main id="main-content" tabIndex={-1} inert={showIntro || undefined}>{routeContent}</main>
 
-      <footer className={landing ? 'landing-footer' : undefined}>
+      <footer inert={showIntro || undefined}>
         <p>
           Hoang Viet To <span aria-hidden="true">/</span> Software Developer
         </p>
@@ -314,6 +303,9 @@ export default function App({ initialPath }: AppProps) {
           Return to top <span aria-hidden="true">↑</span>
         </a>
       </footer>
+
+      {/* Fixed overlay; last in source order so the skip link stays the first stop. */}
+      {showIntro ? <ArenaIntro onClose={closeIntro} onNavigate={onNavigate} /> : null}
     </div>
   )
 }

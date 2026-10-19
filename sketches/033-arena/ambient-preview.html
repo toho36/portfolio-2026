@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GameOnVB and Goal Loop · Ambient preview</title><link rel="stylesheet" href="./style.css">
+<style>
+#hold,#poster,#loop,#travel{position:absolute;inset:0;width:100%;height:100%}#hold{overflow:hidden}#poster,#loop,#travel{object-fit:cover}#loop{visibility:hidden}#travel{opacity:0;transition:opacity 120ms linear}#peek{position:absolute;left:0;top:0;width:1px;height:1px;max-width:none;transform-origin:0 0;pointer-events:none}.hero.inactive #travel{transition:none}@media(prefers-reduced-motion:reduce){#travel{transition:none}}
+</style></head><body><main>
+<!-- Parent copies this page + existing style.css into preview/. No production edits.
+Required assets in preview/media/desktop/ AND preview/media/mobile/:
+  gameon-ambient.mp4, goal-loop-ambient.mp4: new 48-frame/24fps loop encodes;
+  stop-1.webp, stop-2.webp, stop-3.webp, gameon-peek.webp, segB.mp4, segC.mp4:
+    byte copies of current media (the admitted phase-zero source poses).
+No live manifest or production player imports. Existing atlas projection is the
+approved fixed-camera frame84 mapping. No chapter is looped. -->
+<section id="hero" class="hero" aria-label="GameOnVB and Goal Loop ambient preview" tabindex="-1">
+<div id="hold"><img id="poster" src="./media/desktop/stop-1.webp" alt="GameOnVB canvas in the arena"><video id="loop" muted playsinline preload="none" aria-hidden="true"></video><img id="peek" alt="" aria-hidden="true" hidden></div>
+<video id="travel" muted playsinline preload="none" aria-hidden="true" hidden></video><div class="shade"></div>
+<div id="game-copy" class="copy"><h2>GameOnVB</h2><p>My own full-stack product: registration, payments and attendance for volleyball sessions.</p></div>
+<div id="lab-copy" class="copy" hidden><h2>Goal Loop</h2><p>Software delivery, run as a bounded system.</p></div>
+<div id="end-copy" class="copy" hidden><h2>Goal Loop</h2><p>One run. Check found a crack, Build used 1 of 2 repair pieces, the same Check passed, Review confirmed the fit.</p></div>
+<nav aria-label="Preview navigation"><span id="count">Ambient preview</span><button id="next">Next <span aria-hidden="true">↓</span></button><button id="skip">Skip</button></nav>
+<p id="announcement" class="sr-only" aria-live="polite" aria-atomic="true"></p><p id="error" class="error" role="status" hidden>Media unavailable. The last valid view is retained. Next tries the destination still; Skip continues below.</p>
+</section><section id="following" class="following" tabindex="-1"><p class="eyebrow">Beyond the arena</p><h2>Systems that work in the real world.</h2><p>Registration. Payments. Attendance.</p></section>
+</main><script type="module">
+const get=id=>document.getElementById(id);
+const hero=get('hero'),hold=get('hold'),poster=get('poster'),loop=get('loop'),peek=get('peek'),travel=get('travel');
+const next=get('next'),error=get('error'),motion=matchMedia('(prefers-reduced-motion: reduce)'),portrait=matchMedia('(orientation: portrait)');
+let stop=1,target=2,settling=null,phase='idle',variant=portrait.matches?'mobile':'desktop';
+let epoch=0,visible=true,disposed=false,failedTravel=false,failedLoop=false,ready=false;
+let overlapTimer,stallTimer,loopAttempt=0,travelAttempt=0,loopPending=false,travelPending=false,loopGeneration=0;
+const releases=[],mediaReleases={loop:[],travel:[]};
+const projection={
+ desktop:{size:[1600,900],h:[.41075193881988525,-.030462045921043047,.2946240305900574,0,.37389343712526857,-.44275009632110596,0,-.060924063855442294,1]},
+ mobile:{size:[900,1600],h:[.46413350105285645,-.03960837776361588,.2679332494735718,0,.10309823730009135,.21500831842422485,0,-.07921678296871004,1]},
+};
+const path=name=>`./media/${variant}/${name}`;
+const onstage=()=>!disposed&&visible&&!document.hidden&&!motion.matches;
+const showError=()=>{error.hidden=false;};
+function listen(node,type,callback,list=releases){node.addEventListener(type,callback);list.push(()=>node.removeEventListener(type,callback));}
+function unbind(kind){for(const release of mediaReleases[kind])release();mediaReleases[kind]=[];}
+function timers(){clearTimeout(overlapTimer);clearTimeout(stallTimer);}
+function pause(video){
+ if(video===loop){++loopAttempt;loopPending=false;}else{++travelAttempt;travelPending=false;}
+ video.pause();
+}
+function clearVideo(video){pause(video);video.removeAttribute('src');video.load();}
+function safePlay(video,failure){
+ const isLoop=video===loop;
+ if((isLoop?loopPending:travelPending)||!video.paused)return;
+ const attempt=isLoop?++loopAttempt:++travelAttempt,token=epoch;
+ if(isLoop)loopPending=true;else travelPending=true;
+ const current=()=>!disposed&&token===epoch&&attempt===(isLoop?loopAttempt:travelAttempt);
+ const clear=()=>{if(isLoop)loopPending=false;else travelPending=false;};
+ try{
+  Promise.resolve(video.play()).then(()=>{if(current())clear();},reason=>{
+   if(!current())return;clear();
+   if(reason?.name!=='AbortError')failure();
+  });
+ }catch(reason){if(current()){clear();if(reason?.name!=='AbortError')failure();}}
+}
+function projectPeek(){
+ const {width,height}=hero.getBoundingClientRect(),{size:[sw,sh],h:a}=projection[variant];
+ const scale=Math.max(width/sw,height/sh),w=sw*scale,h=sh*scale,ox=(width-w)/2,oy=(height-h)/2;
+ const p=[w*a[0]+ox*a[6],w*a[1]+ox*a[7],w*a[2]+ox*a[8],h*a[3]+oy*a[6],h*a[4]+oy*a[7],h*a[5]+oy*a[8],a[6],a[7],a[8]];
+ peek.style.transform=`matrix3d(${[p[0],p[3],0,p[6],p[1],p[4],0,p[7],0,0,1,0,p[2],p[5],0,p[8]].join(',')})`;
+}
+function copy(){
+ get('game-copy').hidden=stop!==1;get('lab-copy').hidden=stop!==2;get('end-copy').hidden=stop!==3;
+ hero.classList.toggle('lab',stop>=2);hero.classList.remove('moving');
+ next.textContent=stop===3?'Continue ↓':'Next ↓';next.disabled=false;
+ get('announcement').textContent=stop===1?'GameOnVB':stop===2?'Goal Loop. Software delivery, run as a bounded system.':'Goal Loop. Review: fit confirmed.';
+}
+function loopFailure(){pause(loop);failedLoop=true;loop.style.visibility='hidden';showError();}
+function travelFailure(){
+ if(phase!=='loading'&&phase!=='moving')return;
+ ++epoch;timers();unbind('travel');pause(travel);travel.hidden=true;travel.style.opacity='0';travel.loop=false;
+ hold.hidden=false;phase='idle';failedTravel=true;copy();showError();sync();
+}
+function armStall(){
+ clearTimeout(stallTimer);
+ if(onstage()&&(phase==='loading'||phase==='moving')){
+  const token=epoch;stallTimer=setTimeout(()=>{if(token===epoch)travelFailure();},6000);
+ }
+}
+function sync(){
+ const active=onstage();hero.classList.toggle('inactive',!active);
+ if(!active){pause(loop);pause(travel);clearTimeout(stallTimer);return;}
+ if(phase==='idle'&&ready&&stop<3&&!failedLoop&&!loop.src){startLoop(epoch);return;}
+ if((phase==='idle'||phase==='loading')&&ready&&stop<3&&!failedLoop&&loop.src)safePlay(loop,loopFailure);
+ if(phase==='loading'||phase==='moving'){safePlay(travel,travelFailure);armStall();}
+}
+function startLoop(token){
+ if(disposed||token!==epoch||motion.matches||stop===3||!ready||!onstage())return;
+ const source=path(stop===1?'gameon-ambient.mp4':'goal-loop-ambient.mp4');
+ unbind('loop');pause(loop);loop.style.visibility='hidden';loop.loop=true;const generation=++loopGeneration;
+ const valid=()=>!disposed&&generation===loopGeneration&&loop.src.endsWith(source.slice(1))&&(phase==='idle'||phase==='loading')&&onstage();
+ listen(loop,'playing',()=>{if(valid()&&!failedLoop)loop.style.visibility='visible';else pause(loop);},mediaReleases.loop);
+ listen(loop,'error',()=>{if(generation===loopGeneration&&!motion.matches&&!disposed)loopFailure();},mediaReleases.loop);
+ loop.src=source;loop.load();sync();
+}
+async function loadIdle(destination){
+ const token=++epoch;timers();unbind('travel');pause(travel);pause(loop);
+ phase='settling';settling=destination;next.disabled=true;
+ const selectedVariant=variant,candidate=new Image();candidate.src=path(`stop-${destination}.webp`);
+ try{await candidate.decode();}catch{
+  if(token!==epoch||disposed)return;
+  phase='idle';settling=null;failedTravel=true;hold.hidden=false;travel.hidden=true;travel.style.opacity='0';
+  copy();showError();sync();return;
+ }
+ if(disposed||token!==epoch||variant!==selectedVariant)return;
+ // The old valid image/video is kept until a decoded replacement exists.
+ poster.src=candidate.src;poster.alt=destination===1?'GameOnVB canvas in the arena':'Existing Goal Loop scene';
+ stop=destination;phase='idle';settling=null;ready=true;failedLoop=false;failedTravel=false;
+ hold.hidden=false;travel.hidden=true;travel.style.opacity='0';loop.style.visibility='hidden';
+ if(motion.matches)clearVideo(travel);
+ unbind('loop');clearVideo(loop);copy();peek.hidden=true;projectPeek();
+ if(stop===1){
+  const atlas=new Image();atlas.src=path('gameon-peek.webp');
+  atlas.decode().then(()=>{if(disposed||token!==epoch||stop!==1)return;peek.src=atlas.src;peek.hidden=false;},()=>{if(token===epoch&&!disposed)showError();});
+ }
+ sync();
+}
+function startTravel(){
+ if(disposed||phase!=='idle')return;
+ if(stop===3){leave();return;}
+ target=stop+1;
+ if(motion.matches||failedTravel){void loadIdle(target);return;}
+ const token=++epoch;timers();unbind('travel');pause(travel);
+ // An outstanding initial still/atlas decode is stale; native Next is immediate.
+ phase='loading';next.disabled=true;travel.loop=false;travel.hidden=false;travel.style.opacity='0';
+ const source=path(stop===1?'segB.mp4':'segC.mp4');
+ const valid=()=>!disposed&&token===epoch&&travel.src.endsWith(source.slice(1))&&(phase==='loading'||phase==='moving');
+ listen(travel,'playing',()=>{
+  if(!valid())return;
+  if(!onstage()){pause(travel);return;}
+  phase='moving';travel.style.opacity='1';hero.classList.add('moving');armStall();
+  clearTimeout(overlapTimer);overlapTimer=setTimeout(()=>{
+   if(!valid()||phase!=='moving'||!onstage())return;
+   hold.hidden=true;pause(loop);
+  },140);
+ },mediaReleases.travel);
+ listen(travel,'ended',()=>{if(valid()&&phase==='moving')void loadIdle(target);},mediaReleases.travel);
+ listen(travel,'error',()=>{if(valid())travelFailure();},mediaReleases.travel);
+ listen(travel,'waiting',()=>{if(valid())armStall();},mediaReleases.travel);
+ listen(travel,'timeupdate',()=>{if(valid())armStall();},mediaReleases.travel);
+ travel.src=source;travel.load();sync();
+}
+function dispose(){
+ if(disposed)return;disposed=true;++epoch;timers();
+ unbind('loop');unbind('travel');pause(loop);pause(travel);
+ for(const release of releases.splice(0))release();intersection.disconnect();resize.disconnect();
+}
+function leave(){dispose();get('following').scrollIntoView({behavior:'auto'});get('following').focus();}
+listen(next,'click',startTravel);listen(get('skip'),'click',leave);
+listen(document,'visibilitychange',sync);
+listen(window,'keydown',event=>{
+ if(event.key!=='Escape'||!visible||document.hidden)return;
+ if(phase==='loading'||phase==='moving'){void loadIdle(target);hero.focus();}else leave();
+});
+listen(portrait,'change',()=>{
+ if(disposed)return;const destination=phase==='settling'?settling:stop;
+ peek.hidden=true;variant=portrait.matches?'mobile':'desktop';
+ // Preserve the current valid surface through orientation still decoding.
+ void loadIdle(destination);
+});
+listen(motion,'change',()=>{
+ if(disposed)return;
+ if(motion.matches){
+  const destination=phase==='settling'?settling:(phase==='loading'||phase==='moving')?target:stop;
+  unbind('loop');unbind('travel');pause(loop);pause(travel);
+  void loadIdle(destination);
+ }else if(phase==='idle')startLoop(epoch);
+});
+listen(window,'pagehide',event=>{
+ if(event.persisted){pause(loop);pause(travel);clearTimeout(stallTimer);}else dispose();
+});
+listen(window,'pageshow',event=>{if(event.persisted&&!disposed)sync();});
+const intersection=new IntersectionObserver(entries=>{visible=entries.some(entry=>entry.isIntersecting);sync();if(visible&&phase==='idle'&&!loop.src)startLoop(epoch);},{threshold:0});
+intersection.observe(hero);
+const resize=new ResizeObserver(projectPeek);resize.observe(hero);
+hold.hidden=false;travel.hidden=true;travel.style.opacity='0';peek.hidden=true;copy();
+// Initial still decode/ornament never disables native Next. No loop URL is
+// assigned before the motion/visibility gates pass (including reduced mode).
+const initial=loadIdle(1);phase='idle';next.disabled=false;void initial;
+</script></body></html>

@@ -1,7 +1,7 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
-import App, { applyRouteMetadata, installRevealMotion, isLightTablePair, restoreLandingHash, selectHomeTransition } from './App'
+import App, { applyRouteMetadata, installRevealMotion, isLightTablePair, selectHomeTransition } from './App'
 import { readFileSync } from 'node:fs'
 import { getRouteNavigationUrl, normalizePathname, pushRouteNavigation, ROUTES, resolveRoute, routeMetadata } from './content/routes'
 
@@ -19,9 +19,9 @@ function createClassList() {
   }
 }
 
-describe('landing and project shells', () => {
+describe('light-table homepage and project shells', () => {
   it('renders the approved fan and all source-safe supporting sections in order', () => {
-    const markup = render('/gameonvb')
+    const markup = render()
     expect(markup).toContain('New tools.')
     expect(markup).toContain('Old standards.')
     expect([...markup.matchAll(/data-poster="([^"]+)"/g)].map((m) => m[1])).toEqual([
@@ -34,7 +34,7 @@ describe('landing and project shells', () => {
   })
 
   it('links approved projects and keeps SolidPixels and Small tools non-link', () => {
-    const markup = render('/gameonvb')
+    const markup = render()
     expect(markup).toContain('href="/gameonvb"')
     expect(markup).toContain('href="/goal-loop"')
     expect(markup).toContain('href="/playground"')
@@ -287,7 +287,7 @@ function provenanceNavigation(path = '/', state: Record<string, unknown> | null 
 }
 
 describe('App per-entry light-table provenance', () => {
-  it.each(['/goal-loop', '/gameonvb'])('stamps a new Home -> %s entry, including a header link, preserving new-entry keys', path => {
+  it.each(['/goal-loop', '/gameonvb'])('stamps a new animated Home -> %s entry, preserving new-entry keys', path => {
     const n = provenanceNavigation('/', { homeKey: 'home' }, { entryKey: 'preserved' })
     n.click(path)
     expect(n.location.pathname).toBe(path)
@@ -329,19 +329,36 @@ describe('App per-entry light-table provenance', () => {
 })
 
 
-describe('landing route integration', () => {
-  it('mounts only the new four-section composition on home, with one shell', () => {
+describe('light-table route integration', () => {
+  it.each(['/gameonvb', '/goal-loop'])('hides the global navbar in %s and retains the project return link', path => {
+    const html = render(path)
+    expect(html).toMatch(/<header class="site-header" hidden=""/)
+    expect(html).toContain('Back to homepage')
+    for (const other of ['/', '/playground', '/not-a-route']) expect(render(other)).not.toMatch(/<header class="site-header" hidden=/)
+    const css = readFileSync(new URL('./home/lightTable/lightTable.css', import.meta.url), 'utf8')
+    expect(css).toContain('.site-header[hidden]')
+    expect(css).toContain(':has(.ball-entry[open], .goal-entry[open])')
+  })
+  it.each(['/gameonvb', '/goal-loop'])('leaves navbar entry to %s native instead of flying an inactive card', path => {
+    const n = provenanceNavigation()
+    const event = n.click(path, { currentTarget: { getAttribute: () => path, target: '', hasAttribute: () => false, closest: (selector: string) => selector === '.site-header' ? {} : null } })
+    expect(event.preventDefault).not.toHaveBeenCalled()
+    expect(n.history.pushState).not.toHaveBeenCalled()
+    expect(n.history.replaceState).not.toHaveBeenCalled()
+    const card = provenanceNavigation()
+    expect(card.click(path).preventDefault).toHaveBeenCalledOnce()
+    expect(card.location.pathname).toBe(path)
+  })
+  it('mounts the original cards on home, with one shell and no open project', () => {
     const html = render('/')
     expect(html.match(/<header[ >]/g)).toHaveLength(1)
     expect(html.match(/<main[ >]/g)).toHaveLength(1)
     expect(html.match(/<footer[ >]/g)).toHaveLength(1)
-    expect(html).toContain('I build web platforms and the systems behind them.')
-    expect(html).toContain('data-p1-status="idle"')
-    expect(html).toContain('data-work-select')
-    expect(html).toContain('Goal Loop verification gates')
-    for (const id of ['introduction', 'work', 'approach', 'contact']) expect(html).toContain(`id="${id}"`)
-    for (const hash of ['work', 'contact']) expect(html).toContain(`href="#${hash}"`)
-    expect(html).not.toMatch(/data-light-table-shell|data-sheet=|data-poster=|Scroll to deal/)
+    expect(html).toContain('data-light-table-shell="true"')
+    expect([...html.matchAll(/data-sheet="([^"]+)"/g)].map(m => m[1])).toEqual(['goal-loop', 'gameonvb', 'intro'])
+    expect(html).toContain('Scroll to deal.')
+    for (const id of ['introduction', 'contact']) expect(html).toContain(`id="${id}"`)
+    expect(html).not.toMatch(/landing-composition|landing-page|landing-header|landing-footer|landing-nav-hint|data-p1-status|data-work-select|<dialog[^>]* open=/)
   })
   it.each(['/gameonvb', '/goal-loop'])('retains the cold project dialog on %s', path => {
     const html = render(path)
@@ -350,34 +367,21 @@ describe('landing route integration', () => {
     expect(html).toContain(`<dialog class="${dialogClass}" open=""`)
     expect(html).not.toContain('landing-composition')
   })
-  it('leaves landing fragments native and distinguishes the retained Light Table pair', () => {
-    for (const href of ['#work', '#contact']) {
+  it('leaves homepage fragments native and keeps home and projects in the same live Light Table', () => {
+    for (const href of ['#introduction', '#contact']) {
       const n = provenanceNavigation()
       expect(n.click(href).preventDefault).not.toHaveBeenCalled()
       expect(n.history.pushState).not.toHaveBeenCalled()
     }
-    expect(isLightTablePair('/', '/gameonvb')).toBe(false)
-    expect(isLightTablePair('/goal-loop', '/')).toBe(false)
+    expect(isLightTablePair('/', '/gameonvb')).toBe(true)
+    expect(isLightTablePair('/goal-loop', '/')).toBe(true)
     expect(isLightTablePair('/goal-loop', '/gameonvb')).toBe(true)
   })
 })
 
 
-it('restores landing fragments after cold mount or history returns from a project', () => {
-  const scrollIntoView = vi.fn()
-  const getElementById = vi.fn((id: string) => ['work', 'contact'].includes(id) ? { scrollIntoView } : null)
-  const doc = { getElementById } as unknown as Document
-  for (const hash of ['#work', '#contact', '#%63ontact']) restoreLandingHash(doc, hash)
-  expect(scrollIntoView).toHaveBeenCalledTimes(3)
-  expect(scrollIntoView).toHaveBeenLastCalledWith({ behavior: 'instant' })
-  restoreLandingHash(doc, '#missing')
-  restoreLandingHash(doc, '#%')
-  restoreLandingHash(doc, '')
-  expect(scrollIntoView).toHaveBeenCalledTimes(3)
-})
 
-
-it.each(['/gameonvb', '/goal-loop', '/playground'])('uses the clicked landing anchor for delegated navigation to %s', path => {
+it.each(['/gameonvb', '/goal-loop', '/playground'])('uses the explicit anchor for delegated navigation to %s', path => {
   const n = provenanceNavigation()
   const event = n.click(path, {}, true)
   expect(event.preventDefault).toHaveBeenCalledOnce()

@@ -237,8 +237,8 @@ it('measures the local shell header on pathname sync and observes wrapping chang
 })
 
 it('keeps App pathname normalization and modified/middle clicks browser-owned', () => {
-  expect(isLightTablePair('/', '/gameonvb/')).toBe(false)
-  expect(isLightTablePair('/gameonvb/', '/')).toBe(false)
+  expect(isLightTablePair('/', '/gameonvb/')).toBe(true)
+  expect(isLightTablePair('/gameonvb/', '/')).toBe(true)
   expect(isLightTablePair('/goal-loop', '/gameonvb')).toBe(true)
   expect(isLightTablePair('/', '/')).toBe(false)
   const input = { href: '/gameonvb', currentUrl: 'https://portfolio.test/', button: 0, defaultPrevented: false, altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, target: '', download: false }

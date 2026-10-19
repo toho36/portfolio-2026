@@ -113,6 +113,8 @@
 .site-shell:has([data-light-table-shell]) { --ink: #171816; --paper: #e9e7df; --muted: #b7afa0; --line: #454137; --signal: #d6b652; --focus: #e6d296; background: #171816; color: var(--paper); color-scheme: dark; }
 .site-shell:has([data-light-table-shell]) > main { width: 100%; margin: 0; }
 .site-shell:has([data-light-table-shell]) > .site-header { position: fixed; z-index: 30; top: 0; left: 0; width: 100%; min-height: 80px; padding-inline: clamp(1.25rem,3vw,3rem); background: #171816f0; }
+.site-shell:has([data-light-table-shell]) > .site-header[hidden],
+.site-shell:has(.ball-entry[open], .goal-entry[open]) > .site-header { display: none; }
 .site-shell:has([data-light-table-shell]) > footer { display: grid; }
 .site-shell:has([data-light-table-shell]) > .skip-link { z-index: 40; }
 .ball-entry { z-index: 20; scrollbar-gutter: stable; }
