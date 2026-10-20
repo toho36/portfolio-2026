@@ -27,7 +27,7 @@ const STEPS: readonly GameOnVbStep[] = [
 const SETS: readonly GameOnVbSet[] = [
   {
     label: 'Set 1 · computer time', value: '<10', unit: 'ms per visit',
-    before: { prefix: 'Before: ', struck: '62 ms', suffix: ' · Limit: 10 ms' },
+    before: { prefix: 'Before: ', struck: '62 ms', suffix: 'Limit: 10 ms' },
     body: 'On the free plan, the server may spend 10 ms of computer time on each visit. Mine needed up to 62 ms, so some visitors got an error.',
     tech: 'Next.js on Cloudflare Workers',
   },
@@ -39,7 +39,7 @@ const SETS: readonly GameOnVbSet[] = [
   },
   {
     label: 'Set 3 · scheduled jobs', value: '1', unit: 'scheduled job',
-    before: { prefix: 'Before: ', struck: '9', suffix: ' · Limit: 5' },
+    before: { prefix: 'Before: ', struck: '9', suffix: 'Limit: 5' },
     body: 'The free plan allows five scheduled jobs. I had nine, so I combined them into one that starts the others.',
     tech: 'Cron triggers: 9 → 1 hub',
   },

@@ -52,8 +52,8 @@ describe('GameOnVB Match Operations case study', () => {
     expect(markup).toContain('aria-label="0 Kč a month"')
     expect(markup).toContain('<div class="score" data-score="true">')
     expect(markup).toContain('Limits beaten')
-    expect(markup).toContain('Before: <s>62 ms</s><span class="limit"> · Limit: 10 ms</span>')
-    expect(markup).toContain('Before: <s>9</s><span class="limit"> · Limit: 5</span>')
+    expect(markup).toContain('Before: <s>62 ms</s><span class="limit">Limit: 10 ms</span>')
+    expect(markup).toContain('Before: <s>9</s><span class="limit">Limit: 5</span>')
     expect(markup).toContain('href="https://gameonvb.cz"')
     expect(markup).toContain('Cancel early.<br/>Keep your credit.')
     expect(markup).not.toMatch(/case-problem|case-pair|class="lifecycle"|Evidence boundary/)
@@ -79,21 +79,30 @@ describe('GameOnVB Match Operations case study', () => {
     for (const text of ['Sign up', 'Scan in any Czech bank app', 'Confirmed', 'Door list · Tue']) expect(markup).toContain(text)
   })
 
+  it('gives each step its own readable app screen for phones', () => {
+    const markup = render()
+    expect(markup.match(/class="step-screen" aria-hidden="true"/g)).toHaveLength(4)
+    const firstStep = markup.slice(markup.indexOf('data-step="0"'), markup.indexOf('data-step="1"'))
+    expect(firstStep).toContain('Sign up')
+  })
+
   it('scopes the approved responsive and reduced-motion rules below the hero', () => {
     const css = readFileSync(new URL('./gameOnVb.css', import.meta.url), 'utf8')
     expect(css).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/)
     expect(css).toMatch(/@media\s*\(max-width:\s*820px\)/)
     expect(css).toMatch(/@media\s*\(max-width:\s*600px\)/)
-    expect(css).toMatch(/min-width:\s*601px/)
+    expect(css).toMatch(/\.gv \.band \{ height: 300svh; \}/)
+    expect(css).toMatch(/\.gv \.phone-col \{ display: none; \}/)
+    expect(css).toMatch(/padding: clamp\(48px, 10vw, 72px\) 0/)
     expect(css).toMatch(/height:\s*3px/)
     expect(css).toMatch(/rotate\(-8deg\)/)
     expect(css).toContain('#e2553a')
-    expect(css).toContain('#0b0e0f')
     expect(css).toMatch(/text-wrap:\s*pretty/)
     const rules = parse(css)
     rules.walkRules(rule => {
       if (rule.parent?.type === 'atrule' && rule.parent.name === 'keyframes') return
-      rule.selectors.forEach(selector => expect(selector).toMatch(/^\.gv(?:[ :.]|$)/))
+      // Page rules stay under .gv; only the phone-size hero text fixes reach the shared hero, under .voleyevents.
+      rule.selectors.forEach(selector => expect(selector).toMatch(/^\.gv(?:[ :.]|$)|^\.voleyevents \.(?:entry-header|ball-entry-caption|ball-story-links)\b/))
     })
     const reduced: Record<string, string> = {}
     rules.walkAtRules('media', media => {
@@ -193,7 +202,7 @@ function motionFixture(reduced = false, width = 1440) {
   const elements: Record<string, unknown> = { '[data-band]': band, '[data-track]': track,
     '[data-won]': won, '.phone-col': phone, '[data-band-ball]': bandBall, '[data-step-ball]': stepBall }
   const lists: Record<string, unknown[]> = { '[data-step]': steps, '[data-screen]': screens,
-    '.pips i': pips, '.reveal': [reveal] }
+    '.pips i': pips, '.reveal': [reveal], '[data-track] .set': Array.from({ length: 5 }, (_, i) => ({ offsetLeft: 24 + i * 330 })) }
   const listeners = new Map<string, EventListener>()
   const add = vi.fn((name: string, fn: EventListener) => listeners.set(name, fn))
   const remove = vi.fn((name: string) => listeners.delete(name))
@@ -264,17 +273,29 @@ describe('GameOnVB dialog motion', () => {
     } finally { cleanup(); vi.unstubAllGlobals() }
   })
 
-  it('selects mobile steps below the sticky phone and skips rolling and hopping for reduced motion', async () => {
+  it('rests the band on each card on phones and moves only between cards', async () => {
+    const { mountGameOnVbMotion } = await import('./gameOnVbMotion')
+    const h = motionFixture(false, 390)
+    const at = (progress: number) => { h.band.getBoundingClientRect = () => ({ top: -progress * 3200, height: 4200, width: 390, bottom: 4200 - progress * 3200 }); h.scroll() }
+    const cleanup = mountGameOnVbMotion(h.root)
+    try {
+      at(.05); expect(h.track.style.transform).toBe('translateX(0px)')
+      at(.3); expect(h.track.style.transform).toBe('translateX(-330px)')
+      at(.125); expect(h.track.style.transform).toBe('translateX(-165px)')
+    } finally { cleanup(); vi.unstubAllGlobals() }
+  })
+
+  it('selects the step nearest the viewport middle on phones and skips rolling and hopping for reduced motion', async () => {
     const { mountGameOnVbMotion } = await import('./gameOnVbMotion')
     const h = motionFixture(true, 390)
     h.steps.forEach((step, i) => { step.getBoundingClientRect = () => ({ top: 350 + i * 300, height: 200, width: 390, bottom: 550 + i * 300 }) })
     const cleanup = mountGameOnVbMotion(h.root)
     try {
-      expect(h.screens[1].classList.contains('on')).toBe(true)
+      expect(h.screens[0].classList.contains('on')).toBe(true)
       expect(h.won.textContent).toBe('4')
       expect(h.track.style.transform).toBe('translateX(0px)')
       const ball = h.bandBall.style.transform
-      h.steps[2].getBoundingClientRect = () => ({ top: 586, height: 200, width: 390, bottom: 786 })
+      h.steps[2].getBoundingClientRect = () => ({ top: 410, height: 200, width: 390, bottom: 610 })
       h.scroll()
       expect(h.screens[2].classList.contains('on')).toBe(true)
       expect(h.bandBall.style.transform).toBe(ball)

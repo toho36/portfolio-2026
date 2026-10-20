@@ -33,6 +33,57 @@ function RouteAnchor({
   )
 }
 
+type PhoneScreen = (typeof VOLEYEVENTS.screens)[number]
+
+// One app-screen drawing, shown in the phone and, on phones, next to each step.
+function ScreenContent({ screen }: { readonly screen: PhoneScreen }) {
+  return <>
+      <span className="sbar">{screen.title}</span>
+      {screen.rows.map(row => <div className="row" key={row.label}>{row.label}<span className={`pill${row.ok ? ' ok' : ''}`}>{row.pill}</span></div>)}
+      {screen.button && <div className="btn">{screen.button}</div>}
+      {screen.amount && <b className="pay-amount">{screen.amount}</b>}
+      {screen.qrCaption && <>
+        <svg className="qr" viewBox="-2 -2 29 29" aria-hidden="true">
+          <rect x="-2" y="-2" width="29" height="29" fill="#fff"/>
+          <g fill="#16130b">
+            <rect x="0" y="0" width="7" height="7"/>
+            <rect x="1" y="1" width="5" height="5" fill="#fff"/>
+            <rect x="2" y="2" width="3" height="3"/>
+            <rect x="18" y="0" width="7" height="7"/>
+            <rect x="19" y="1" width="5" height="5" fill="#fff"/>
+            <rect x="20" y="2" width="3" height="3"/>
+            <rect x="0" y="18" width="7" height="7"/>
+            <rect x="1" y="19" width="5" height="5" fill="#fff"/>
+            <rect x="2" y="20" width="3" height="3"/>
+            <path d="
+              M8 0h1v1h-1ZM9 0h1v1h-1ZM11 0h1v1h-1ZM13 0h1v1h-1ZM14 0h1v1h-1ZM16 0h1v1h-1ZM8 1h1v1h-1ZM9 1h1v1h-1ZM10 1h1v1h-1ZM11 1h1v1h-1ZM13 1h1v1h-1ZM14 1h1v1h-1Z
+              M9 2h1v1h-1ZM11 2h1v1h-1ZM13 2h1v1h-1ZM14 2h1v1h-1ZM15 2h1v1h-1ZM16 2h1v1h-1ZM9 3h1v1h-1ZM12 3h1v1h-1ZM14 3h1v1h-1ZM15 3h1v1h-1ZM16 3h1v1h-1ZM9 4h1v1h-1Z
+              M10 4h1v1h-1ZM12 4h1v1h-1ZM13 4h1v1h-1ZM16 4h1v1h-1ZM12 5h1v1h-1ZM14 5h1v1h-1ZM15 5h1v1h-1ZM8 6h1v1h-1ZM10 6h1v1h-1ZM15 6h1v1h-1ZM10 7h1v1h-1ZM15 7h1v1h-1Z
+              M3 8h1v1h-1ZM4 8h1v1h-1ZM6 8h1v1h-1ZM7 8h1v1h-1ZM8 8h1v1h-1ZM9 8h1v1h-1ZM10 8h1v1h-1ZM12 8h1v1h-1ZM13 8h1v1h-1ZM14 8h1v1h-1ZM16 8h1v1h-1ZM17 8h1v1h-1Z
+              M22 8h1v1h-1ZM23 8h1v1h-1ZM24 8h1v1h-1ZM2 9h1v1h-1ZM3 9h1v1h-1ZM4 9h1v1h-1ZM5 9h1v1h-1ZM8 9h1v1h-1ZM9 9h1v1h-1ZM10 9h1v1h-1ZM11 9h1v1h-1ZM18 9h1v1h-1Z
+              M23 9h1v1h-1ZM24 9h1v1h-1ZM0 10h1v1h-1ZM2 10h1v1h-1ZM3 10h1v1h-1ZM4 10h1v1h-1ZM5 10h1v1h-1ZM6 10h1v1h-1ZM7 10h1v1h-1ZM8 10h1v1h-1ZM9 10h1v1h-1ZM10 10h1v1h-1Z
+              M11 10h1v1h-1ZM12 10h1v1h-1ZM15 10h1v1h-1ZM16 10h1v1h-1ZM17 10h1v1h-1ZM18 10h1v1h-1ZM19 10h1v1h-1ZM22 10h1v1h-1ZM24 10h1v1h-1ZM0 11h1v1h-1ZM1 11h1v1h-1ZM2 11h1v1h-1Z
+              M4 11h1v1h-1ZM5 11h1v1h-1ZM8 11h1v1h-1ZM10 11h1v1h-1ZM15 11h1v1h-1ZM16 11h1v1h-1ZM17 11h1v1h-1ZM21 11h1v1h-1ZM22 11h1v1h-1ZM4 12h1v1h-1ZM6 12h1v1h-1ZM7 12h1v1h-1Z
+              M8 12h1v1h-1ZM9 12h1v1h-1ZM10 12h1v1h-1ZM13 12h1v1h-1ZM17 12h1v1h-1ZM18 12h1v1h-1ZM19 12h1v1h-1ZM20 12h1v1h-1ZM21 12h1v1h-1ZM3 13h1v1h-1ZM9 13h1v1h-1ZM11 13h1v1h-1Z
+              M14 13h1v1h-1ZM15 13h1v1h-1ZM18 13h1v1h-1ZM19 13h1v1h-1ZM20 13h1v1h-1ZM23 13h1v1h-1ZM2 14h1v1h-1ZM4 14h1v1h-1ZM5 14h1v1h-1ZM10 14h1v1h-1ZM13 14h1v1h-1ZM14 14h1v1h-1Z
+              M15 14h1v1h-1ZM16 14h1v1h-1ZM18 14h1v1h-1ZM19 14h1v1h-1ZM20 14h1v1h-1ZM22 14h1v1h-1ZM23 14h1v1h-1ZM1 15h1v1h-1ZM6 15h1v1h-1ZM7 15h1v1h-1ZM8 15h1v1h-1ZM9 15h1v1h-1Z
+              M11 15h1v1h-1ZM15 15h1v1h-1ZM19 15h1v1h-1ZM21 15h1v1h-1ZM22 15h1v1h-1ZM3 16h1v1h-1ZM8 16h1v1h-1ZM15 16h1v1h-1ZM19 16h1v1h-1ZM20 16h1v1h-1ZM21 16h1v1h-1ZM22 16h1v1h-1Z
+              M23 16h1v1h-1ZM24 16h1v1h-1ZM11 17h1v1h-1ZM14 17h1v1h-1ZM17 17h1v1h-1ZM19 17h1v1h-1ZM23 17h1v1h-1ZM24 17h1v1h-1ZM9 18h1v1h-1ZM10 18h1v1h-1ZM11 18h1v1h-1ZM13 18h1v1h-1Z
+              M15 18h1v1h-1ZM16 18h1v1h-1ZM17 18h1v1h-1ZM20 18h1v1h-1ZM24 18h1v1h-1ZM8 19h1v1h-1ZM9 19h1v1h-1ZM11 19h1v1h-1ZM12 19h1v1h-1ZM13 19h1v1h-1ZM16 19h1v1h-1ZM17 19h1v1h-1Z
+              M21 19h1v1h-1ZM22 19h1v1h-1ZM24 19h1v1h-1ZM8 20h1v1h-1ZM12 20h1v1h-1ZM14 20h1v1h-1ZM16 20h1v1h-1ZM17 20h1v1h-1ZM20 20h1v1h-1ZM21 20h1v1h-1ZM23 20h1v1h-1ZM24 20h1v1h-1Z
+              M8 21h1v1h-1ZM9 21h1v1h-1ZM10 21h1v1h-1ZM11 21h1v1h-1ZM12 21h1v1h-1ZM14 21h1v1h-1ZM16 21h1v1h-1ZM17 21h1v1h-1ZM18 21h1v1h-1ZM19 21h1v1h-1ZM20 21h1v1h-1ZM23 21h1v1h-1Z
+              M9 22h1v1h-1ZM11 22h1v1h-1ZM14 22h1v1h-1ZM18 22h1v1h-1ZM22 22h1v1h-1ZM23 22h1v1h-1ZM24 22h1v1h-1ZM8 23h1v1h-1ZM9 23h1v1h-1ZM11 23h1v1h-1ZM12 23h1v1h-1ZM13 23h1v1h-1Z
+              M17 23h1v1h-1ZM18 23h1v1h-1ZM19 23h1v1h-1ZM20 23h1v1h-1ZM21 23h1v1h-1ZM22 23h1v1h-1ZM23 23h1v1h-1ZM10 24h1v1h-1ZM12 24h1v1h-1ZM13 24h1v1h-1ZM14 24h1v1h-1ZM15 24h1v1h-1Z
+              M18 24h1v1h-1ZM20 24h1v1h-1ZM21 24h1v1h-1ZM22 24h1v1h-1ZM23 24h1v1h-1ZM24 24h1v1h-1Z
+            "/>
+          </g>
+        </svg>
+        <p className="qr-caption">{screen.qrCaption}</p>
+      </>}
+      {screen.stamp && <div className="stamp">{screen.stamp}</div>}
+  </>
+}
+
 export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
   const [landing, setLanding] = useState<LandingIndex>(0)
   const story = useRef<HTMLDivElement>(null)
@@ -104,49 +155,7 @@ export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
           <div className="phone-col"><div className="phone"><div className="phone-in" aria-hidden="true">
             {VOLEYEVENTS.screens.map((screen, index) => (
               <div className={`screen${index === 0 ? ' on' : ''}`} data-screen={index} key={screen.title}>
-                <span className="sbar">{screen.title}</span>
-                {screen.rows.map(row => <div className="row" key={row.label}>{row.label}<span className={`pill${row.ok ? ' ok' : ''}`}>{row.pill}</span></div>)}
-                {screen.button && <div className="btn">{screen.button}</div>}
-                {screen.amount && <b className="pay-amount">{screen.amount}</b>}
-                {screen.qrCaption && <>
-                  <svg className="qr" viewBox="-2 -2 29 29" aria-hidden="true">
-                    <rect x="-2" y="-2" width="29" height="29" fill="#fff"/>
-                    <g fill="#16130b">
-                      <rect x="0" y="0" width="7" height="7"/>
-                      <rect x="1" y="1" width="5" height="5" fill="#fff"/>
-                      <rect x="2" y="2" width="3" height="3"/>
-                      <rect x="18" y="0" width="7" height="7"/>
-                      <rect x="19" y="1" width="5" height="5" fill="#fff"/>
-                      <rect x="20" y="2" width="3" height="3"/>
-                      <rect x="0" y="18" width="7" height="7"/>
-                      <rect x="1" y="19" width="5" height="5" fill="#fff"/>
-                      <rect x="2" y="20" width="3" height="3"/>
-                      <path d="
-                        M8 0h1v1h-1ZM9 0h1v1h-1ZM11 0h1v1h-1ZM13 0h1v1h-1ZM14 0h1v1h-1ZM16 0h1v1h-1ZM8 1h1v1h-1ZM9 1h1v1h-1ZM10 1h1v1h-1ZM11 1h1v1h-1ZM13 1h1v1h-1ZM14 1h1v1h-1Z
-                        M9 2h1v1h-1ZM11 2h1v1h-1ZM13 2h1v1h-1ZM14 2h1v1h-1ZM15 2h1v1h-1ZM16 2h1v1h-1ZM9 3h1v1h-1ZM12 3h1v1h-1ZM14 3h1v1h-1ZM15 3h1v1h-1ZM16 3h1v1h-1ZM9 4h1v1h-1Z
-                        M10 4h1v1h-1ZM12 4h1v1h-1ZM13 4h1v1h-1ZM16 4h1v1h-1ZM12 5h1v1h-1ZM14 5h1v1h-1ZM15 5h1v1h-1ZM8 6h1v1h-1ZM10 6h1v1h-1ZM15 6h1v1h-1ZM10 7h1v1h-1ZM15 7h1v1h-1Z
-                        M3 8h1v1h-1ZM4 8h1v1h-1ZM6 8h1v1h-1ZM7 8h1v1h-1ZM8 8h1v1h-1ZM9 8h1v1h-1ZM10 8h1v1h-1ZM12 8h1v1h-1ZM13 8h1v1h-1ZM14 8h1v1h-1ZM16 8h1v1h-1ZM17 8h1v1h-1Z
-                        M22 8h1v1h-1ZM23 8h1v1h-1ZM24 8h1v1h-1ZM2 9h1v1h-1ZM3 9h1v1h-1ZM4 9h1v1h-1ZM5 9h1v1h-1ZM8 9h1v1h-1ZM9 9h1v1h-1ZM10 9h1v1h-1ZM11 9h1v1h-1ZM18 9h1v1h-1Z
-                        M23 9h1v1h-1ZM24 9h1v1h-1ZM0 10h1v1h-1ZM2 10h1v1h-1ZM3 10h1v1h-1ZM4 10h1v1h-1ZM5 10h1v1h-1ZM6 10h1v1h-1ZM7 10h1v1h-1ZM8 10h1v1h-1ZM9 10h1v1h-1ZM10 10h1v1h-1Z
-                        M11 10h1v1h-1ZM12 10h1v1h-1ZM15 10h1v1h-1ZM16 10h1v1h-1ZM17 10h1v1h-1ZM18 10h1v1h-1ZM19 10h1v1h-1ZM22 10h1v1h-1ZM24 10h1v1h-1ZM0 11h1v1h-1ZM1 11h1v1h-1ZM2 11h1v1h-1Z
-                        M4 11h1v1h-1ZM5 11h1v1h-1ZM8 11h1v1h-1ZM10 11h1v1h-1ZM15 11h1v1h-1ZM16 11h1v1h-1ZM17 11h1v1h-1ZM21 11h1v1h-1ZM22 11h1v1h-1ZM4 12h1v1h-1ZM6 12h1v1h-1ZM7 12h1v1h-1Z
-                        M8 12h1v1h-1ZM9 12h1v1h-1ZM10 12h1v1h-1ZM13 12h1v1h-1ZM17 12h1v1h-1ZM18 12h1v1h-1ZM19 12h1v1h-1ZM20 12h1v1h-1ZM21 12h1v1h-1ZM3 13h1v1h-1ZM9 13h1v1h-1ZM11 13h1v1h-1Z
-                        M14 13h1v1h-1ZM15 13h1v1h-1ZM18 13h1v1h-1ZM19 13h1v1h-1ZM20 13h1v1h-1ZM23 13h1v1h-1ZM2 14h1v1h-1ZM4 14h1v1h-1ZM5 14h1v1h-1ZM10 14h1v1h-1ZM13 14h1v1h-1ZM14 14h1v1h-1Z
-                        M15 14h1v1h-1ZM16 14h1v1h-1ZM18 14h1v1h-1ZM19 14h1v1h-1ZM20 14h1v1h-1ZM22 14h1v1h-1ZM23 14h1v1h-1ZM1 15h1v1h-1ZM6 15h1v1h-1ZM7 15h1v1h-1ZM8 15h1v1h-1ZM9 15h1v1h-1Z
-                        M11 15h1v1h-1ZM15 15h1v1h-1ZM19 15h1v1h-1ZM21 15h1v1h-1ZM22 15h1v1h-1ZM3 16h1v1h-1ZM8 16h1v1h-1ZM15 16h1v1h-1ZM19 16h1v1h-1ZM20 16h1v1h-1ZM21 16h1v1h-1ZM22 16h1v1h-1Z
-                        M23 16h1v1h-1ZM24 16h1v1h-1ZM11 17h1v1h-1ZM14 17h1v1h-1ZM17 17h1v1h-1ZM19 17h1v1h-1ZM23 17h1v1h-1ZM24 17h1v1h-1ZM9 18h1v1h-1ZM10 18h1v1h-1ZM11 18h1v1h-1ZM13 18h1v1h-1Z
-                        M15 18h1v1h-1ZM16 18h1v1h-1ZM17 18h1v1h-1ZM20 18h1v1h-1ZM24 18h1v1h-1ZM8 19h1v1h-1ZM9 19h1v1h-1ZM11 19h1v1h-1ZM12 19h1v1h-1ZM13 19h1v1h-1ZM16 19h1v1h-1ZM17 19h1v1h-1Z
-                        M21 19h1v1h-1ZM22 19h1v1h-1ZM24 19h1v1h-1ZM8 20h1v1h-1ZM12 20h1v1h-1ZM14 20h1v1h-1ZM16 20h1v1h-1ZM17 20h1v1h-1ZM20 20h1v1h-1ZM21 20h1v1h-1ZM23 20h1v1h-1ZM24 20h1v1h-1Z
-                        M8 21h1v1h-1ZM9 21h1v1h-1ZM10 21h1v1h-1ZM11 21h1v1h-1ZM12 21h1v1h-1ZM14 21h1v1h-1ZM16 21h1v1h-1ZM17 21h1v1h-1ZM18 21h1v1h-1ZM19 21h1v1h-1ZM20 21h1v1h-1ZM23 21h1v1h-1Z
-                        M9 22h1v1h-1ZM11 22h1v1h-1ZM14 22h1v1h-1ZM18 22h1v1h-1ZM22 22h1v1h-1ZM23 22h1v1h-1ZM24 22h1v1h-1ZM8 23h1v1h-1ZM9 23h1v1h-1ZM11 23h1v1h-1ZM12 23h1v1h-1ZM13 23h1v1h-1Z
-                        M17 23h1v1h-1ZM18 23h1v1h-1ZM19 23h1v1h-1ZM20 23h1v1h-1ZM21 23h1v1h-1ZM22 23h1v1h-1ZM23 23h1v1h-1ZM10 24h1v1h-1ZM12 24h1v1h-1ZM13 24h1v1h-1ZM14 24h1v1h-1ZM15 24h1v1h-1Z
-                        M18 24h1v1h-1ZM20 24h1v1h-1ZM21 24h1v1h-1ZM22 24h1v1h-1ZM23 24h1v1h-1ZM24 24h1v1h-1Z
-                      "/>
-                    </g>
-                  </svg>
-                  <p className="qr-caption">{screen.qrCaption}</p>
-                </>}
-                {screen.stamp && <div className="stamp">{screen.stamp}</div>}
+                <ScreenContent screen={screen} />
               </div>
             ))}
           </div></div></div>
@@ -156,6 +165,7 @@ export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
               <div className="step" id={step.id} data-step={index} key={step.id}>
                 <span className="n" aria-hidden="true">{index + 1}</span>
                 <h2>{step.title}</h2><p>{step.body}</p>
+                <div className="step-screen" aria-hidden="true"><ScreenContent screen={VOLEYEVENTS.screens[index]} /></div>
               </div>
             ))}
           </div>

@@ -6,11 +6,11 @@ export function mountGameOnVbMotion(root: HTMLElement): () => void {
   const media = view.matchMedia('(prefers-reduced-motion: reduce)')
   const band = root.querySelector<HTMLElement>('[data-band]')!
   const track = root.querySelector<HTMLElement>('[data-track]')!
+  const cards = [...root.querySelectorAll<HTMLElement>('[data-track] .set')]
   const won = root.querySelector<HTMLElement>('[data-won]')!
   const pips = [...root.querySelectorAll<HTMLElement>('.pips i')]
   const steps = [...root.querySelectorAll<HTMLElement>('[data-step]')]
   const screens = [...root.querySelectorAll<HTMLElement>('[data-screen]')]
-  const phoneCol = root.querySelector<HTMLElement>('.phone-col')!
   const bandBall = root.querySelector<HTMLElement>('[data-band-ball]')!
   const stepBall = root.querySelector<HTMLElement>('[data-step-ball]')!
   const reveals = [...root.querySelectorAll<HTMLElement>('.reveal')]
@@ -61,14 +61,22 @@ export function mountGameOnVbMotion(root: HTMLElement): () => void {
     const progress = Math.min(1, Math.max(0, -rect.top / Math.max(1, rect.height - height)))
     const b = reduced ? 1 : progress
     const max = reduced ? 0 : Math.max(0, track.scrollWidth - width + 48)
-    track.style.transform = `translateX(${-b * max}px)`
+    let shift = b * max
+    if (!reduced && width <= 600 && cards.length > 1) {
+      // On phones one card fills the screen, so rest on each card and move only between them.
+      const stops = cards.map(card => Math.min(max, card.offsetLeft - cards[0].offsetLeft))
+      const segment = Math.min(cards.length - 1.0001, b * (cards.length - 1))
+      const index = Math.floor(segment)
+      const t = Math.min(1, Math.max(0, (segment - index - .3) / .4))
+      shift = stops[index] + (stops[index + 1] - stops[index]) * t * t * (3 - 2 * t)
+    }
+    track.style.transform = `translateX(${-shift}px)`
     const count = Math.min(4, Math.floor(b * 5.2))
     // Avoid announcing the same score on every scroll event.
     if (won.textContent !== String(count)) won.textContent = String(count)
     pips.forEach((pip, index) => pip.classList.toggle('on', index < count))
 
-    // On mobile, the sticky phone covers the top of the viewport.
-    const mid = view.innerWidth <= 820 ? (phoneCol.getBoundingClientRect().bottom + height) / 2 : height / 2
+    const mid = height / 2
     let active = 0
     let distance = Infinity
     steps.forEach((step, index) => {
