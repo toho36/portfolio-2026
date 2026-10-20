@@ -94,26 +94,23 @@ it('uses one persistent App seam and App navigation for the eligible pair', () =
   expect(app).toContain('isLightTablePair')
 })
 
-it('real Goal Loop routes restore the same watch hero above the complete sourced case', () => {
+it('real Goal Loop routes open the kitchen hero while the watch remains in its homepage card', () => {
   for (const path of ['/goal-loop', '/goal-loop/']) {
     const html = render(path)
     expect(html.match(/data-light-table-shell/g)).toHaveLength(1)
-    expect(html.match(/data-watch-hero/g)).toHaveLength(1)
+    expect(html.match(/class="wrap k-hero"/g)).toHaveLength(1)
     expect(html.match(/class="watch-view"/g)).toHaveLength(1)
     expect(html).toContain('class="goal-entry" open=""')
-    expect(html).toContain('The same skeleton wristwatch, enlarged')
+    expect(html).toContain('<h1 id="goal-loop-title">Quality first.<br/><em>Speed follows.</em></h1>')
     expect(html).not.toMatch(/data-calibre|class="calibre"|Separate full case|iframe/)
-    expect(html.match(/<details class="run-reference"/g)).toHaveLength(6)
-    expect(html).toContain('id="run-tape"')
-    expect(html).toContain('Illustration, not a live Goal Loop run')
+    expect(html.match(/class="k-pane(?: on)?"/g)).toHaveLength(5)
+    expect(html).toContain('id="kitchen-pass"')
+    expect(html).not.toMatch(/entry-watch-slot|data-watch-hero|class="goal-loop"/)
     const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1])
     expect(new Set(ids).size).toBe(ids.length)
     for (const width of [390, 1440]) {
       expect(declarations('.goal-entry', width)).toMatchObject({ '--ink': '#e7e5de', '--paper': '#343c34' })
-      expect(declarations('.goal-entry > .goal-loop', width)).toMatchObject({ '--run-ink': 'var(--paper)', '--run-field': 'var(--ink)' })
       expect(declarations('.goal-entry', width)['scroll-padding-top']).toBe('var(--shell-header-height,0px)')
-      expect(declarations('.goal-entry .entry-header', width).top).toBe('var(--shell-header-height,0px)')
-      expect(declarations('.entry-watch-slot', width)).toMatchObject({ position: 'absolute', transform: 'translateZ(0)' })
     }
   }
 })

@@ -90,12 +90,12 @@ describe('light-table homepage and project shells', () => {
     const unknown = render('/not-a-route')
 
     expect(gameOnVB).toContain(
-      'Registration and operations software for recurring recreational volleyball events.',
+      'Sign-ups, payments and check-in for regular recreational volleyball sessions.',
     )
     expect(gameOnVB).toContain('href="/"')
     expect(gameOnVB).toContain('href="/goal-loop"')
     expect(goalLoop).toContain('id="goal-loop-title"')
-    expect(goalLoop).toContain('id="run-tape"')
+    expect(goalLoop).toContain('id="kitchen-pass"')
     expect(goalLoop).toContain('href="/"')
     expect(goalLoop).toContain('href="/gameonvb"')
     for (const markup of [playground, playgroundSlash]) {

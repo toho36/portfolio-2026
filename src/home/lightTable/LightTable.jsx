@@ -1,7 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { HomePage } from '../../pages/Home'
 import { GoalLoopPage } from '../../pages/GoalLoop'
-import { GOAL_LOOP } from '../../content/goalLoop'
 import { createWatchFlow } from './watchFlow.js'
 import { VoleyEventsPage } from '../../pages/VoleyEvents'
 import { VOLEYEVENTS } from '../../content/voleyevents'
@@ -240,35 +239,23 @@ export function LightTable({pathname,onNavigate}) {
   },[ballMounted,ballDesired,reduced])
   useLayoutEffect(()=>{
     if(!mounted)return
-    const dialog=dialogRef.current,deck=deckRef.current,fan=deck.querySelector('.sheet-fan'),host=deck.querySelector('.watch-view'),surface=host.watchSurface
+    const dialog=dialogRef.current,deck=deckRef.current,fan=deck.querySelector('.sheet-fan'),host=deck.querySelector('.watch-view')
     if(!flowRef.current){
-      const sheet=host.closest('.sheet'),box=sheet.getBoundingClientRect(),m=new DOMMatrix(getComputedStyle(sheet.parentElement).transform)
-      const style=getComputedStyle(surface),w=parseFloat(style.width),h=parseFloat(style.height),b=surface.getBoundingClientRect()
-      const visible=box.bottom>0&&box.top<innerHeight&&!sheet.closest('[inert]')
-      const origin=visible?{a:m.a,b:m.b,c:m.c,d:m.d,x:b.x-Math.min(0,m.a*w)-Math.min(0,m.c*h),y:b.y-Math.min(0,m.b*w)-Math.min(0,m.d*h)}:{a:1,b:0,c:0,d:1,x:(innerWidth-w)/2,y:(innerHeight-h)/2}
-      const previousOverflow=document.body.style.overflow,previousSurfaceStyle=surface.style.cssText,previousDeckStyle=deck.style.cssText,previousFanStyle=fan.style.cssText,footer=deck.querySelector('.table-footer'),previousFooterStyle=footer.style.cssText
+      const sheet=host.closest('.sheet')
+      const previousOverflow=document.body.style.overflow,previousDeckStyle=deck.style.cssText,previousFanStyle=fan.style.cssText,footer=deck.querySelector('.table-footer'),previousFooterStyle=footer.style.cssText
       footer.style.setProperty('visibility','hidden','important')
       if(!sourceRef.current||sourceRef.current.hidden)sourceRef.current=sheet.querySelector('.sheet-cta:not([hidden])')||deck.querySelector('button[aria-label="Show Goal Loop"]')
       function paint(p){
-        const scale=Math.min((innerWidth*(innerWidth>760?.64:1)-24)/w,(innerHeight-210)/h)
-        const end={a:scale,b:0,c:0,d:scale,x:innerWidth*(innerWidth>760?.64:.5)-w*scale/2,y:innerHeight*.5-h*scale/2}
-        const mix=k=>origin[k]+(end[k]-origin[k])*p
-        // Transfer only the renderer-owned surface. Keep its canvas/camera backing.
-        const affine=Object.fromEntries(['a','b','c','d','x','y'].map(k=>[k,mix(k)]))
-        surface.style.transform=`matrix(${affine.a},${affine.b},${affine.c},${affine.d},${affine.x},${affine.y})`
         dialog.style.setProperty('--progress',String(p))
-        const t=Math.max(0,Math.min(1,(p-.55)/.45));dialog.style.setProperty('--text',String(t*t*(3-2*t)))
         deck.style.opacity=String(1-p*.8);fan.style.transform=`translate(-50%,-50%) scale(${1-p*.035})`
-        dialog.dataset.progress=p.toFixed(5);dialog.dataset.sourceAffine=JSON.stringify(affine)
+        dialog.dataset.progress=p.toFixed(5)
       }
-      function resize(){paint(flowRef.current?.state.position??(watchColdRef.current?1:0))}
+      function visibility(){if(document.hidden)flowRef.current?.pause();else flowRef.current?.resume()}
       function restore(){
-        removeEventListener('resize',resize)
-        surface.style.cssText=previousSurfaceStyle;host.append(surface);delete host.watchEntry;const view=host.watchView;if(view?.resize())view.paint(view.pose.time,view.pose.open)
+        document.removeEventListener('visibilitychange',visibility)
         dialog.close();delete dialog.dataset.watchReady;document.body.style.overflow=previousOverflow
         deck.style.cssText=previousDeckStyle;fan.style.cssText=previousFanStyle;footer.style.cssText=previousFooterStyle
         deck.inert=false;deck.removeAttribute('aria-hidden');restoreRef.current=null
-        host.dispatchEvent(new Event('watchentrychange'))
       }
       restoreRef.current=restore
       function land(p){
@@ -280,14 +267,10 @@ export function LightTable({pathname,onNavigate}) {
         const focus=ctaVisible?source:deck.querySelector('button[aria-label="Show Goal Loop"]');focus?.focus({preventScroll:true})
         if(ballDesiredRef.current)setBallMounted(true)
       }
-      // Freeze the exact rendered reveal before focus/leave can change its target.
-      host.watchEntry={pose:host.watchView?.pose,paint}
-      surface.style.cssText=`position:fixed;inset:auto;left:0;top:0;width:${w}px;height:${h}px;transform-origin:0 0`
-      paint(watchColdRef.current?1:0);dialog.querySelector('.entry-watch-slot').append(surface)
+      paint(watchColdRef.current?1:0)
       if(dialog.open)dialog.close();dialog.show();dialog.scrollTop=0;dialog.dataset.watchReady='true';watchBackRef.current?.focus({preventScroll:true});document.body.style.overflow='hidden'
-      flowRef.current=createWatchFlow(paint,land,{position:watchColdRef.current?1:0,velocity:0});host.watchEntry.flow=flowRef.current
-      if(document.hidden)flowRef.current.pause()
-      host.dispatchEvent(new Event('watchentrychange'));addEventListener('resize',resize)
+      flowRef.current=createWatchFlow(paint,land,{position:watchColdRef.current?1:0,velocity:0})
+      document.addEventListener('visibilitychange',visibility);visibility()
       if(watchColdRef.current)scrollStoryAnchor()
     }
     setPhase(desired?'entering':'leaving')
@@ -309,7 +292,7 @@ export function LightTable({pathname,onNavigate}) {
                 onPointerLeave={event=>{event.currentTarget.style.setProperty('--mx','0');event.currentTarget.style.setProperty('--my','0')}}>
                 <button className="sheet-select" type="button" aria-label={`Inspect ${sheet.label} card`} aria-pressed={active===index} onClick={()=>select(index)} onFocus={event=>{if(event.currentTarget.matches(':focus-visible')&&!ballDesiredRef.current&&Math.abs(position-index)>.6)select(index)}}/>
                 <div className="sheet-top"><span>0{index+1} / 03</span><span>{sheet.label}</span><i aria-hidden="true">+</i></div>
-                {index===0?<Watch active={mounted||!!restoreRef.current||position<.7&&!ballMounted} reduced={reduced}/>:index===1?<Volleyball cold={coldRef.current} active={Math.abs(position-1)<.7&&!mounted&&!restoreRef.current||ballMounted} reduced={reduced}/>:<div className="intro-art" aria-hidden="true"><span>HVT</span><i/><i/><i/></div>}
+                {index===0?<Watch active={position<.7&&!mounted&&!restoreRef.current&&!ballMounted} reduced={reduced}/>:index===1?<Volleyball cold={coldRef.current} active={Math.abs(position-1)<.7&&!mounted&&!restoreRef.current||ballMounted} reduced={reduced}/>:<div className="intro-art" aria-hidden="true"><span>HVT</span><i/><i/><i/></div>}
                 <h2>{sheet.title}</h2>
                 <div className="sheet-bottom"><span>{index===0?'Anatomy / movement':index===1?'Recreational volleyball':'Software / systems'}</span><a className="target-link sheet-cta" href={sheet.href} hidden={Math.abs(position-index)>.02} onClick={index<2?enter:undefined}
                   onPointerDown={event=>{if(event.isPrimary&&event.button===0)event.currentTarget.dataset.pressed='true'}}
@@ -326,13 +309,7 @@ export function LightTable({pathname,onNavigate}) {
     </section>
     <div inert={ballMounted||mounted?true:undefined} aria-hidden={ballMounted||mounted?true:undefined}><HomePage onNavigate={onNavigate}/></div>
     <dialog className="goal-entry" ref={dialogRef} open={watchColdRef.current||undefined} onCancel={event=>{event.preventDefault();back()}} aria-labelledby="goal-loop-title" data-phase={phase}>
-      {mounted&&<GoalLoopPage onNavigate={event=>event.currentTarget.getAttribute('href')==='/'?back(event):onNavigate(event)} hero={
-        <section className="light-table-hero" data-watch-hero aria-labelledby="goal-loop-title">
-          <div className="entry-watch-slot" role="img" aria-label="The same skeleton wristwatch, enlarged"><div className="entry-wash" aria-hidden="true"/></div>
-          <nav className="entry-header" aria-label="Goal Loop presentation"><a className="target-link" href="/" ref={watchBackRef} onClick={back}>← Back to homepage</a><span>Goal Loop / Run anatomy</span></nav>
-          <div className="entry-caption"><h1 id="goal-loop-title">Precision,<br/>in motion.</h1><p>A system, made visible.</p><p>A watch anatomy study in ivory, steel, brass and leather.</p><p>Illustration, not a live Goal Loop run. No agents, project tests or deployments execute.</p><p>{GOAL_LOOP.hero.lede}</p><a className="target-link" href="#run-tape">Read the full run trace ↓</a></div>
-        </section>
-      }/>}
+      {mounted&&<GoalLoopPage backRef={watchBackRef} onNavigate={event=>event.currentTarget.getAttribute('href')==='/'?back(event):onNavigate(event)}/>}
     </dialog>
     <dialog className="ball-entry" ref={ballDialogRef} open={coldRef.current||undefined} onCancel={event=>{event.preventDefault();ballBack()}} aria-labelledby="voleyevents-title" data-phase={ballPhase}>
       {ballMounted&&<VoleyEventsPage onNavigate={event=>event.currentTarget.getAttribute('href')==='/'?ballBack(event):onNavigate(event)} hero={
@@ -347,7 +324,7 @@ export function LightTable({pathname,onNavigate}) {
           <nav className="entry-header" aria-label="GameOnVB presentation"><a className="target-link" href="/" ref={backRef} onClick={ballBack}>← Back to homepage</a><span>GameOnVB / Match operations</span></nav>
           <div className="ball-entry-copy">
             <div className="ball-entry-caption"><p>{VOLEYEVENTS.hero.eyebrow}</p><h1 id="voleyevents-title">More time on court.</h1><p>{VOLEYEVENTS.hero.title}</p></div>
-            <nav className="ball-story-links" aria-label="Match operations stages">{VOLEYEVENTS.lifecycle.map(stage=><a className="target-link" href={`#${stage.id}`} key={stage.id}>{stage.label}</a>)}</nav>
+            <nav className="ball-story-links" aria-label="Match operations stages">{VOLEYEVENTS.steps.map(stage=><a className="target-link" href={`#${stage.id}`} key={stage.id}>{stage.label}</a>)}</nav>
           </div>
         </section>
       }/>}

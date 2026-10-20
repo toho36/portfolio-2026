@@ -52,9 +52,9 @@ describe('route records', () => {
         canonical: 'https://portfolio-pied-eight-38.vercel.app/gameonvb',
       },
       {
-        title: 'Goal Loop Run Anatomy — Hoang Viet To',
+        title: 'Goal Loop: Quality first, speed follows — Hoang Viet To',
         description:
-          'A bounded, evidence-driven software delivery run with independent critique, deterministic checks, review and fail-closed outcomes.',
+          'How I deliver software: plan, challenge and check every change before it ships. Quality first; speed comes from having less to redo.',
         canonical: 'https://portfolio-pied-eight-38.vercel.app/goal-loop',
       },
       {

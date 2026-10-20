@@ -1,13 +1,11 @@
 import { readFileSync } from 'node:fs'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import { parse } from 'postcss'
 import App from '../App'
 import { ROUTES } from '../content/routes'
-import {
-  VOLEYEVENTS,
-  VOLEYEVENTS_LIFECYCLE,
-} from '../content/voleyevents'
+import { VOLEYEVENTS } from '../content/voleyevents'
 
 function render(path = '/gameonvb') {
   return renderToStaticMarkup(createElement(App, { initialPath: path }))
@@ -19,12 +17,12 @@ describe('GameOnVB Match Operations case study', () => {
     const route = ROUTES.find(({ path }) => path === '/gameonvb')
     const hero = markup.slice(
       markup.indexOf('class="staircase-entry light-table-hero"'),
-      markup.indexOf('class="case-section'),
+      markup.indexOf('class="gv gameonvb-story"'),
     )
 
     expect(hero).toContain('GameOnVB / Match operations')
     expect(hero).toContain(
-      'Registration and operations software for recurring recreational volleyball events.',
+      'Sign-ups, payments and check-in for regular recreational volleyball sessions.',
     )
     expect(hero).not.toContain(
       'A registration and operations system for recurring recreational volleyball events.',
@@ -34,81 +32,88 @@ describe('GameOnVB Match Operations case study', () => {
     )
   })
 
-  it('keeps problem, constraints, decisions, lifecycle, evidence and status in reading order', () => {
+  it('presents the approved rule, four sets, phone steps and closing in order', () => {
     const markup = render()
-    const landmarks = [
-      'The operational problem',
-      'Constraint',
-      'System decision',
-      'One registration / one operational record',
-      'Evidence boundary',
-      'Current status',
-    ]
-
-    landmarks.forEach((landmark) => expect(markup).toContain(landmark))
+    const landmarks = ['class="ticker"', 'The rule I set myself', 'Four sets',
+      'Set 1 · computer time', 'Set 2 · the rebuild', 'Set 3 · scheduled jobs',
+      'Set 4 · background work', 'GameOnVB now runs entirely on the free plan.',
+      'class="phone-col"', 'class="gv-steps"', 'When plans change',
+      'Visit gameonvb.cz', 'aria-label="Case study navigation"']
+    landmarks.forEach(landmark => expect(markup).toContain(landmark))
     landmarks.slice(1).forEach((landmark, index) => {
-      expect(markup.indexOf(landmark)).toBeGreaterThan(
-        markup.indexOf(landmarks[index]),
-      )
+      expect(markup.indexOf(landmark)).toBeGreaterThan(markup.indexOf(landmarks[index]))
     })
+    expect(markup).toContain('Run a real product for free.')
+    expect(VOLEYEVENTS.sets.map(({ value, unit }) => [value, unit])).toEqual([
+      ['<10', 'ms per visit'], ['81', 'ready-made pages'], ['1', 'scheduled job'],
+      ['4', 'services fixed'], ['0 Kč', 'a month'],
+    ])
+    expect(markup).toContain('0 Kč')
+    expect(markup).toContain('aria-label="0 Kč a month"')
+    expect(markup).toContain('<div class="score" data-score="true">')
+    expect(markup).toContain('Limits beaten')
+    expect(markup).toContain('Before: <s>62 ms</s><span class="limit"> · Limit: 10 ms</span>')
+    expect(markup).toContain('Before: <s>9</s><span class="limit"> · Limit: 5</span>')
+    expect(markup).toContain('href="https://gameonvb.cz"')
+    expect(markup).toContain('Cancel early.<br/>Keep your credit.')
+    expect(markup).not.toMatch(/case-problem|case-pair|class="lifecycle"|Evidence boundary/)
   })
 
-  it('explains one complete registration lifecycle in the required order', () => {
+  it('keeps all four steps readable and every story link anchored', () => {
     const markup = render()
-    const lifecycle = markup.slice(
-      markup.indexOf('<section id="lifecycle"'),
-      markup.indexOf('class="case-pair case-closing"'),
-    )
-    const labels = [
-      'Event opens',
-      'Player registers',
-      'Payment matches',
-      'Attendance resolves',
-    ]
-
-    expect(VOLEYEVENTS_LIFECYCLE.map(({ label }) => label)).toEqual(labels)
-    labels.forEach((label) => expect(lifecycle).toContain(label))
-    labels.slice(1).forEach((label, index) => {
-      expect(lifecycle.indexOf(label)).toBeGreaterThan(
-        lifecycle.indexOf(labels[index]),
-      )
-    })
-    expect(lifecycle).toMatch(/registration/i)
-    expect(lifecycle).toMatch(/QR-bank payment matching/i)
-    expect(lifecycle).toMatch(/cancellation credit/i)
-    expect(lifecycle).toMatch(/attendance/i)
-    expect(lifecycle).toMatch(/admin operations/i)
-    expect(lifecycle).toMatch(/audit/i)
-  })
-
-  it('retains complete semantic stage content without relying on the illustration', () => {
-    const markup = render()
-    const lifecycle = markup.slice(
-      markup.indexOf('<section id="lifecycle"'),
-      markup.indexOf('class="case-pair case-closing"'),
-    )
-
-    expect(lifecycle).toContain('<ol class="lifecycle-track">')
-    expect(lifecycle.match(/<li class="lifecycle-stage(?:\s[^"]*)?"/g)).toHaveLength(4)
-    for (const stage of VOLEYEVENTS_LIFECYCLE) {
-      expect(lifecycle).toContain(`id="${stage.id}"`)
-      expect(lifecycle).toContain(`<h3>${stage.label}</h3>`)
-      expect(lifecycle).toContain(stage.body)
-      expect(stage.handles).not.toHaveLength(0)
+    const steps = markup.slice(markup.indexOf('class="gv-steps"'), markup.indexOf('class="gv-end"'))
+    const labels = ['Pick a session.', 'Scan to pay.', 'Matched automatically.', 'Check in at the door.']
+    expect(VOLEYEVENTS.steps.map(({ title }) => title)).toEqual(labels)
+    expect([...steps.matchAll(/data-step="([0-3])"/g)].map(match => Number(match[1]))).toEqual([0, 1, 2, 3])
+    for (const step of VOLEYEVENTS.steps) {
+      expect(steps).toContain(`id="${step.id}"`)
+      expect(steps).toContain(`<h2>${step.title}</h2>`)
+      expect(steps).toContain(step.body)
     }
-    expect(lifecycle).not.toMatch(/<h3[^>]*aria-hidden|<p[^>]*aria-hidden/)
+    expect(steps).not.toMatch(/<h2[^>]*aria-hidden|<p[^>]*aria-hidden/)
+    const hero = markup.slice(markup.indexOf('class="ball-story-links"'), markup.indexOf('class="gv gameonvb-story"'))
+    for (const [, id] of hero.matchAll(/href="#([^"]+)"/g)) {
+      expect(markup.match(new RegExp(`id="${id}"`, 'g'))).toHaveLength(1)
+    }
+    expect(markup.match(/data-screen="[0-3]"/g)).toHaveLength(4)
+    for (const text of ['Sign up', 'Scan in any Czech bank app', 'Confirmed', 'Door list · Tue']) expect(markup).toContain(text)
+  })
+
+  it('scopes the approved responsive and reduced-motion rules below the hero', () => {
+    const css = readFileSync(new URL('./gameOnVb.css', import.meta.url), 'utf8')
+    expect(css).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/)
+    expect(css).toMatch(/@media\s*\(max-width:\s*820px\)/)
+    expect(css).toMatch(/@media\s*\(max-width:\s*600px\)/)
+    expect(css).toMatch(/min-width:\s*601px/)
+    expect(css).toMatch(/height:\s*3px/)
+    expect(css).toMatch(/rotate\(-8deg\)/)
+    expect(css).toContain('#e2553a')
+    expect(css).toContain('#0b0e0f')
+    expect(css).toMatch(/text-wrap:\s*pretty/)
+    const rules = parse(css)
+    rules.walkRules(rule => {
+      if (rule.parent?.type === 'atrule' && rule.parent.name === 'keyframes') return
+      rule.selectors.forEach(selector => expect(selector).toMatch(/^\.gv(?:[ :.]|$)/))
+    })
+    const reduced: Record<string, string> = {}
+    rules.walkAtRules('media', media => {
+      if (!media.params.includes('prefers-reduced-motion')) return
+      media.walkRules('.gv .track', rule => { rule.walkDecls(decl => { reduced[decl.prop] = decl.value }) })
+    })
+    expect(reduced).toMatchObject({ 'flex-wrap': 'wrap', transform: 'none', width: 'min(84rem, calc(100% - 3rem))' })
+    expect(css).not.toMatch(/gv-hero|\.dial|\.lane|\.seg|\.legend|wait-row|\.big s\b/)
   })
 
   it('offers the transferred upper-tread hero before the complete ungated story', () => {
     const markup = render()
-    const hero = markup.slice(markup.indexOf('class="staircase-entry light-table-hero"'), markup.indexOf('class="case-section'))
+    const hero = markup.slice(markup.indexOf('class="staircase-entry light-table-hero"'), markup.indexOf('class="gv gameonvb-story"'))
     expect(hero).toContain('More time on court.')
     expect(hero.match(/data-ball-hero="true"/g)).toHaveLength(1)
     expect(hero).toContain('data-cold-ball-fallback="true"')
     expect(hero).toContain('The same volleyball landing on the upper stone tread')
     expect(hero).toContain('assets/ball-preview.png')
     expect(hero).not.toMatch(/data-stair-root|Release the ball|Catch\. Pull\.|Reset /)
-    for (const stage of VOLEYEVENTS_LIFECYCLE) expect(hero).toContain(`href="#${stage.id}"`)
+    for (const stage of VOLEYEVENTS.steps) expect(hero).toContain(`href="#${stage.id}"`)
     expect(markup).not.toMatch(/playable-court|Scroll follows one participant|Separate full case|landing prototype/)
   })
 
@@ -151,16 +156,129 @@ describe('GameOnVB Match Operations case study', () => {
     const content = JSON.stringify(VOLEYEVENTS)
     const markup = render()
 
-    expect(content).not.toMatch(/\d|%|€|\$|£/)
-    expect(content).not.toMatch(
-      /customer quote|testimonial|players|payments total/i,
-    )
-    const story = markup.slice(markup.indexOf('class="case-section'))
-    expect(story).not.toMatch(/<canvas|<video|data:image|dashboard screenshot|<img/i)
+    expect(content).not.toMatch(/%|€|\$|£|customer quote|testimonial|payments total/i)
+    const story = markup.slice(markup.indexOf('class="gv gameonvb-story"'))
+    expect(story).not.toMatch(/<canvas|<video|data:image|dashboard screenshot/i)
     expect(markup).not.toMatch(/<canvas|<video|dashboard screenshot/i)
-    const images = [...markup.matchAll(/<img[^>]*src="([^"]+)"/g)].map(m => m[1])
-    expect(images).toHaveLength(2)
+    const images = [...markup.matchAll(/<(?:img|image)[^>]*(?:src|href)="([^"]+)"/g)].map(m => m[1])
+    expect(images).toHaveLength(7)
     expect(images[0]).toMatch(/^data:image\/svg\+xml,/)
-    expect(images[1]).toMatch(/\/assets\/ball-preview\.png$/)
+    for (const image of images.slice(1)) expect(image).toMatch(/\/assets\/ball-preview\.png$/)
+    expect(story.match(/aria-hidden="true"/g)?.length).toBeGreaterThanOrEqual(5)
+  })
+})
+
+// Geometry and event ownership are exercised without a browser renderer.
+function motionFixture(reduced = false, width = 1440) {
+  const classes = () => {
+    const values = new Set<string>()
+    return { contains: (name: string) => values.has(name), add: (name: string) => values.add(name),
+      remove: (name: string) => values.delete(name),
+      toggle(name: string, on: boolean) { if (on) values.add(name); else values.delete(name) } }
+  }
+  const element = (top = 0, height = 620) => ({
+    classList: classes(), style: { transform: '', removeProperty: vi.fn() }, textContent: '',
+    getBoundingClientRect: () => ({ top, height, width, bottom: top + height }),
+  })
+  const band = element(0, 4200), track = { ...element(400), scrollWidth: 3000 }
+  const won = element(), pips = Array.from({ length: 4 }, () => element())
+  const number = { offsetLeft: 0, offsetWidth: 140, offsetTop: 0, offsetHeight: 80 }
+  const steps = Array.from({ length: 4 }, (_, i) => ({ ...element(i * 620),
+    querySelector: () => ({ ...number, offsetTop: i * 620 }) }))
+  const screens = Array.from({ length: 4 }, () => element())
+  const hopAnimation = { cancel: vi.fn() }, cssAnimation = { cancel: vi.fn() }
+  const stepBall = { ...element(), animate: vi.fn(() => hopAnimation) }
+  const bandBall = { ...element(), parentElement: element() }
+  const reveal = element(), phone = element(42, 330)
+  const elements: Record<string, unknown> = { '[data-band]': band, '[data-track]': track,
+    '[data-won]': won, '.phone-col': phone, '[data-band-ball]': bandBall, '[data-step-ball]': stepBall }
+  const lists: Record<string, unknown[]> = { '[data-step]': steps, '[data-screen]': screens,
+    '.pips i': pips, '.reveal': [reveal] }
+  const listeners = new Map<string, EventListener>()
+  const add = vi.fn((name: string, fn: EventListener) => listeners.set(name, fn))
+  const remove = vi.fn((name: string) => listeners.delete(name))
+  const frames = new Map<number, FrameRequestCallback>()
+  let frameId = 0
+  const media = { matches: reduced, addEventListener: add, removeEventListener: remove }
+  const view = { innerWidth: width, innerHeight: 1000, matchMedia: () => media,
+    addEventListener: add, removeEventListener: remove,
+    requestAnimationFrame(fn: FrameRequestCallback) { frames.set(++frameId, fn); return frameId },
+    cancelAnimationFrame(id: number) { frames.delete(id) } }
+  const docAdd = vi.fn(add), docRemove = vi.fn(remove)
+  const doc = { defaultView: view, addEventListener: docAdd, removeEventListener: docRemove }
+  const disconnect = vi.fn(), observe = vi.fn()
+  const root = { ownerDocument: doc, clientWidth: width, dataset: {} as Record<string, string>,
+    querySelector: (selector: string) => elements[selector], querySelectorAll: (selector: string) => lists[selector],
+    closest: () => null, getAnimations: () => [cssAnimation] }
+  vi.stubGlobal('IntersectionObserver', class { observe = observe; unobserve() {}; disconnect = disconnect })
+  vi.stubGlobal('ResizeObserver', class { observe() {}; disconnect = disconnect })
+  return { root: root as unknown as HTMLElement, band, track, won, pips, steps, screens,
+    stepBall, bandBall, reveal, media, listeners, add: docAdd, remove: docRemove, frames, disconnect, hopAnimation, cssAnimation,
+    scroll() { listeners.get('scroll')!(new Event('scroll')); this.flush() },
+    flush() { const pending = [...frames.values()]; frames.clear(); pending.forEach(fn => fn(0)) } }
+}
+
+describe('GameOnVB dialog motion', () => {
+  it('drives the band and phone from captured document scroll and cleans up all ownership', async () => {
+    const { mountGameOnVbMotion } = await import('./gameOnVbMotion')
+    const h = motionFixture()
+    const cleanup = mountGameOnVbMotion(h.root)
+    try {
+      expect(h.add).toHaveBeenCalledWith('scroll', expect.any(Function), { capture: true, passive: true })
+      expect(h.won.textContent).toBe('0')
+      h.band.getBoundingClientRect = () => ({ top: -3200, height: 4200, width: 1440, bottom: 1000 })
+      h.steps.forEach((step, i) => { step.getBoundingClientRect = () => ({ top: i * 620 - 700, height: 620, width: 1440, bottom: i * 620 - 80 }) })
+      h.scroll()
+      expect(h.track.style.transform).toBe('translateX(-1608px)')
+      expect(h.won.textContent).toBe('4')
+      expect(h.pips.every(pip => pip.classList.contains('on'))).toBe(true)
+      expect(h.screens[1].classList.contains('on')).toBe(true)
+      expect(h.stepBall.animate).toHaveBeenCalledTimes(1)
+      h.listeners.get('scroll')!(new Event('scroll'))
+      expect(h.frames.size).toBe(1)
+      cleanup()
+      expect(h.frames.size).toBe(0)
+      expect(h.listeners.size).toBe(0)
+      expect(h.remove).toHaveBeenCalledWith('scroll', expect.any(Function), true)
+      expect(h.disconnect).toHaveBeenCalled()
+      expect(h.hopAnimation.cancel).toHaveBeenCalled()
+      expect(h.cssAnimation.cancel).toHaveBeenCalled()
+    } finally { cleanup(); vi.unstubAllGlobals() }
+  })
+
+  it('responds to a reduced-motion preference change during a hop', async () => {
+    const { mountGameOnVbMotion } = await import('./gameOnVbMotion')
+    const h = motionFixture()
+    const cleanup = mountGameOnVbMotion(h.root)
+    try {
+      h.steps[1].getBoundingClientRect = () => ({ top: 400, height: 200, width: 1440, bottom: 600 })
+      h.scroll()
+      expect(h.stepBall.animate).toHaveBeenCalledTimes(1)
+      h.media.matches = true
+      h.listeners.get('change')!(new Event('change'))
+      h.flush()
+      expect(h.hopAnimation.cancel).toHaveBeenCalled()
+      expect(h.stepBall.animate).toHaveBeenCalledTimes(1)
+      expect(h.won.textContent).toBe('4')
+      expect(h.track.style.transform).toBe('translateX(0px)')
+    } finally { cleanup(); vi.unstubAllGlobals() }
+  })
+
+  it('selects mobile steps below the sticky phone and skips rolling and hopping for reduced motion', async () => {
+    const { mountGameOnVbMotion } = await import('./gameOnVbMotion')
+    const h = motionFixture(true, 390)
+    h.steps.forEach((step, i) => { step.getBoundingClientRect = () => ({ top: 350 + i * 300, height: 200, width: 390, bottom: 550 + i * 300 }) })
+    const cleanup = mountGameOnVbMotion(h.root)
+    try {
+      expect(h.screens[1].classList.contains('on')).toBe(true)
+      expect(h.won.textContent).toBe('4')
+      expect(h.track.style.transform).toBe('translateX(0px)')
+      const ball = h.bandBall.style.transform
+      h.steps[2].getBoundingClientRect = () => ({ top: 586, height: 200, width: 390, bottom: 786 })
+      h.scroll()
+      expect(h.screens[2].classList.contains('on')).toBe(true)
+      expect(h.bandBall.style.transform).toBe(ball)
+      expect(h.stepBall.animate).not.toHaveBeenCalled()
+    } finally { cleanup(); vi.unstubAllGlobals() }
   })
 })

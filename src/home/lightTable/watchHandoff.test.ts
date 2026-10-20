@@ -104,7 +104,7 @@ function harness(cold = false) {
     ballDialogRef: ref(ballDialog), ballDesiredRef: ref(false), ballSourceRef: ref(ball.cta), ballScrollRef: ref(850), ballRestoreRef: ref(null), coldRef: ref(false), backRef: ref(ball.cta),
     deckRef: ref(deck), assistRef: ref({ cancel() {} }), innerWidth: 1440, innerHeight: 1000, scrollY: cold ? 0 : 13,
     location: new URL(cold ? '/goal-loop' : '/', 'https://portfolio.test/'), history: { state: null, back: vi.fn() }, getRouteNavigationUrl, onNavigate: vi.fn(),
-    document: { hidden: false, visibilityState: 'visible', getElementById: () => null, body: { style: { overflow: 'scroll' } }, createElement: () => ({ style: style(), remove() {} }) },
+    document: { addEventListener() {}, removeEventListener() {}, hidden: false, visibilityState: 'visible', getElementById: () => null, body: { style: { overflow: 'scroll' } }, createElement: () => ({ style: style(), remove() {} }) },
     addEventListener() {}, removeEventListener() {},
     window: { matchMedia: () => ({ matches: false }), scrollTo({ top }: { top: number }) { context.scrollY = top } }, scrollStoryAnchor() {},
     DOMMatrix: class { a = .83; b = -.05; c = .05; d = .83; e = 0; f = 0 }, Event: class {}, ResizeObserver: class { observe() {} disconnect() {} },
@@ -195,8 +195,8 @@ it.each([
     expect(c.onNavigate).toHaveBeenCalledOnce(); expect(c.onNavigate.mock.calls[0][0].currentTarget.getAttribute('href')).toBe('/')
     expect(c.history.back).not.toHaveBeenCalled(); expect(c.pathname).toBe('/')
     expect(flow.state).toEqual(before); expect(c.document.body.style.overflow).toBe('hidden')
-    expect(host.surface.parentElement).not.toBe(host.host)
-    h.tick(); expect(host.surface.parentElement).not.toBe(host.host)
+    expect(host.surface.parentElement === host.host).toBe(host === h.watch)
+    h.tick(); expect(host.surface.parentElement === host.host).toBe(host === h.watch)
     h.settle()
     expect(c.pathname).toBe('/'); expect(c.document.body.style.overflow).toBe('scroll')
     expect(flow.state).toEqual(incoming === '/goal-loop' ? { position: 0, velocity: 0 } : { time: 0, velocity: 0 })
@@ -247,7 +247,7 @@ it.each([
     h.commit(); expect(flow.state).toEqual(state)
     expect(c.document.body.style.overflow).toBe('hidden')
     const host = path === '/goal-loop' ? h.watch : h.ball
-    expect(host.surface.parentElement).not.toBe(host.host)
+    expect(host.surface.parentElement === host.host).toBe(host === h.watch)
     n.traverse(-1); expect(c.location.href).toBe('https://portfolio.test/'); h.tick(); h.tick(); const reverse = flow.state
     n.traverse(1); expect(c.location.href).toBe(`https://portfolio.test${path}`); expect(flow.state).toEqual(reverse)
     expect(path === '/goal-loop' ? c.flowRef.current : h.ball.host.ballFlow).toBe(flow)
@@ -262,7 +262,7 @@ it.each([
     expect(c.location.href).toBe(`https://portfolio.test${path}`)
     expect(path === '/goal-loop' ? h.dialog.open : h.ballDialog.open).toBe(true)
     expect(c.document.body.style.overflow).toBe('hidden')
-    expect(host.surface.parentElement).not.toBe(host.host)
+    expect(host.surface.parentElement === host.host).toBe(host === h.watch)
     c.history.back.mockClear(); n.exit(path, escape)
     expect(c.history.back).toHaveBeenCalledOnce(); expect(c.onNavigate).not.toHaveBeenCalled()
     n.traverse(-1); h.settle()
@@ -293,23 +293,26 @@ it.each([
   } finally { n.cleanup(); h.cleanup() }
 })
 
-it('actual production watch handler retains affine/view/backing and restores source styles/scroll/focus', () => {
+it('actual production kitchen entry fades without moving the watch and restores source styles/scroll/focus', () => {
   const h = harness()
   try {
     h.path('/goal-loop')
     expect(h.context.restoreRef.current).toBeTypeOf('function')
-    expect(h.dialog.open).toBe(true); expect(h.watch.surface.parentElement).not.toBe(h.watch.host)
-    expect(h.watch.surface.style.cssText).toContain('width:600px;height:500px')
-    expect(h.watch.surface.style.transform).toBe('matrix(0.83,-0.05,0.05,0.83,201.25,230.75)')
+    expect(h.dialog.open).toBe(true); expect(h.watch.surface.parentElement).toBe(h.watch.host)
+    expect(h.watch.surface.style.cssText).toBe('original inline style')
+    expect(h.dialog.style['--progress' as keyof typeof h.dialog.style]).toBe('0')
     for (let i = 0; i < 12; i++) h.tick()
     const flow = h.context.flowRef.current, state = flow.state
+    expect(Number(h.dialog.style['--progress' as keyof typeof h.dialog.style])).toBeGreaterThan(0)
+    expect(Number(h.dialog.style['--progress' as keyof typeof h.dialog.style])).toBeLessThan(1)
+    expect(h.watch.surface.parentElement).toBe(h.watch.host)
+    expect(h.watch.host.watchEntry).toBeUndefined()
     h.path('/'); expect(flow.state).toEqual(state); h.tick(); h.tick()
     const reversing = flow.state; h.path('/goal-loop'); expect(flow.state).toEqual(reversing)
     expect(h.watch.host.watchView).toBe(h.view)
     expect(h.view.resize).not.toHaveBeenCalled()
-    h.view.resize.mockReturnValue(true)
     h.path('/'); h.settle()
-    expect(h.view.paint).toHaveBeenCalledWith(8, .73)
+    expect(h.view.paint).not.toHaveBeenCalled()
     expect(h.watch.surface.parentElement).toBe(h.watch.host)
     for (const node of [h.watch.surface, h.deck, h.fan, h.footer]) expect(node.style.cssText).toBe('original inline style')
     expect(h.context.scrollY).toBe(13); expect(h.focus.at(-1)).toBe('watch')
@@ -340,6 +343,8 @@ it('cold real watch route starts at rest and returns source zero without a home 
   try {
     h.commit(); expect(h.context.flowRef.current?.state).toEqual({ position: 1, velocity: 0 })
     h.tick(); expect(h.context.phase).toBe('open')
+    expect(h.dialog.dataset).toMatchObject({ progress: '1.00000' })
+    expect(h.watch.surface.parentElement).toBe(h.watch.host)
     h.path('/'); h.settle(); expect(h.context.scrollY).toBe(0); expect(h.context.position).toBe(0)
     expect(h.context.watchColdRef.current).toBe(false)
   } finally { h.cleanup() }
@@ -491,4 +496,46 @@ it.each(['/goal-loop', '/gameonvb'])('%s mounted cold from the landing returns t
     expect(c.history.back).toHaveBeenCalledOnce()
     expect(c.onNavigate).not.toHaveBeenCalled()
   } finally { n.cleanup(); h.cleanup() }
+})
+
+
+it('disables the actual homepage Watch runtime throughout the kitchen entry and resumes it on return', () => {
+  const expression = source.match(/<Watch\b[^>]*\bactive=\{([^}]+)\}/)![1]
+  for (const state of [
+    { position: 0, mounted: false, restoreRef: ref(null), ballMounted: false, expected: true },
+    { position: 0, mounted: true, restoreRef: ref(null), ballMounted: false, expected: false },
+    { position: 0, mounted: true, restoreRef: ref(() => {}), ballMounted: false, expected: false },
+    { position: 0, mounted: false, restoreRef: ref(() => {}), ballMounted: false, expected: false },
+    { position: 0, mounted: false, restoreRef: ref(null), ballMounted: true, expected: false },
+  ]) expect(run(`return (${expression})`, state)).toBe(state.expected)
+  const start = source.indexOf('    if(!mounted)return')
+  const effect = source.slice(start, source.indexOf('  },[mounted,desired,reduced])', start))
+  expect(effect).not.toMatch(/watchSurface|entry-watch-slot|append\(|sourceAffine|DOMMatrix|watchEntry/)
+})
+
+
+it('pauses the independent kitchen fade while hidden, defers a reduced-motion snap, and removes its visibility listener', () => {
+  const h = harness(), c = h.context, listeners = new Map<string, () => void>()
+  c.document.addEventListener = vi.fn((name: string, listener: () => void) => listeners.set(name, listener))
+  c.document.removeEventListener = vi.fn((name: string) => listeners.delete(name))
+  try {
+    c.document.hidden = true
+    h.path('/goal-loop')
+    const flow = c.flowRef.current
+    expect(flow.state).toEqual({ position: 0, velocity: 0 })
+    expect(flow.pending).toBe(false)
+    c.reduced = true; h.commit()
+    expect(flow.state.position).toBe(0)
+    c.document.hidden = false; listeners.get('visibilitychange')!()
+    expect(flow.state).toEqual({ position: 1, velocity: 0 })
+    expect(h.dialog.dataset).toMatchObject({ progress: '1.00000' })
+    expect(c.phase).toBe('open')
+    expect(h.watch.surface.parentElement).toBe(h.watch.host)
+    h.path('/')
+    expect(c.flowRef.current).toBeNull()
+    expect(h.dialog.open).toBe(false)
+    expect(c.scrollY).toBe(13)
+    expect(listeners.has('visibilitychange')).toBe(false)
+    expect(c.document.removeEventListener).toHaveBeenCalledWith('visibilitychange', expect.any(Function))
+  } finally { h.cleanup() }
 })

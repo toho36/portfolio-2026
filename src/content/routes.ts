@@ -19,9 +19,9 @@ export const ROUTES = [
     id: 'goal-loop',
     path: '/goal-loop',
     label: 'Goal Loop',
-    title: 'Goal Loop Run Anatomy — Hoang Viet To',
+    title: 'Goal Loop: Quality first, speed follows — Hoang Viet To',
     description:
-      'A bounded, evidence-driven software delivery run with independent critique, deterministic checks, review and fail-closed outcomes.',
+      'How I deliver software: plan, challenge and check every change before it ships. Quality first; speed comes from having less to redo.',
   },
   {
     id: 'playground',
