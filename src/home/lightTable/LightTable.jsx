@@ -279,11 +279,22 @@ export function LightTable({pathname,onNavigate}) {
   },[mounted,desired,reduced])
   useLayoutEffect(()=>()=>{flowRef.current?.destroy();flowRef.current=null;restoreRef.current?.();ballRestoreRef.current?.()},[])
   const active=Math.round(position)
+  // Phones: a sideways finger swipe deals the next or previous card; vertical scroll stays native.
+  const swipeRef=useRef(null)
+  function swipeStart(event){swipeRef.current=event.pointerType==='touch'?{x:event.clientX,y:event.clientY}:null}
+  function swipeEnd(event){
+    const start=swipeRef.current;swipeRef.current=null;if(!start)return
+    const dx=event.clientX-start.x,dy=event.clientY-start.y
+    if(Math.abs(dx)<48||Math.abs(dx)<Math.abs(dy)*1.5)return
+    const next=Math.max(0,Math.min(sheets.length-1,active+(dx<0?1:-1)))
+    // Run after the deck assist's own touchend settle, which would otherwise snap back.
+    setTimeout(()=>select(next),0)
+  }
   return <div data-light-table-shell data-pathname={pathname}>
     <section className="light-table" ref={deckRef} data-position={position.toFixed(3)} data-phase={ballPhase} inert={ballRestoreRef.current||restoreRef.current?true:undefined} aria-hidden={ballMounted||mounted?true:undefined}>
       <div className="table-sticky">
         <h1 className="table-title"><span>New tools.</span><span>Old standards.</span></h1>
-        <div className="sheet-fan" aria-label="Selected work">
+        <div className="sheet-fan" aria-label="Selected work" style={{touchAction:'pan-y'}} onPointerDown={swipeStart} onPointerUp={swipeEnd} onPointerCancel={()=>{swipeRef.current=null}}>
           {sheets.map((sheet,index)=>{
             const p=sheetPose(index,position)
             return <div className="sheet-position" data-sheet={sheet.id} key={sheet.id} style={{'--x':p.x,'--y':p.y,'--rotation':`${p.rotation}deg`,'--scale':p.scale,opacity:p.opacity,zIndex:p.z}} inert={p.opacity===0?true:undefined}>
@@ -304,7 +315,7 @@ export function LightTable({pathname,onNavigate}) {
             </div>
           })}
         </div>
-        <div className="table-footer"><span>Scroll to deal.<br/>Reverse to collect.</span><nav aria-label="Selected sheets">{sheets.map((s,i)=><button type="button" key={s.id} aria-label={`Show ${s.label}`} aria-current={active===i?'true':undefined} onClick={()=>select(i)}>0{i+1}</button>)}</nav><span>Software.<br/>Systems.</span></div>
+        <div className="table-footer"><span>Scroll or swipe to deal.<br/>Reverse to collect.</span><nav aria-label="Selected sheets">{sheets.map((s,i)=><button type="button" key={s.id} aria-label={`Show ${s.label}`} aria-current={active===i?'true':undefined} onClick={()=>select(i)}>0{i+1}</button>)}</nav><span>Software.<br/>Systems.</span></div>
       </div>
     </section>
     <div inert={ballMounted||mounted?true:undefined} aria-hidden={ballMounted||mounted?true:undefined}><HomePage onNavigate={onNavigate}/></div>
@@ -324,7 +335,6 @@ export function LightTable({pathname,onNavigate}) {
           <nav className="entry-header" aria-label="GameOnVB presentation"><a className="target-link" href="/" ref={backRef} onClick={ballBack}>← Back to homepage</a><span>GameOnVB / Match operations</span></nav>
           <div className="ball-entry-copy">
             <div className="ball-entry-caption"><p>{VOLEYEVENTS.hero.eyebrow}</p><h1 id="voleyevents-title">More time on court.</h1><p>{VOLEYEVENTS.hero.title}</p></div>
-            <nav className="ball-story-links" aria-label="Match operations stages">{VOLEYEVENTS.steps.map(stage=><a className="target-link" href={`#${stage.id}`} key={stage.id}>{stage.label}</a>)}</nav>
           </div>
         </section>
       }/>}

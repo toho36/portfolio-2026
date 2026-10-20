@@ -58,4 +58,5 @@
 .playground-page .playground-study img { display: block; width: 100%; height: auto; border-radius: 6px; }
 .playground-page .playground-study h3 { margin: 0 0 .75rem; font-size: 1.5rem; letter-spacing: -.02em; }
 .playground-page .playground-study p { margin: 0 0 .75rem; line-height: 1.5; max-width: 60ch; }
-@media (max-width: 760px) { .playground-page .playground-study { grid-template-columns: 1fr; } }
+.playground-page .playground-study .playground-study-kind { margin: -.4rem 0 .9rem; font: 600 14px/1.4 ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; opacity: .75; }
+@media (max-width: 760px) { .playground-page .playground-study { grid-template-columns: 1fr; } .playground-page .playground-studies > h2, .playground-page .playground-study > div { padding-inline: 16px; } }

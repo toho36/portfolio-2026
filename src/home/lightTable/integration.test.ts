@@ -50,17 +50,16 @@ it('reserves the measured shell header for native chapter scrolling', () => {
   }
 })
 
-it('keeps caption and wrapping native chapter links in one normal flow stack', () => {
+it('keeps the hero to the stairs, the ball and the caption; chapter links start the story below', () => {
   const html = render('/gameonvb')
   for (const width of [390, 1440]) {
     expect(declarations('.ball-entry-caption', width).position ?? 'static').toBe('static')
-    expect(declarations('.ball-story-links', width).position ?? 'static').toBe('static')
     expect(declarations('.ball-entry-copy', width)).toMatchObject({ position: 'absolute', bottom: '8px', display: 'flex', 'flex-direction': 'column' })
-    expect(declarations('.ball-story-links', width)['flex-wrap']).toBe('wrap')
-    expect(declarations('.ball-story-links a', width)['min-height']).toBe('44px')
     expect(declarations('.ball-entry-caption h1', width)['max-width']).toBe('none')
   }
-  expect(/class="ball-entry-copy"><div class="ball-entry-caption">[\s\S]*?<\/div><nav class="ball-story-links"[\s\S]*?<\/nav><\/div>/.test(html)).toBe(true)
+  expect(/class="ball-entry-copy"><div class="ball-entry-caption">[\s\S]*?<\/div><\/div>/.test(html)).toBe(true)
+  expect(html).not.toContain('ball-story-links')
+  expect(html.indexOf('class="gv-jump wrap"')).toBeGreaterThan(html.indexOf('class="ball-entry-copy"'))
   for (const id of ['event-opens', 'player-registers', 'payment-matches', 'attendance-resolves']) expect(html).toContain(`href="#${id}"`)
 })
 it('renders three real-path fan sheets with native supporting content on project routes', () => {

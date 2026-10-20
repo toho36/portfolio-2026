@@ -29,7 +29,7 @@ export const ROUTES = [
     label: 'Playground',
     title: 'Playground — Hoang Viet To',
     description:
-      'Interactive experiments: Hot Wire and Giant Impact, an artistic study of Moon formation.',
+      'Interactive experiments: Hot Wire, a 3D skill game, and Villa, a 3D scroll animation.',
   },
 ] as const
 

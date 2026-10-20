@@ -106,6 +106,8 @@ export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
       </section>}
 
       <div className="gv gameonvb-story" ref={story} data-score-set={VOLEYEVENTS.band.scoreSet}>
+        {/* Chapter links start the story below the hero, so the hero stays the stairs and the ball. */}
+        <nav className="gv-jump wrap" aria-label="Match operations stages">{VOLEYEVENTS.steps.map(step => <a className="target-link" href={`#${step.id}`} key={step.id}>{step.label}</a>)}</nav>
         <div className="ticker" aria-hidden="true">
           <img className="tick-ball" src={ballPreview} alt="" aria-hidden="true" />
           <div>{[0, 1].map(repeat => VOLEYEVENTS.ticker.map((text, index) => (

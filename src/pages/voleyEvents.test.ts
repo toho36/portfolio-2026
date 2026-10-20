@@ -71,7 +71,7 @@ describe('GameOnVB Match Operations case study', () => {
       expect(steps).toContain(step.body)
     }
     expect(steps).not.toMatch(/<h2[^>]*aria-hidden|<p[^>]*aria-hidden/)
-    const hero = markup.slice(markup.indexOf('class="ball-story-links"'), markup.indexOf('class="gv gameonvb-story"'))
+    const hero = markup.slice(markup.indexOf('class="gv-jump wrap"'), markup.indexOf('class="ticker"'))
     for (const [, id] of hero.matchAll(/href="#([^"]+)"/g)) {
       expect(markup.match(new RegExp(`id="${id}"`, 'g'))).toHaveLength(1)
     }
@@ -123,7 +123,9 @@ describe('GameOnVB Match Operations case study', () => {
     expect(hero).toContain('The same volleyball landing on the upper stone tread')
     expect(hero).toContain('assets/ball-preview.png')
     expect(hero).not.toMatch(/data-stair-root|Release the ball|Catch\. Pull\.|Reset /)
-    for (const stage of VOLEYEVENTS.steps) expect(hero).toContain(`href="#${stage.id}"`)
+    // Chapter links live in the first story section, not in the hero.
+    const jump = markup.slice(markup.indexOf('class="gv-jump wrap"'), markup.indexOf('class="ticker"'))
+    for (const stage of VOLEYEVENTS.steps) { expect(hero).not.toContain(`href="#${stage.id}"`); expect(jump).toContain(`href="#${stage.id}"`) }
     expect(markup).not.toMatch(/playable-court|Scroll follows one participant|Separate full case|landing prototype/)
   })
 

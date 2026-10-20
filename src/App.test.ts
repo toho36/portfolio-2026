@@ -356,7 +356,7 @@ describe('light-table route integration', () => {
     expect(html.match(/<footer[ >]/g)).toHaveLength(1)
     expect(html).toContain('data-light-table-shell="true"')
     expect([...html.matchAll(/data-sheet="([^"]+)"/g)].map(m => m[1])).toEqual(['goal-loop', 'gameonvb', 'intro'])
-    expect(html).toContain('Scroll to deal.')
+    expect(html).toContain('Scroll or swipe to deal.')
     for (const id of ['introduction', 'contact']) expect(html).toContain(`id="${id}"`)
     expect(html).not.toMatch(/landing-composition|landing-page|landing-header|landing-footer|landing-nav-hint|data-p1-status|data-work-select|<dialog[^>]* open=/)
   })
