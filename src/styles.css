@@ -1684,6 +1684,11 @@ html[data-curtain='reveal']::after { animation: curtain-reveal .2s cubic-bezier(
 .not-found .target-link { width: fit-content; }
 @media (max-width: 760px) {
   .route-home .site-header { min-height: 5.5rem; }
+  .site-shell .sheet-fan {
+    --fan-width: min(77vw, calc((100svh - 19rem) * .6));
+    width: var(--fan-width);
+    top: calc(13rem + var(--fan-width) * .9);
+  }
   .home-role { display: none; }
   .home-counter { top: 6rem; }
   .poster-track::before, .poster-track::after { width: 1.25rem; }
@@ -1793,8 +1798,15 @@ html[data-curtain='reveal']::after { animation: curtain-reveal .2s cubic-bezier(
 .site-shell .wire-score { font-size: 13px; }
 .site-shell .wire-hint { font-size: 14px; }
 @media (max-width: 820px) {
+  .site-shell.route-home > .site-header { background: #171816; }
+  /* Clear the two 44px header rows, their gap and padding, plus at least 16px. */
+  .route-home .table-title { top: 9rem; font-size: 24px; }
   /* Phones: card corners keep only the card number and the action, so the action can stay readable. */
   .site-shell .light-table .sheet-bottom > span { display: none; }
   .site-shell .light-table .sheet-bottom { justify-content: flex-end; }
   .site-shell .wire-modes button, .site-shell .wire-sound { min-height: 44px; font-size: 13px; padding-block: 0; }
+}
+@media (orientation: landscape) and (max-width: 760px) {
+  .site-shell .table-sticky { min-height: 46.25rem; }
+  .site-shell .sheet-fan { --fan-width: min(77vw, calc((max(100svh, 46.25rem) - 19rem) * .6)); }
 }
