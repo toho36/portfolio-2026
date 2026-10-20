@@ -22,7 +22,7 @@ describe('GameOnVB Match Operations case study', () => {
 
     expect(hero).toContain('GameOnVB / Match operations')
     // The title and summary open the story right below the hero; the hero itself is the stairs and the ball.
-    const intro = markup.slice(markup.indexOf('class="gv-intro wrap"'), markup.indexOf('class="gv-jump"'))
+    const intro = markup.slice(markup.indexOf('class="gv-intro wrap"'), markup.indexOf('class="ticker"'))
     expect(intro).toContain('<h1 id="voleyevents-title">More time on court.</h1>')
     expect(intro).toContain('Sign-ups, payments and check-in for regular recreational volleyball sessions.')
     expect(hero).not.toContain('More time on court.')
@@ -125,9 +125,14 @@ describe('GameOnVB Match Operations case study', () => {
     expect(hero).toContain('The same volleyball landing on the upper stone tread')
     expect(hero).toContain('assets/ball-preview.png')
     expect(hero).not.toMatch(/data-stair-root|Release the ball|Catch\. Pull\.|Reset /)
-    // Chapter links live in the first story section, not in the hero.
-    const jump = markup.slice(markup.indexOf('class="gv-jump"'), markup.indexOf('class="ticker"'))
-    for (const stage of VOLEYEVENTS.steps) { expect(hero).not.toContain(`href="#${stage.id}"`); expect(jump).toContain(`href="#${stage.id}"`) }
+    // The sticky section bar opens the story below the hero; every link has exactly one target section.
+    const jump = markup.slice(markup.indexOf('class="gv-jump"'), markup.indexOf('class="gv-intro wrap"'))
+    expect(VOLEYEVENTS.sections.map(section => section.label)).toEqual(['Overview', 'Free plan', 'Limits', 'How it works', 'Plans change'])
+    for (const section of VOLEYEVENTS.sections) {
+      expect(hero).not.toContain(`href="#${section.id}"`)
+      expect(jump).toContain(`href="#${section.id}">${section.label}</a>`)
+      expect(markup.match(new RegExp(`<section[^>]*id="${section.id}"`, 'g'))).toHaveLength(1)
+    }
     expect(markup).not.toMatch(/playable-court|Scroll follows one participant|Separate full case|landing prototype/)
   })
 

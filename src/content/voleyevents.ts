@@ -111,6 +111,13 @@ export const VOLEYEVENTS = {
     body: "Nobody required it. I chose to run GameOnVB on Cloudflare's free plan, and the free plan pushed back four times.",
     spiker: { zero: '0', currency: 'Kč', label: '0 Kč a month' },
   },
+  sections: [
+    { id: 'overview', label: 'Overview' },
+    { id: 'free-plan', label: 'Free plan' },
+    { id: 'limits', label: 'Limits' },
+    { id: 'how-it-works', label: 'How it works' },
+    { id: 'plans-change', label: 'Plans change' },
+  ],
   band: { title: ['Four sets', 'against the limits.'], score: 'Limits beaten', scoreSet: 'Set', total: '/ 4', swipe: 'Swipe the cards ↔', trackLabel: 'Four sets against the limits, scroll sideways' },
   sets: SETS,
   screens: SCREENS,

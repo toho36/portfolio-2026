@@ -11,7 +11,10 @@ export function mountGameOnVbMotion(root: HTMLElement): () => void {
   const scoreText = { beaten: scoreLabel?.textContent ?? '', set: root.dataset.scoreSet ?? 'Set' }
   const pips = [...root.querySelectorAll<HTMLElement>('.pips i')]
   const steps = [...root.querySelectorAll<HTMLElement>('[data-step]')]
-  const jumps = [...root.querySelectorAll<HTMLElement>('.gv-jump a')]
+  const bar = root.querySelector<HTMLElement>('.gv-jump')
+  const jumps = [...root.querySelectorAll<HTMLAnchorElement>('.gv-jump a')]
+  const sections = jumps.map(link => root.querySelector<HTMLElement>(link.hash)).filter((el): el is HTMLElement => Boolean(el))
+  let current = -1
   const screens = [...root.querySelectorAll<HTMLElement>('[data-screen]')]
   const bandBall = root.querySelector<HTMLElement>('[data-band-ball]')!
   const stepBall = root.querySelector<HTMLElement>('[data-step-ball]')!
@@ -89,9 +92,16 @@ export function mountGameOnVbMotion(root: HTMLElement): () => void {
       screen.classList.toggle('past', index < active)
     })
     steps.forEach((step, index) => step.classList.toggle('on', index === active))
-    // The sticky chapter bar marks the step being read, only while the steps are on screen.
-    const reading = steps.length > 0 && steps[0].getBoundingClientRect().top < height && steps[steps.length - 1].getBoundingClientRect().bottom > 0
-    jumps.forEach((link, index) => link.classList.toggle('on', reading && index === active))
+    // The sticky bar marks the section being read: the last one whose top passed the upper third of the screen.
+    let reading = -1
+    sections.forEach((section, index) => { if (section.getBoundingClientRect().top < height / 3) reading = index })
+    if (reading !== current) {
+      current = reading
+      jumps.forEach((link, index) => link.classList.toggle('on', index === reading))
+      const link = jumps[reading]
+      // Phones scroll the bar sideways so the marked section stays visible.
+      if (bar && link && bar.scrollWidth > bar.clientWidth) bar.scrollTo?.({ left: link.offsetLeft - (bar.clientWidth - link.offsetWidth) / 2, behavior: media.matches ? 'auto' : 'smooth' })
+    }
 
     const pin = bandBall.parentElement!.getBoundingClientRect()
     const top = track.getBoundingClientRect().top - pin.top - 56

@@ -60,7 +60,7 @@ it('keeps the hero to the stairs, the ball and the throw hint; title and chapter
   expect(html).not.toContain('ball-story-links')
   expect(html.indexOf('class="gv-jump"')).toBeGreaterThan(html.indexOf('class="ball-entry-copy"'))
   expect(html.indexOf('<h1 id="voleyevents-title">')).toBeGreaterThan(html.indexOf('class="ball-entry-copy"'))
-  for (const id of ['event-opens', 'player-registers', 'payment-matches', 'attendance-resolves']) expect(html).toContain(`href="#${id}"`)
+  for (const id of ['overview', 'free-plan', 'limits', 'how-it-works', 'plans-change']) expect(html).toContain(`href="#${id}"`)
 })
 it('renders three real-path fan sheets with native supporting content on project routes', () => {
   const html = render('/gameonvb')

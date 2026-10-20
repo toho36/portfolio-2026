@@ -116,15 +116,16 @@ export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
       </section>}
 
       <div className="gv gameonvb-story" ref={story} data-score-set={VOLEYEVENTS.band.scoreSet}>
-        {/* The hero stays the stairs and the ball; the title and chapter links start the story below it. */}
-        {hero && <section className="gv-intro wrap" aria-labelledby="voleyevents-title">
+        {/* The hero stays the stairs and the ball; the title and section links start the story below it. */}
+        {/* Sticky section bar: one row, scrolls sideways on narrow phones, marks the section being read. */}
+        <nav className="gv-jump" aria-label="GameOnVB sections">{VOLEYEVENTS.sections.map(section => (
+          <a className="target-link" href={`#${section.id}`} key={section.id} onClick={smoothJump}>{section.label}</a>
+        ))}</nav>
+        {hero && <section className="gv-intro wrap" id="overview" aria-labelledby="voleyevents-title">
           <p className="tag">{VOLEYEVENTS.hero.eyebrow}</p>
           <h1 id="voleyevents-title">More time on court.</h1>
           <p>{VOLEYEVENTS.hero.title}</p>
         </section>}
-        <nav className="gv-jump" aria-label="Match operations stages">{VOLEYEVENTS.steps.map((step, index) => (
-          <a className="target-link" href={`#${step.id}`} key={step.id} onClick={smoothJump}><b>{index + 1}</b>{step.short}</a>
-        ))}</nav>
         <div className="ticker" aria-hidden="true">
           <img className="tick-ball" src={ballPreview} alt="" aria-hidden="true" />
           <div>{[0, 1].map(repeat => VOLEYEVENTS.ticker.map((text, index) => (
@@ -132,7 +133,7 @@ export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
           )))}</div>
         </div>
 
-        <section className="wrap gv-rule" aria-labelledby="gv-rule-title">
+        <section className="wrap gv-rule" id="free-plan" aria-labelledby="gv-rule-title">
           <div className="reveal">
             <p className="tag">{VOLEYEVENTS.rule.eyebrow}</p>
             <h2 id="gv-rule-title">{VOLEYEVENTS.rule.title}</h2>
@@ -146,7 +147,7 @@ export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
           </svg>
         </section>
 
-        <section className="band" data-band aria-labelledby="gv-band-title">
+        <section className="band" id="limits" data-band aria-labelledby="gv-band-title">
           <div className="band-pin">
             <img className="band-ball" data-band-ball src={ballPreview} alt="" aria-hidden="true" />
             <div className="band-head">
@@ -171,7 +172,7 @@ export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
           </div>
         </section>
 
-        <section className="wrap gv-how" aria-label="Match operations">
+        <section className="wrap gv-how" id="how-it-works" aria-label="How it works">
           <div className="phone-col"><div className="phone"><div className="phone-in" aria-hidden="true">
             {VOLEYEVENTS.screens.map((screen, index) => (
               <div className={`screen${index === 0 ? ' on' : ''}`} data-screen={index} key={screen.title}>
@@ -191,7 +192,7 @@ export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
           </div>
         </section>
 
-        <section className="gv-end" aria-labelledby="gv-end-title"><div className="wrap reveal">
+        <section className="gv-end" id="plans-change" aria-labelledby="gv-end-title"><div className="wrap reveal">
           <p className="tag">{VOLEYEVENTS.closing.eyebrow}</p>
           <h2 id="gv-end-title">{VOLEYEVENTS.closing.title[0]}<br />{VOLEYEVENTS.closing.title[1]}</h2>
           <div className="chips">{VOLEYEVENTS.closing.chips.map(chip => <span key={chip}>{chip}</span>)}</div>
