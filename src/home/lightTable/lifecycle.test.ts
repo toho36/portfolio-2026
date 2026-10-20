@@ -10,8 +10,10 @@ import { deckPosition } from './model.js'
 
 const source = readFileSync(new URL('./LightTable.jsx', import.meta.url), 'utf8')
 const wrapper = readFileSync(new URL('./Volleyball.jsx', import.meta.url), 'utf8')
-const effect = source.slice(source.indexOf('    if(!ballMounted)return'), source.indexOf('  },[ballMounted,ballDesired,reduced])'))
+const effect = source.slice(source.indexOf('    if(!ballMounted)return'), source.indexOf('  },[ballMounted,ballDesired,reduced,position])'))
 const sync = source.slice(source.indexOf("    const want=pathname==='/gameonvb'"), source.indexOf('  },[pathname])'))
+const focusStart = source.indexOf('    const pending=pendingFocusRef.current')
+const focusEffect = source.slice(focusStart, source.indexOf('\n  })', focusStart))
 // Execute the production effect bodies with the actual flow and measured layout.
 // This proves handler ownership and clocks; it makes no browser/GPU claim.
 const run = (code: string, context: Record<string, any>) => new Function('context', `with(context){${code}}`)(context)
@@ -24,25 +26,30 @@ function frames() {
   return { queue, tick() { now += 16; const batch = [...queue.values()]; queue.clear(); batch.forEach(fn => fn(now)) } }
 }
 function handoff(cold = false) {
-  const raf = frames(), calls: string[] = []
+  const raf = frames(), calls: string[] = [], measuredPositions: number[] = [], appended: any[] = []
+  let committedPosition = cold ? 0 : 1
   const style = () => ({ setProperty(k: string, v: string) { (this as any)[k] = v }, cssText: '' })
-  const image = { style: style(), dataset: {} }, surface = { style: style(), clientWidth: 600, clientHeight: 500, querySelector: () => image, getBoundingClientRect: () => ({ x: 201, y: 201 }) }
-  const cta = { hidden: false, focus: () => calls.push('source-focus'), getBoundingClientRect: () => ({ top: 660, bottom: 700 }) }
+  const image = { style: style(), dataset: {} }, surface: any = { style: style(), clientWidth: 600, clientHeight: 500, querySelector: () => image, getBoundingClientRect() { measuredPositions.push(committedPosition); return { x: 201 + (1 - committedPosition) * 100, y: 201 } } }
+  const cta = { hidden: false, closest: (): object | null => deck.inert ? deck : null, focus() { expect(this.hidden || deck.inert || deck.ariaHidden).toBe(false); calls.push('source-focus') }, getBoundingClientRect: () => ({ top: 660, bottom: 700 }) }
   const band = {}, sheet = { clientTop: 1, parentElement: {}, closest: () => null, getBoundingClientRect: () => ({ top: 200, bottom: 700 }), querySelector: (q: string) => q === '.sheet-bottom' ? band : cta }
   const fan = { style: { ...style(), transform: 'translate(-49%,-51%)', width: '', height: '', left: '', top: '', transformOrigin: '' }, parentElement: { getBoundingClientRect: () => ({ x: 0, y: 0 }) }, getBoundingClientRect: () => ({ x: 200, y: 200 }), querySelectorAll: () => [{ getBoundingClientRect: () => ({ left: 180, right: 830, top: 170, bottom: 820 }) }] }
-  const footer = { style: style() }, nav = { focus: () => calls.push('navigation-focus') }
+  const footer = { style: style() }, nav = { closest: () => null, focus: () => calls.push('navigation-focus') }
   const view = { resize: () => calls.push('resize'), extend: () => calls.push('extend'), paint: () => calls.push('paint') }
-  const host: any = { ballSurface: surface, ballView: view, dataset: { runtime: 'static', sourcePose: JSON.stringify({ x: .2, y: -.3, time: 9 }) }, closest: () => sheet, append: () => calls.push('append'), dispatchEvent: () => calls.push('event') }
+  const host: any = { ballSurface: surface, ballView: view, dataset: { runtime: 'static', sourcePose: JSON.stringify({ x: .2, y: -.3, time: 9 }) }, closest: () => sheet, append(node: any) { node.parentElement = this; calls.push('append') }, dispatchEvent: () => calls.push('event') }
+  surface.parentElement = host
   let headerHeight = 124.1875, resizeHeader = () => {}
   const header = { getBoundingClientRect: () => ({ height: headerHeight }) }
   const observed = vi.fn(), disconnected = vi.fn()
-  const deck = { inert: false, removeAttribute() {}, closest: () => ({ querySelector: () => header }), querySelector: (q: string) => q === '.volleyball-view' ? host : q === '.sheet-fan' ? fan : q === '.table-footer' ? footer : nav }
-  const slot = { append: () => calls.push('transfer') }
+  const deck = { inert: false, ariaHidden: false, removeAttribute() {}, closest: () => ({ querySelector: () => header }), querySelector: (q: string) => q === '.volleyball-view' ? host : q === '.sheet-fan' ? fan : q === '.table-footer' ? footer : q === '[data-sheet="gameonvb"] .sheet-cta' ? cta : nav }
+  // Production appends a static stairs image as well as the existing surface.
+  // Count surface transfers by identity, not every append into the slot.
+  const slot = { append(node: any) { appended.push(node); node.parentElement = this; if (node === surface) calls.push('transfer') } }
   const dialog: any = { open: cold, scrollTop: 400, dataset: {}, style: style(), querySelector: () => slot, show() { this.open = true; calls.push('show') }, close() { this.open = false; calls.push('close') } }
   const context: Record<string, any> = {
     history: { state: { lightTableFromHome: !cold } },
-    mounted: false, desired: false, restoreRef: ref(null), desiredRef: ref(false), dialogScrollRef: ref(0), watchColdRef: ref(false), watchFragmentRef: ref(false), dialogRef: ref({ style: style() }), setDesired() {}, setMounted() {},
-    ballMounted: true, ballDesired: true, reduced: false, pathname: '/gameonvb', coldRef: ref(cold), ballDialogRef: ref(dialog), deckRef: ref(deck), ballRestoreRef: ref(null), ballDesiredRef: ref(false), ballSourceRef: ref(cta), ballScrollRef: ref(cold ? 0 : 850), backRef: ref(cta), assistRef: ref({ cancel: () => calls.push('cancel') }),
+    mounted: false, desired: false, restoreRef: ref(null), desiredRef: ref(false), watchColdRef: ref(false), watchFragmentRef: ref(false), dialogRef: ref({ style: style() }), setDesired() {}, setMounted() {},
+    ballMounted: true, ballDesired: true, reduced: false, position: cold ? 0 : 1, pathname: '/gameonvb', coldRef: ref(cold), ballDialogRef: ref(dialog), deckRef: ref(deck), ballRestoreRef: ref(null), ballDesiredRef: ref(true), ballSourceRef: ref(cta), backRef: ref({ closest: () => null, focus: () => calls.push('back-focus') }), assistRef: ref({ cancel: () => calls.push('cancel') }),
+    pendingFocusRef: ref(null), ballIndex: 1, watchIndex: 0, sheets: [{ id: 'gameonvb', label: 'GameOnVB' }, { id: 'goal-loop', label: 'Goal Loop' }],
     innerWidth: 1440, innerHeight: 1000, scrollY: cold ? 0 : 850, location: { hash: '' }, scrollStoryAnchor() {},
     document: { body: { style: { overflow: 'scroll' } }, createElement: () => ({ style: style(), remove: () => calls.push('steps-remove') }) },
     window: { scrollTo({ top }: { top: number }) { context.scrollY = top } },
@@ -50,13 +57,27 @@ function handoff(cold = false) {
     ResizeObserver: class { constructor(callback: () => void) { resizeHeader = callback } observe = observed; disconnect = disconnected },
     getComputedStyle: (o: any) => o === fan ? { width: '602px', height: '502px', left: '501px', top: '451px' } : o === sheet.parentElement ? { width: '602px', height: '502px', transform: 'none', transformOrigin: '301px 251px' } : o === band ? { top: '450px', height: '44px', paddingTop: '12px', paddingBottom: '0px', borderTopWidth: '0px', borderBottomWidth: '0px' } : { width: '600', height: '500' },
     BALL_DURATION, createBallChoreography, captureBallOrientation, ballEase, ballEntryPresentation, ballContactLayout, staticLanding, staticStepImage, deckPosition,
-    setBallPhase(value: string) { context.phase = value }, setPosition(value: number) { context.position = value }, setBallMounted(value: boolean) { context.ballMounted = value }, setBallDesired(value: boolean) { context.ballDesired = value },
+    setBallPhase(value: string) { pending.phase = value }, setPosition(value: number) { pending.position = value }, setBallMounted(value: boolean) { pending.ballMounted = value }, setBallDesired(value: boolean) { pending.ballDesired = value },
   }
+  let pending: Record<string, any> = {}, deps = ''
   host.ballFlow = createBallFlow(state => { context.clock = state; host.ballEntry?.paint(state.time); return false }, p => host.ballEntry?.land(p), { time: cold ? BALL_DURATION : 0, velocity: 0 })
-  const apply = () => run(effect, context)
+  const commitOnce = () => {
+    Object.assign(context, pending); pending = {}
+    committedPosition = context.position
+    cta.hidden = Math.abs(context.position - 1) > .02
+    deck.inert = Boolean(context.ballRestoreRef.current || context.restoreRef.current)
+    deck.ariaHidden = context.ballMounted || context.mounted
+    const render = Object.assign(Object.create(context), { ballMounted: context.ballMounted, ballDesired: context.ballDesired, reduced: context.reduced, position: context.position, mounted: context.mounted })
+    const next = [context.ballMounted, context.ballDesired, context.reduced, context.position].join()
+    if (deps !== next) { deps = next; run(effect, render) }
+    run(focusEffect, render)
+  }
+  const apply = () => { for (let i = 0; i < 10; i++) { commitOnce(); if (!Object.keys(pending).length) return }; throw new Error('commit did not settle') }
+  const tick = raf.tick
+  raf.tick = () => { tick(); if (deps) apply() }
   const path = (pathname: string) => { context.pathname = pathname; run(sync, context); apply() }
   const cleanup = () => { context.ballRestoreRef.current?.(); host.ballFlow.destroy(); vi.unstubAllGlobals() }
-  return { context, host, view, surface, dialog, fan, calls, raf, apply, path, cleanup, header, observed, disconnected, resizeHeader(height: number) { headerHeight = height; resizeHeader() } }
+  return { context, host, view, surface, dialog, deck, fan, calls, appended, measuredPositions, raf, apply, commitOnce, path, cleanup, header, observed, disconnected, resizeHeader(height: number) { headerHeight = height; resizeHeader() } }
 }
 
 function coldFragment(cold = true, readyState = 'loading', hash = '#payment-matches', pathname = '/gameonvb') {
@@ -278,7 +299,7 @@ it('production pathname reversals retain the current view, surface, contact and 
   } finally { h.cleanup() }
 })
 
-it('cold production handoff starts settled, exposes story fragments, and returns to scroll zero', () => {
+it('cold production handoff starts settled, exposes story fragments, and returns to its own card', () => {
   const h = handoff(true)
   try {
     h.apply()
@@ -288,9 +309,78 @@ it('cold production handoff starts settled, exposes story fragments, and returns
     expect(h.context.phase).toBe('open')
     h.path('/')
     for (let i = 0; i < 400; i++) h.raf.tick()
-    expect(h.context.scrollY).toBe(0)
-    expect(h.context.position).toBe(0)
+    // The old zero target returned cold GameOnVB to the Goal Loop card.
+    expect(h.context.scrollY).toBe(850)
+    expect(h.context.position).toBe(1)
     expect(h.context.coldRef.current).toBe(false)
+  } finally { h.cleanup() }
+})
+
+it.each([
+  { cold: true, from: 0 }, { cold: false, from: 0 },
+  { cold: false, from: .4 }, { cold: false, from: .975 }, { cold: false, from: 2 },
+])('prepares GameOnVB from $from (cold=$cold) before measuring committed source geometry', ({ cold, from }) => {
+  const h = handoff(cold), c = h.context
+  try {
+    c.position = from; c.scrollY = from * 850
+    h.commitOnce()
+    expect(h.host.ballEntry).toBeUndefined(); expect(h.measuredPositions).toEqual([])
+    expect(c.position).toBe(from); expect(c.scrollY).toBe(850)
+    expect(h.calls).not.toContain('transfer'); expect(h.calls).not.toContain('back-focus')
+    h.commitOnce()
+    expect(h.measuredPositions).toEqual([1]); expect(h.host.ballEntry.source.origin.x).toBe(201)
+    expect(h.host.ballSurface).toBe(h.surface); expect(h.host.ballView).toBe(h.view)
+    expect(h.calls.filter(call => call === 'extend')).toHaveLength(1)
+    expect(h.calls.at(-1)).toBe('back-focus')
+    h.apply()
+  } finally { h.cleanup() }
+})
+
+it.each([.99, 1, 1.01])('keeps the authored source capture at eligible front position %s', from => {
+  const h = handoff(), c = h.context
+  try {
+    c.position = from; c.scrollY = from * 850
+    h.commitOnce()
+    expect(h.measuredPositions).toEqual([from]); expect(c.scrollY).toBe(from * 850)
+    expect(h.host.ballEntry.source.origin.x).toBeCloseTo(201 + (1 - from) * 100)
+    h.apply()
+  } finally { h.cleanup() }
+})
+
+it('cancels preparation when route intent changes before the front-pose commit', () => {
+  const h = handoff(true)
+  try {
+    h.commitOnce(); h.path('/')
+    expect(h.host.ballEntry).toBeUndefined(); expect(h.measuredPositions).toEqual([])
+    expect(h.dialog.open).toBe(false)
+    expect(h.appended).toEqual([]); expect(h.surface.parentElement).toBe(h.host)
+    expect(h.calls).not.toContain('transfer'); expect(h.calls).not.toContain('back-focus')
+    h.path('/gameonvb')
+    expect(h.measuredPositions).toEqual([1]); expect(h.calls.filter(call => call === 'transfer')).toHaveLength(1)
+    expect(h.appended.filter(node => node === h.surface)).toEqual([h.surface])
+    expect(h.appended.filter(node => node !== h.surface)).toHaveLength(1)
+    expect(h.surface.parentElement).not.toBe(h.host)
+    h.path('/')
+    for (let i = 0; i < 400; i++) h.raf.tick()
+    expect(h.host.ballSurface).toBe(h.surface); expect(h.surface.parentElement).toBe(h.host)
+    expect(h.calls.filter(call => call === 'transfer')).toHaveLength(1)
+    expect(h.host.ballEntry).toBeUndefined(); expect(h.context.ballRestoreRef.current).toBeNull()
+  } finally { h.cleanup() }
+})
+
+it('reduced landing uses the current viewport step and waits for returned CTA and accessibility to commit', () => {
+  const h = handoff(), c = h.context
+  try {
+    h.apply(); c.reduced = true; h.apply()
+    c.position = 0; c.scrollY = 2600; h.dialog.scrollTop = 1200
+    c.innerHeight = 1200
+    c.pathname = '/'; run(sync, c); h.commitOnce()
+    expect(h.dialog.open).toBe(false); expect(h.dialog.scrollTop).toBe(0)
+    expect(c.scrollY).toBe(1020); expect(h.deck.ariaHidden).toBe(true)
+    expect(h.calls).not.toContain('source-focus')
+    h.apply()
+    expect(c.position).toBe(1); expect(h.deck.ariaHidden || h.deck.inert).toBe(false)
+    expect(h.calls.at(-1)).toBe('source-focus'); expect(c.scrollY).toBe(1020)
   } finally { h.cleanup() }
 })
 
@@ -390,7 +480,7 @@ function returnHandlers(h: ReturnType<typeof handoff>, cold = false, fragment = 
   const back = run(`${handler};return ballBack`, h.context)
   h.context.ballBack = back
   const event = () => ({ button: 0, defaultPrevented: false, altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, currentTarget: { target: '' }, preventDefault: vi.fn() })
-  h.context.backRef.current = { click: () => back(event()), focus() {} }
+  h.context.backRef.current = { ...h.context.backRef.current, click: () => back(event()) }
   const escapeEffect = source.slice(source.indexOf('    const escape=event=>'), source.indexOf('  },[])', source.indexOf('    const escape=event=>')))
   const removeEscape = run(escapeEffect, h.context)
   return { history, navigate, location, event, back, escape() { const key = { key: 'Escape', defaultPrevented: false, preventDefault: vi.fn() }; listeners.get('keydown')!(key); return key },
@@ -412,6 +502,7 @@ it('warm native Back and Escape return through history, suppress repeats, and Fo
       expect(handlers.history.back).toHaveBeenCalledTimes(1)
       expect(handlers.navigate).not.toHaveBeenCalled()
       expect(h.context.ballDesiredRef.current).toBe(false)
+      h.apply()
       expect(h.context.ballDesired).toBe(false)
       handlers.escape(); handlers.back(handlers.event())
       expect(handlers.history.back).toHaveBeenCalledTimes(1)
@@ -434,7 +525,7 @@ it('warm native Back and Escape return through history, suppress repeats, and Fo
   }
 })
 
-it('cold direct Back reaches actual home at scroll zero and fragment Back bypasses prior fragments', () => {
+it('cold direct Back reaches its own home card and fragment Back bypasses prior fragments', () => {
   for (const cold of [true, false]) {
     const h = handoff(cold), handlers = returnHandlers(h, cold, !cold)
     try {
@@ -443,7 +534,8 @@ it('cold direct Back reaches actual home at scroll zero and fragment Back bypass
       expect(handlers.navigate).toHaveBeenCalledTimes(1)
       expect(handlers.location.href).toBe('https://portfolio.test/')
       for (let i = 0; i < 400; i++) h.raf.tick()
-      expect(h.context.scrollY).toBe(cold ? 0 : 850)
+      // Cold entry scroll zero identifies Goal Loop, not the GameOnVB endpoint.
+      expect(h.context.scrollY).toBe(850)
     } finally { handlers.cleanup(); h.cleanup() }
   }
 })

@@ -15,6 +15,8 @@ const appStart = appSource.indexOf('    const anchor = navigationAnchor')
 const appNavigation = appSource.slice(appStart, appSource.indexOf('\n  }, [])', appStart)).replace('querySelector<HTMLElement>', 'querySelector').replace(' as HTMLAnchorElement', '')
 const run = (code: string, context: Record<string, any>) => new Function('context', `with(context){${code}}`)(context)
 const ref = (current: any) => ({ current })
+const focusStart = source.indexOf('    const pending=pendingFocusRef.current')
+const focusEffect = source.slice(focusStart, source.indexOf('\n  })', focusStart))
 
 it('actual JSX source ball yields GPU cleanup to the incoming watch only after the outgoing ball returns', async () => {
   const expression = source.match(/<Volleyball\b[^>]*\bactive=\{([^}]+)\}/)![1]
@@ -78,7 +80,7 @@ function harness(cold = false) {
   const style = () => ({ cssText: 'original inline style', setProperty(k: string, v: string) { (this as any)[k] = v } })
   const focus: string[] = []
   const makeHost = (name: string) => {
-    const cta = { hidden: false, closest: () => null, focus: () => focus.push(name), getBoundingClientRect: () => ({ top: 660, bottom: 700 }) }
+    const cta = { hidden: false, closest: (): object | null => deck.inert ? deck : null, focus() { expect(this.hidden || deck.inert || deck.ariaHidden).toBe(false); focus.push(name) }, getBoundingClientRect: () => ({ top: 660, bottom: 700 }) }
     const band = {}, sheet = { clientTop: 1, parentElement: {}, closest: () => null, getBoundingClientRect: () => ({ top: 200, bottom: 700 }), querySelector: (q: string) => q === '.sheet-bottom' ? band : cta }
     const image = { style: style(), dataset: {} }, surface: any = { style: style(), clientWidth: 600, clientHeight: 500, querySelector: () => image, getBoundingClientRect: () => ({ x: 201.25, y: 200.75 }) }
     const host: any = { dataset: { runtime: 'webgl', sourcePose: JSON.stringify({ x: .2, y: -.3, time: 9 }) }, closest: () => sheet, append(s: any) { s.parentElement = this }, dispatchEvent() {} }
@@ -97,11 +99,14 @@ function harness(cold = false) {
   const dialog = makeDialog(), ballDialog = makeDialog()
   const fan = { style: { ...style(), transform: 'translate(-49%,-51%)', width: '', height: '', left: '', top: '', transformOrigin: '' }, parentElement: { getBoundingClientRect: () => ({ x: 0, y: 0 }) }, getBoundingClientRect: () => ({ x: 200, y: 200 }), querySelectorAll: () => [{ getBoundingClientRect: () => ({ left: 180, right: 830, top: 170, bottom: 820 }) }] }
   const footer = { style: style() }, header = { getBoundingClientRect: () => ({ height: 125.25 }) }
-  const deck = { style: style(), inert: false, removeAttribute() {}, closest: () => ({ querySelector: () => header }), querySelector: (q: string) => q === '.watch-view' ? watch.host : q === '.volleyball-view' ? ball.host : q === '.sheet-fan' ? fan : q === '.table-footer' ? footer : watch.cta }
+  const button = (name: string) => ({ closest: (): object | null => deck.inert ? deck : null, focus() { expect(deck.inert || deck.ariaHidden).toBe(false); focus.push(name) } })
+  const watchButton = button('watch-show'), ballButton = button('ball-show')
+  const deck = { style: style(), inert: false, ariaHidden: false, removeAttribute() {}, closest: () => ({ querySelector: () => header }), querySelector: (q: string) => q === '.watch-view' ? watch.host : q === '.volleyball-view' ? ball.host : q === '.sheet-fan' ? fan : q === '.table-footer' ? footer : q === '[data-sheet="gameonvb"] .sheet-cta' ? ball.cta : q === '[data-sheet="goal-loop"] .sheet-cta' ? watch.cta : q.includes('GameOnVB') ? ballButton : watchButton }
   const context: Record<string, any> = {
     pathname: cold ? '/goal-loop' : '/', mounted: cold, desired: cold, ballMounted: false, ballDesired: false, reduced: false, position: 0,
-    dialogRef: ref(dialog), flowRef: ref(null), restoreRef: ref(null), desiredRef: ref(cold), sourceRef: ref(watch.cta), dialogScrollRef: ref(0), watchColdRef: ref(cold), watchFragmentRef: ref(cold), watchBackRef: ref(watch.cta),
-    ballDialogRef: ref(ballDialog), ballDesiredRef: ref(false), ballSourceRef: ref(ball.cta), ballScrollRef: ref(850), ballRestoreRef: ref(null), coldRef: ref(false), backRef: ref(ball.cta),
+    dialogRef: ref(dialog), flowRef: ref(null), restoreRef: ref(null), desiredRef: ref(cold), sourceRef: ref(watch.cta), watchColdRef: ref(cold), watchFragmentRef: ref(cold), watchBackRef: ref({ closest: () => null, focus() { expect(dialog.open && context.mounted).toBe(true); focus.push('watch-back') } }),
+    ballDialogRef: ref(ballDialog), ballDesiredRef: ref(false), ballSourceRef: ref(ball.cta), ballRestoreRef: ref(null), coldRef: ref(false), backRef: ref({ closest: () => null, focus() { expect(ballDialog.open && context.ballMounted).toBe(true); focus.push('ball-back') } }),
+    pendingFocusRef: ref(null), ballIndex: 1, watchIndex: 0, sheets: [{ id: 'gameonvb', label: 'GameOnVB' }, { id: 'goal-loop', label: 'Goal Loop' }],
     deckRef: ref(deck), assistRef: ref({ cancel() {} }), innerWidth: 1440, innerHeight: 1000, scrollY: cold ? 0 : 13,
     location: new URL(cold ? '/goal-loop' : '/', 'https://portfolio.test/'), history: { state: null, back: vi.fn() }, getRouteNavigationUrl, onNavigate: vi.fn(),
     document: { addEventListener() {}, removeEventListener() {}, hidden: false, visibilityState: 'visible', getElementById: () => null, body: { style: { overflow: 'scroll' } }, createElement: () => ({ style: style(), remove() {} }) },
@@ -110,29 +115,40 @@ function harness(cold = false) {
     DOMMatrix: class { a = .83; b = -.05; c = .05; d = .83; e = 0; f = 0 }, Event: class {}, ResizeObserver: class { observe() {} disconnect() {} },
     getComputedStyle: (o: any) => o === fan ? { width: '602px', height: '502px', left: '501px', top: '451px' } : o === ball.sheet.parentElement || o === watch.sheet.parentElement ? { width: '602px', height: '502px', transform: 'matrix', transformOrigin: '301px 251px' } : o === ball.band ? { top: '450px', height: '44px', paddingTop: '12px', paddingBottom: '0px', borderTopWidth: '0px', borderBottomWidth: '0px' } : { width: '600', height: '500' },
     createWatchFlow, BALL_DURATION, createBallChoreography, captureBallOrientation, ballEase, ballEntryPresentation, ballContactLayout, staticLanding, staticStepImage, deckPosition,
-    setPhase(v: string) { context.phase = v }, setBallPhase(v: string) { context.ballPhase = v }, setPosition(v: number) { context.position = v },
+    setPhase(v: string) { pending.phase = v }, setBallPhase(v: string) { pending.ballPhase = v }, setPosition(v: number) { pending.position = v },
   }
-  for (const key of ['mounted', 'desired', 'ballMounted', 'ballDesired']) context[`set${key[0].toUpperCase() + key.slice(1)}`] = (v: boolean) => { context[key] = v }
+  let pending: Record<string, any> = {}
+  for (const key of ['mounted', 'desired', 'ballMounted', 'ballDesired']) context[`set${key[0].toUpperCase() + key.slice(1)}`] = (v: boolean) => { pending[key] = v }
   ball.host.ballFlow = createBallFlow(s => { ball.host.ballEntry?.paint(s.time); return false }, p => ball.host.ballEntry?.land(p))
   const sync = source.slice(source.indexOf("    const want=pathname==='/gameonvb'"), source.indexOf('  },[pathname])'))
-  const ballEffect = source.slice(source.indexOf('    if(!ballMounted)return'), source.indexOf('  },[ballMounted,ballDesired,reduced])'))
+  const ballEffect = source.slice(source.indexOf('    if(!ballMounted)return'), source.indexOf('  },[ballMounted,ballDesired,reduced,position])'))
   const start = source.indexOf('    if(!mounted)return')
   const watchEffect = start < 0 ? '' : source.slice(start, source.indexOf('  },[mounted,desired,reduced])'))
   let ballDeps = '', watchDeps = ''
+  function commitOnce() {
+    Object.assign(context, pending); pending = {}
+    ball.cta.hidden = Math.abs(context.position - 1) > .02; watch.cta.hidden = Math.abs(context.position) > .02
+    deck.inert = Boolean(context.ballRestoreRef.current || context.restoreRef.current)
+    deck.ariaHidden = context.ballMounted || context.mounted
+    const render = Object.assign(Object.create(context), Object.fromEntries(['ballMounted', 'ballDesired', 'mounted', 'desired', 'reduced', 'position'].map(key => [key, context[key]])))
+    const b = [context.ballMounted, context.ballDesired, context.reduced, context.position].join(), w = [context.mounted, context.desired, context.reduced].join()
+    if (b !== ballDeps) { ballDeps = b; run(ballEffect, render) }
+    if (w !== watchDeps) { watchDeps = w; run(watchEffect, render) }
+    run(focusEffect, render)
+  }
   function commit() {
     for (let i = 0; i < 10; i++) {
-      const b = [context.ballMounted, context.ballDesired, context.reduced].join(), w = [context.mounted, context.desired, context.reduced].join()
-      if (b === ballDeps && w === watchDeps) return
-      if (b !== ballDeps) { ballDeps = b; run(ballEffect, context) }
-      if (w !== watchDeps) { watchDeps = w; run(watchEffect, context) }
+      commitOnce()
+      if (!Object.keys(pending).length) return
     }
     throw new Error('commit did not settle')
   }
-  function path(pathname: string) { context.pathname = context.location.pathname = pathname; run(sync, context); commit() }
+  function requestPath(pathname: string) { context.pathname = context.location.pathname = pathname; run(sync, context) }
+  function path(pathname: string) { requestPath(pathname); commit() }
   function tick() { now += 16; const batch = [...queue.values()]; queue.clear(); batch.forEach(fn => fn(now)); commit(); expect(maxOpen).toBeLessThanOrEqual(1); expect(context.document.body.style.overflow).toBe(dialog.open || ballDialog.open ? 'hidden' : 'scroll') }
   function settle() { for (let i = 0; i < 400; i++) tick() }
   function cleanup() { context.flowRef.current?.destroy(); ball.host.ballFlow.destroy(); context.restoreRef.current?.(); context.ballRestoreRef.current?.(); expect(queue.size).toBe(0); vi.unstubAllGlobals() }
-  return { context, watch, ball, dialog, ballDialog, deck, fan, footer, view, focus, path, tick, settle, commit, cleanup }
+  return { context, watch, ball, dialog, ballDialog, deck, fan, footer, view, focus, requestPath, path, tick, settle, commit, commitOnce, cleanup }
 }
 
 function navigation(h: ReturnType<typeof harness>) {
@@ -158,8 +174,8 @@ function navigation(h: ReturnType<typeof harness>) {
   const event = (href: string) => ({ button: 0, defaultPrevented: false, altKey: false, ctrlKey: false, metaKey: false, shiftKey: false,
     currentTarget: { ...(href === '/gameonvb' ? h.ball.cta : h.watch.cta), target: '', getAttribute: () => href, hasAttribute: () => false, closest: () => null }, preventDefault: vi.fn() })
   c.back = back; c.ballBack = ballBack
-  c.watchBackRef.current = { click: () => back(event('/')), focus() {} }
-  c.backRef.current = { click: () => ballBack(event('/')), focus() {} }
+  c.watchBackRef.current = { ...c.watchBackRef.current, click: () => back(event('/')) }
+  c.backRef.current = { ...c.backRef.current, click: () => ballBack(event('/')) }
   c.document.addEventListener = (key: string, fn: (e: any) => void) => keys.set(key, fn)
   c.document.removeEventListener = (key: string) => keys.delete(key)
   const start = source.indexOf('    const escape=event=>')
@@ -189,7 +205,8 @@ it.each([
     const before = flow.state, host = incoming === '/goal-loop' ? h.watch : h.ball
     h.path(incoming); c.reduced = true; h.commit(); c.reduced = false; h.commit()
     expect(c.history.state?.lightTableFromHome === true).toBe(false)
-    const sourceScroll = incoming === '/goal-loop' ? c.dialogScrollRef.current : c.ballScrollRef.current
+    // Entry scroll may belong to the other project; return to this one's card.
+    const projectScroll = incoming === '/goal-loop' ? 0 : 850
     c.onNavigate.mockClear()
     n.exit(incoming, escape); n.exit(incoming, escape)
     expect(c.onNavigate).toHaveBeenCalledOnce(); expect(c.onNavigate.mock.calls[0][0].currentTarget.getAttribute('href')).toBe('/')
@@ -200,7 +217,9 @@ it.each([
     h.settle()
     expect(c.pathname).toBe('/'); expect(c.document.body.style.overflow).toBe('scroll')
     expect(flow.state).toEqual(incoming === '/goal-loop' ? { position: 0, velocity: 0 } : { time: 0, velocity: 0 })
-    expect(c.scrollY).toBe(sourceScroll)
+    expect(c.scrollY).toBe(projectScroll)
+    expect(c.position).toBe(incoming === '/goal-loop' ? 0 : 1)
+    expect(h.focus.at(-1)).toBe(incoming === '/goal-loop' ? 'watch' : 'ball')
     expect(c.restoreRef.current).toBeNull(); expect(c.ballRestoreRef.current).toBeNull()
     expect(h.watch.surface.parentElement).toBe(h.watch.host); expect(h.ball.surface.parentElement).toBe(h.ball.host)
     expect(h.dialog.open || h.ballDialog.open).toBe(false)
@@ -277,7 +296,7 @@ it.each([
   const h = harness(), c = h.context, n = navigation(h)
   try {
     if (entry === 'cold') {
-      c.scrollY = c.dialogScrollRef.current = c.ballScrollRef.current = 0
+      c.scrollY = 0
       if (path === '/goal-loop') c.watchColdRef.current = c.desiredRef.current = c.mounted = c.desired = true
       else c.coldRef.current = c.ballDesiredRef.current = c.ballMounted = c.ballDesired = true
       c.history.replaceState(null, '', `https://portfolio.test${path}`)
@@ -289,7 +308,8 @@ it.each([
     c.onNavigate.mockClear(); n.exit(path, true); n.exit(path, false)
     expect(c.onNavigate).toHaveBeenCalledOnce(); expect(c.history.back).not.toHaveBeenCalled()
     expect(c.pathname).toBe('/'); h.settle(); expect(c.document.body.style.overflow).toBe('scroll')
-    if (entry === 'cold') expect(c.scrollY).toBe(0)
+    // Cold GameOnVB used to restore zero, which is the Goal Loop card.
+    if (entry === 'cold') expect(c.scrollY).toBe(path === '/gameonvb' ? 850 : 0)
   } finally { n.cleanup(); h.cleanup() }
 })
 
@@ -315,7 +335,8 @@ it('actual production kitchen entry fades without moving the watch and restores 
     expect(h.view.paint).not.toHaveBeenCalled()
     expect(h.watch.surface.parentElement).toBe(h.watch.host)
     for (const node of [h.watch.surface, h.deck, h.fan, h.footer]) expect(node.style.cssText).toBe('original inline style')
-    expect(h.context.scrollY).toBe(13); expect(h.focus.at(-1)).toBe('watch')
+    // Captured scroll 13 belonged to entry, not the Goal Loop card's endpoint.
+    expect(h.context.scrollY).toBe(0); expect(h.focus.at(-1)).toBe('watch')
     expect(h.context.flowRef.current).toBeNull()
   } finally { h.cleanup() }
 })
@@ -347,6 +368,109 @@ it('cold real watch route starts at rest and returns source zero without a home 
     expect(h.watch.surface.parentElement).toBe(h.watch.host)
     h.path('/'); h.settle(); expect(h.context.scrollY).toBe(0); expect(h.context.position).toBe(0)
     expect(h.context.watchColdRef.current).toBe(false)
+  } finally { h.cleanup() }
+})
+
+it.each([
+  ['/goal-loop', 0], ['/goal-loop', 1], ['/goal-loop', 2],
+  ['/gameonvb', 0], ['/gameonvb', .65], ['/gameonvb', 1], ['/gameonvb', 2],
+] as const)('%s restores its own card and CTA after entry from deck position %s and document scrolling', (path, from) => {
+  const h = harness(), c = h.context, ball = path === '/gameonvb'
+  try {
+    c.position = from; c.scrollY = from * 850
+    h.path(path)
+    expect(h.focus.at(-1)).toBe(ball ? 'ball-back' : 'watch-back')
+    h.settle()
+    c.scrollY = 2700; (ball ? h.ballDialog : h.dialog).scrollTop = 1600
+    h.path('/'); h.settle()
+    expect(c.position).toBe(ball ? 1 : 0); expect(c.scrollY).toBe(ball ? 850 : 0)
+    expect(h.focus.at(-1)).toBe(ball ? 'ball' : 'watch')
+    expect(c.pendingFocusRef.current).toBeNull()
+  } finally { h.cleanup() }
+})
+
+it.each(['/goal-loop', '/gameonvb'])('%s reduced landing defers focus until closed content and card visibility commit', path => {
+  const h = harness(), c = h.context, ball = path === '/gameonvb'
+  try {
+    c.reduced = true; h.path(path)
+    c.position = 2; c.scrollY = 2600; c.innerHeight = 1200
+    h.focus.length = 0
+    h.requestPath('/'); h.commitOnce()
+    expect(h.dialog.open || h.ballDialog.open).toBe(false)
+    expect(h.focus).toEqual([]); expect(h.deck.ariaHidden).toBe(true)
+    expect(c.scrollY).toBe(ball ? 1020 : 0)
+    h.commit()
+    expect(h.deck.ariaHidden || h.deck.inert).toBe(false)
+    expect(h.focus).toEqual([ball ? 'ball' : 'watch'])
+    expect(c.position).toBe(ball ? 1 : 0); expect(c.scrollY).toBe(ball ? 1020 : 0)
+  } finally { h.cleanup() }
+})
+
+it.each(['/goal-loop', '/gameonvb'])('%s uses its own Show button when the committed CTA is hidden, clipped or inert', path => {
+  const h = harness(), c = h.context, ball = path === '/gameonvb'
+  try {
+    c.reduced = true; h.path(path); h.path('/')
+    const cta = ball ? h.ball.cta : h.watch.cta
+    for (const unavailable of ['hidden', 'clipped', 'inert']) {
+      cta.hidden = unavailable === 'hidden'
+      cta.getBoundingClientRect = () => unavailable === 'clipped' ? { top: -50, bottom: -10 } : { top: 660, bottom: 700 }
+      cta.closest = () => unavailable === 'inert' ? {} : null
+      c.pendingFocusRef.current = { id: ball ? 'gameonvb' : 'goal-loop', entry: false }
+      run(focusEffect, c)
+      expect(h.focus.at(-1)).toBe(ball ? 'ball-show' : 'watch-show')
+      expect(c.pendingFocusRef.current).toBeNull()
+    }
+  } finally { h.cleanup() }
+})
+
+it.each([
+  ['/goal-loop', '/gameonvb'], ['/gameonvb', '/goal-loop'],
+])('%s handoff to %s suppresses outgoing focus, including a queued homepage focus', (outgoing, incoming) => {
+  const h = harness(), c = h.context
+  try {
+    c.reduced = true; h.path(outgoing)
+    h.focus.length = 0; h.path(incoming)
+    expect(h.focus).toEqual([incoming === '/gameonvb' ? 'ball-back' : 'watch-back'])
+    h.focus.length = 0
+    h.requestPath('/'); h.commitOnce()
+    expect(c.pendingFocusRef.current?.entry).toBe(false); expect(h.focus).toEqual([])
+    h.path(outgoing)
+    expect(h.focus).toEqual([outgoing === '/gameonvb' ? 'ball-back' : 'watch-back'])
+    expect(h.dialog.open).toBe(outgoing === '/goal-loop'); expect(h.ballDialog.open).toBe(outgoing === '/gameonvb')
+  } finally { h.cleanup() }
+})
+
+it.each([
+  ['/goal-loop', '/gameonvb'], ['/gameonvb', '/goal-loop'],
+])('%s handoff to %s revalidates intent after outgoing restoration before incoming mounting', (outgoing, incoming) => {
+  const h = harness(), c = h.context
+  try {
+    c.reduced = true; h.path(outgoing); h.focus.length = 0
+    h.requestPath(incoming); h.commitOnce()
+    expect(c.restoreRef.current).toBeNull(); expect(c.ballRestoreRef.current).toBeNull()
+    expect(h.dialog.open || h.ballDialog.open).toBe(false); expect(h.focus).toEqual([])
+    h.path(outgoing)
+    expect(h.dialog.open).toBe(outgoing === '/goal-loop'); expect(h.ballDialog.open).toBe(outgoing === '/gameonvb')
+    expect(h.focus).toEqual([outgoing === '/goal-loop' ? 'watch-back' : 'ball-back'])
+    if (incoming === '/gameonvb') expect(h.ball.host.ballEntry).toBeUndefined()
+    else expect(c.flowRef.current).toBeNull()
+  } finally { h.cleanup() }
+})
+
+it('revalidates incoming GameOnVB after the outgoing watch restores but before source preparation commits', () => {
+  const h = harness(), c = h.context
+  try {
+    c.reduced = true; h.path('/goal-loop'); h.focus.length = 0
+    h.requestPath('/gameonvb'); h.commitOnce()
+    expect(c.restoreRef.current).toBeNull(); expect(h.dialog.open).toBe(false)
+    h.commitOnce()
+    expect(c.ballMounted).toBe(true); expect(c.position).toBe(0)
+    expect(h.ball.host.ballEntry).toBeUndefined(); expect(h.focus).toEqual([])
+    h.path('/goal-loop')
+    expect(c.ballMounted).toBe(false); expect(h.ball.host.ballEntry).toBeUndefined()
+    expect(h.ball.surface.parentElement).toBe(h.ball.host); expect(h.watch.surface.parentElement).toBe(h.watch.host)
+    expect(h.ballDialog.open).toBe(false); expect(h.dialog.open).toBe(true)
+    expect(h.focus).toEqual(['watch-back'])
   } finally { h.cleanup() }
 })
 
@@ -439,7 +563,7 @@ it('production watch CTA and Back preserve browser-owned modifiers and route/his
     const state = flow.state
     back(event({ metaKey: true })); expect(c.desiredRef.current).toBe(true)
     const exit = event(), keys = new Map<string, (e: any) => void>()
-    c.back = back; c.watchBackRef.current = { click: () => back(exit), focus() {} }
+    c.back = back; c.watchBackRef.current = { ...c.watchBackRef.current, click: () => back(exit) }
     c.document.addEventListener = (key: string, fn: (e: any) => void) => keys.set(key, fn)
     c.document.removeEventListener = (key: string) => keys.delete(key)
     const escapeStart = source.indexOf('    const escape=event=>')
@@ -454,7 +578,8 @@ it('production watch CTA and Back preserve browser-owned modifiers and route/his
     c.location.hash = '#run-tape'
     c.onNavigate = vi.fn((e: ReturnType<typeof event>) => { e.preventDefault(); h.path('/') })
     back(event()); expect(c.onNavigate).toHaveBeenCalledOnce(); expect(c.history.back).toHaveBeenCalledOnce()
-    h.settle(); expect(c.scrollY).toBe(13)
+    // Explicit Home navigation also returns to Goal Loop's endpoint, not entry 13.
+    h.settle(); expect(c.scrollY).toBe(0)
   } finally { n.cleanup(); h.cleanup() }
 })
 
@@ -527,6 +652,7 @@ it('pauses the independent kitchen fade while hidden, defers a reduced-motion sn
     c.reduced = true; h.commit()
     expect(flow.state.position).toBe(0)
     c.document.hidden = false; listeners.get('visibilitychange')!()
+    h.commit()
     expect(flow.state).toEqual({ position: 1, velocity: 0 })
     expect(h.dialog.dataset).toMatchObject({ progress: '1.00000' })
     expect(c.phase).toBe('open')
@@ -534,7 +660,8 @@ it('pauses the independent kitchen fade while hidden, defers a reduced-motion sn
     h.path('/')
     expect(c.flowRef.current).toBeNull()
     expect(h.dialog.open).toBe(false)
-    expect(c.scrollY).toBe(13)
+    // Visibility changes must not revive the old entry-scroll return target.
+    expect(c.scrollY).toBe(0)
     expect(listeners.has('visibilitychange')).toBe(false)
     expect(c.document.removeEventListener).toHaveBeenCalledWith('visibilitychange', expect.any(Function))
   } finally { h.cleanup() }

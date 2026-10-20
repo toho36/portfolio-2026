@@ -21,15 +21,17 @@ const sheets = [
   { id: 'intro', label: 'Hoang Viet To', title: <>New tools.<br/>Old standards.</>, href: '/#introduction' },
 ]
 
+const ballIndex=sheets.findIndex(sheet=>sheet.id==='gameonvb'),watchIndex=sheets.findIndex(sheet=>sheet.id==='goal-loop')
+
 export function LightTable({pathname,onNavigate}) {
   const coldRef=useRef(pathname==='/gameonvb'),coldFragmentRef=useRef(coldRef.current)
   const watchColdRef=useRef(pathname==='/goal-loop'),watchFragmentRef=useRef(watchColdRef.current)
   const [mounted,setMounted]=useState(watchColdRef.current),[desired,setDesired]=useState(watchColdRef.current),[phase,setPhase]=useState(watchColdRef.current?'open':'table')
-  const dialogRef=useRef(null),flowRef=useRef(null),restoreRef=useRef(null),desiredRef=useRef(watchColdRef.current),sourceRef=useRef(null),dialogScrollRef=useRef(0),watchBackRef=useRef(null)
+  const dialogRef=useRef(null),flowRef=useRef(null),restoreRef=useRef(null),desiredRef=useRef(watchColdRef.current),sourceRef=useRef(null),watchBackRef=useRef(null)
   const [position,setPosition]=useState(0),[reduced,setReduced]=useState(false)
   const [ballMounted,setBallMounted]=useState(coldRef.current),[ballDesired,setBallDesired]=useState(coldRef.current),[ballPhase,setBallPhase]=useState(coldRef.current?'open':'table')
-  const ballDialogRef=useRef(null),ballDesiredRef=useRef(coldRef.current),ballSourceRef=useRef(null),ballScrollRef=useRef(0),ballRestoreRef=useRef(null)
-  const deckRef=useRef(null),assistRef=useRef(null),backRef=useRef(null)
+  const ballDialogRef=useRef(null),ballDesiredRef=useRef(coldRef.current),ballSourceRef=useRef(null),ballRestoreRef=useRef(null)
+  const deckRef=useRef(null),assistRef=useRef(null),backRef=useRef(null),pendingFocusRef=useRef(null)
   useEffect(()=>{
     const media=matchMedia('(prefers-reduced-motion: reduce)')
     const assist=createDeckAssist(deckRef.current,()=>media.matches);assistRef.current=assist
@@ -41,11 +43,12 @@ export function LightTable({pathname,onNavigate}) {
   },[])
   useLayoutEffect(()=>{
     const want=pathname==='/gameonvb'
-    if(want&&!ballDesiredRef.current){assistRef.current?.cancel();if(!ballRestoreRef.current)ballScrollRef.current=scrollY}
-    ballDesiredRef.current=want;setBallDesired(want);if(want&&!restoreRef.current)setBallMounted(true);else if(!want&&!ballRestoreRef.current)setBallMounted(false)
+    pendingFocusRef.current=null
+    if(want&&!ballDesiredRef.current)assistRef.current?.cancel()
+    ballDesiredRef.current=want;setBallDesired(want);if(want&&!restoreRef.current)setBallMounted(true);else if(!want&&!ballRestoreRef.current){setBallMounted(false);if(ballDialogRef.current?.open)ballDialogRef.current.close()}
     const watchWant=pathname==='/goal-loop'
-    if(watchWant&&!desiredRef.current){assistRef.current?.cancel();if(!restoreRef.current)dialogScrollRef.current=scrollY}
-    desiredRef.current=watchWant;setDesired(watchWant);if(watchWant&&!ballRestoreRef.current)setMounted(true);else if(!watchWant&&!restoreRef.current)setMounted(false)
+    if(watchWant&&!desiredRef.current)assistRef.current?.cancel()
+    desiredRef.current=watchWant;setDesired(watchWant);if(watchWant&&!ballRestoreRef.current)setMounted(true);else if(!watchWant&&!restoreRef.current){setMounted(false);if(dialogRef.current?.open)dialogRef.current.close()}
     const dialog=ballDialogRef.current,header=deckRef.current.closest('.site-shell')?.querySelector(':scope > .site-header')
     if(!header)return
     const measure=()=>{const height=`${header.getBoundingClientRect().height}px`;dialog.style.setProperty('--shell-header-height',height);dialogRef.current.style.setProperty('--shell-header-height',height)}
@@ -108,8 +111,8 @@ export function LightTable({pathname,onNavigate}) {
   function select(index){if(assistRef.current)assistRef.current.move(index);else window.scrollTo({top:index*innerHeight*.85,behavior:'instant'})}
   function enter(event){
     const destination=getRouteNavigationUrl({href:event.currentTarget.getAttribute('href'),currentUrl:location.href,button:event.button,defaultPrevented:event.defaultPrevented,altKey:event.altKey,ctrlKey:event.ctrlKey,metaKey:event.metaKey,shiftKey:event.shiftKey,target:event.currentTarget.target,download:event.currentTarget.hasAttribute('download')})
-    if(destination==='/gameonvb'){assistRef.current?.cancel();ballSourceRef.current=event.currentTarget;if(!ballRestoreRef.current)ballScrollRef.current=scrollY}
-    if(destination==='/goal-loop'){assistRef.current?.cancel();sourceRef.current=event.currentTarget;if(!restoreRef.current)dialogScrollRef.current=scrollY}
+    if(destination==='/gameonvb'){assistRef.current?.cancel();ballSourceRef.current=event.currentTarget;pendingFocusRef.current=null}
+    if(destination==='/goal-loop'){assistRef.current?.cancel();sourceRef.current=event.currentTarget;pendingFocusRef.current=null}
     onNavigate(event)
   }
   function back(event){
@@ -134,6 +137,13 @@ export function LightTable({pathname,onNavigate}) {
     if(!ballMounted)return
     const dialog=ballDialogRef.current,deck=deckRef.current,host=deck.querySelector('.volleyball-view'),surface=host.ballSurface
     if(!host.ballEntry){
+      if(!ballDesiredRef.current||restoreRef.current)return
+      assistRef.current?.cancel()
+      // Capture the authored source only after its front pose has committed.
+      // A cold route is already mounted, so mounting alone is no render boundary.
+      if(Math.abs(position-ballIndex)>.02){
+        window.scrollTo({top:ballIndex*innerHeight*.85,behavior:'instant'});setPosition(ballIndex);return
+      }
       const sheet=host.closest('.sheet'),box=sheet.getBoundingClientRect(),positionStyle=getComputedStyle(sheet.parentElement),m=new DOMMatrix(positionStyle.transform),style=getComputedStyle(surface),w=parseFloat(style.width),h=parseFloat(style.height),sourceBox=surface.getBoundingClientRect()
       const visible=box.bottom>0&&box.top<innerHeight&&!sheet.closest('[inert]')
       const fan=deck.querySelector('.sheet-fan'),fanBox=fan.getBoundingClientRect(),previousFanTransform=fan.style.transform
@@ -216,10 +226,9 @@ export function LightTable({pathname,onNavigate}) {
       }
       function land(p){
         if(p){setBallPhase('open');return}
-        restore();coldRef.current=false;setBallMounted(false);setBallPhase('table');window.scrollTo({top:ballScrollRef.current,behavior:'instant'})
-        setPosition(deckPosition(scrollY,innerHeight*.85))
-        const source=ballSourceRef.current,bounds=source?.getBoundingClientRect(),ctaVisible=source&&!source.hidden&&bounds&&bounds.top>=0&&bounds.bottom<=innerHeight&&Math.abs(ballScrollRef.current/(innerHeight*.85)-1)<=.02
-        const focus=ctaVisible?source:deck.querySelector('button[aria-label="Show GameOnVB"]');focus?.focus({preventScroll:true})
+        restore();coldRef.current=false;setBallMounted(false);setBallPhase('table');window.scrollTo({top:ballIndex*innerHeight*.85,behavior:'instant'})
+        setPosition(ballIndex)
+        pendingFocusRef.current=desiredRef.current?null:{id:'gameonvb',entry:false}
         if(desiredRef.current)setMounted(true)
 
       }
@@ -227,7 +236,7 @@ export function LightTable({pathname,onNavigate}) {
       host.ballEntry={paint,resize,land,pose,choreography,orientation,source:sourceFrame,edgeTime,aspect:innerWidth/innerHeight,screenWidth:innerWidth,screenHeight:innerHeight,sourceScale};ballRestoreRef.current=restore
       surface.style.cssText=`position:fixed;inset:auto;left:0;top:0;width:${innerWidth}px;height:${innerHeight}px`
       host.ballView?.extend(innerWidth,innerHeight,sourceFrame);paint(coldRef.current?BALL_DURATION:0);dialog.querySelector('.entry-ball-slot').append(surface)
-      if(dialog.open)dialog.close();dialog.show();dialog.scrollTop=0;dialog.dataset.ballReady='true';backRef.current?.focus({preventScroll:true});document.body.style.overflow='hidden';host.dispatchEvent(new Event('ballentrychange'))
+      if(dialog.open)dialog.close();dialog.show();dialog.scrollTop=0;dialog.dataset.ballReady='true';pendingFocusRef.current={id:'gameonvb',entry:true};document.body.style.overflow='hidden';host.dispatchEvent(new Event('ballentrychange'))
       if(coldRef.current)scrollStoryAnchor()
     }
     setBallPhase(ballDesired?'entering':'leaving')
@@ -236,11 +245,12 @@ export function LightTable({pathname,onNavigate}) {
     if(!ballDesired){dialog.scrollTop=0;host.dispatchEvent(new Event('ballentrychange'))}
     host.ballEntry.want=ballDesired;host.ballEntry.reduced=reduced
     host.ballFlow?.set(ballDesired,reduced)
-  },[ballMounted,ballDesired,reduced])
+  },[ballMounted,ballDesired,reduced,position])
   useLayoutEffect(()=>{
     if(!mounted)return
     const dialog=dialogRef.current,deck=deckRef.current,fan=deck.querySelector('.sheet-fan'),host=deck.querySelector('.watch-view')
     if(!flowRef.current){
+      if(!desiredRef.current||ballRestoreRef.current)return
       const sheet=host.closest('.sheet')
       const previousOverflow=document.body.style.overflow,previousDeckStyle=deck.style.cssText,previousFanStyle=fan.style.cssText,footer=deck.querySelector('.table-footer'),previousFooterStyle=footer.style.cssText
       footer.style.setProperty('visibility','hidden','important')
@@ -262,13 +272,12 @@ export function LightTable({pathname,onNavigate}) {
         if(p){setPhase('open');return}
         restore();flowRef.current?.destroy();flowRef.current=null
         watchColdRef.current=false;setMounted(false);setPhase('table')
-        window.scrollTo({top:dialogScrollRef.current,behavior:'instant'});setPosition(deckPosition(scrollY,innerHeight*.85))
-        const source=sourceRef.current,bounds=source?.getBoundingClientRect(),ctaVisible=source&&!source.hidden&&bounds&&bounds.top>=0&&bounds.bottom<=innerHeight&&Math.abs(dialogScrollRef.current/(innerHeight*.85))<=.02
-        const focus=ctaVisible?source:deck.querySelector('button[aria-label="Show Goal Loop"]');focus?.focus({preventScroll:true})
+        window.scrollTo({top:watchIndex*innerHeight*.85,behavior:'instant'});setPosition(watchIndex)
+        pendingFocusRef.current=ballDesiredRef.current?null:{id:'goal-loop',entry:false}
         if(ballDesiredRef.current)setBallMounted(true)
       }
       paint(watchColdRef.current?1:0)
-      if(dialog.open)dialog.close();dialog.show();dialog.scrollTop=0;dialog.dataset.watchReady='true';watchBackRef.current?.focus({preventScroll:true});document.body.style.overflow='hidden'
+      if(dialog.open)dialog.close();dialog.show();dialog.scrollTop=0;dialog.dataset.watchReady='true';pendingFocusRef.current={id:'goal-loop',entry:true};document.body.style.overflow='hidden'
       flowRef.current=createWatchFlow(paint,land,{position:watchColdRef.current?1:0,velocity:0})
       document.addEventListener('visibilitychange',visibility);visibility()
       if(watchColdRef.current)scrollStoryAnchor()
@@ -277,7 +286,28 @@ export function LightTable({pathname,onNavigate}) {
     if(!desired)dialog.scrollTop=0
     flowRef.current.set(desired,reduced)
   },[mounted,desired,reduced])
-  useLayoutEffect(()=>()=>{flowRef.current?.destroy();flowRef.current=null;restoreRef.current?.();ballRestoreRef.current?.()},[])
+  useLayoutEffect(()=>{
+    const pending=pendingFocusRef.current
+    if(!pending)return
+    let target
+    if(pending.entry){
+      const ball=pending.id==='gameonvb'
+      if(!(ball?ballDesiredRef.current:desiredRef.current)){pendingFocusRef.current=null;return}
+      if(!(ball?ballMounted:mounted)||!(ball?ballDialogRef.current:dialogRef.current)?.open)return
+      target=(ball?backRef:watchBackRef).current
+    }else{
+      if(ballDesiredRef.current||desiredRef.current){pendingFocusRef.current=null;return}
+      // Land may run synchronously under reduced motion. Hidden CTAs and inert
+      // homepage content must commit before focus is resolved from the live DOM.
+      if(ballMounted||mounted||ballRestoreRef.current||restoreRef.current)return
+      const deck=deckRef.current,source=deck.querySelector(`[data-sheet="${pending.id}"] .sheet-cta`),bounds=source?.getBoundingClientRect()
+      const visible=source&&!source.hidden&&!source.closest('[inert]')&&bounds.top>=0&&bounds.bottom<=innerHeight
+      target=visible?source:deck.querySelector(`button[aria-label="Show ${sheets.find(sheet=>sheet.id===pending.id).label}"]`)
+    }
+    if(!target||target.hidden||target.closest('[inert]'))return
+    pendingFocusRef.current=null;target.focus({preventScroll:true})
+  })
+  useLayoutEffect(()=>()=>{pendingFocusRef.current=null;flowRef.current?.destroy();flowRef.current=null;restoreRef.current?.();ballRestoreRef.current?.()},[])
   const active=Math.round(position)
   // Phones: a sideways finger swipe deals the next or previous card; vertical scroll stays native.
   const swipeRef=useRef(null)
