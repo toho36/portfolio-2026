@@ -18,7 +18,7 @@
   text-transform: uppercase;
   letter-spacing: -.04em;
   margin: 0;
-  line-height: .86;
+  line-height: .92;
 }
 .gv h2 { font-size: clamp(2.6rem, 6.5vw, 6rem); }
 .gv h3 { font-size: 2rem; }
@@ -193,7 +193,7 @@
   .gv .step-screen { grid-column: 2; grid-row: 1 / span 3; margin-top: 0; }
 }
 @media (max-width: 600px) {
-  .gv h2 { line-height: .95; }
+  .gv h2 { line-height: 1; }
   .gv .band-head { margin-bottom: 2rem; }
   .gv .set { padding: 1.5rem; }
   .gv .set .was .limit { display: block; }

@@ -27,7 +27,7 @@ const STEPS: readonly GameOnVbStep[] = [
 
 const SETS: readonly GameOnVbSet[] = [
   {
-    label: 'Set 1 · computer time', value: '<10', unit: 'ms per visit',
+    label: 'Set 1 · server work', value: '<10', unit: 'ms per visit',
     before: { prefix: 'Before: ', struck: '62 ms', suffix: 'Limit: 10 ms' },
     body: 'On the free plan, the server may spend 10 ms of computer time on each visit. Mine needed up to 62 ms, so some visitors got an error.',
     tech: 'Next.js on Cloudflare Workers',
@@ -102,7 +102,7 @@ export const VOLEYEVENTS = {
     eyebrow: 'GameOnVB / Match operations',
     title: 'Sign-ups, payments and check-in for regular recreational volleyball sessions.',
     lede: PROJECT_STORIES.voleyevents.preview,
-    play: 'Grab the ball and throw it down the stairs.',
+    play: 'Drag the ball and let go to throw it down the stairs.',
   },
   ticker: ['Tue 19:00 Hall A', '3 spots left', 'Thu 18:30 Hall B', 'Full, waitlist open', 'Sun 10:00 Beach', '8 spots left'],
   rule: {

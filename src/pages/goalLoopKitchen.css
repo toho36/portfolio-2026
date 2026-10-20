@@ -215,3 +215,6 @@
  .goal-loop-kitchen .k-legend,.goal-loop-kitchen .k-lane .name,.goal-loop-kitchen .k-row .name{font-size:14px}
  .goal-loop-kitchen .k-navigation{font-size:15px}
 }
+
+/* Sol review: say plainly who does what, right under the hero promise. */
+.goal-loop-kitchen .k-hero .copy .k-role{margin-top:1rem;padding-left:.9rem;border-left:3px solid var(--basil);font-size:16px;line-height:1.55;color:var(--ink)}

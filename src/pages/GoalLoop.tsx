@@ -21,7 +21,7 @@ export function GoalLoopPage({ onNavigate, backRef }: GoalLoopPageProps) {
       </nav>
 
  <section className="wrap k-hero" aria-labelledby="goal-loop-title">
-  <div className="copy reveal"><p className="label">{GOAL_LOOP_KITCHEN.hero.label}</p><h1 id="goal-loop-title">{GOAL_LOOP_KITCHEN.hero.title}<br /><em>{GOAL_LOOP_KITCHEN.hero.emphasis}</em></h1><p>{GOAL_LOOP_KITCHEN.hero.body}</p></div>
+  <div className="copy reveal"><p className="label">{GOAL_LOOP_KITCHEN.hero.label}</p><h1 id="goal-loop-title">{GOAL_LOOP_KITCHEN.hero.title}<br /><em>{GOAL_LOOP_KITCHEN.hero.emphasis}</em></h1><p>{GOAL_LOOP_KITCHEN.hero.body}</p><p className="k-role">{GOAL_LOOP_KITCHEN.hero.role}</p></div>
   <svg className="k-scene reveal" viewBox="0 0 520 420" aria-hidden="true">
    <defs>
     <linearGradient id="k-steelg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#f4f5f5"/><stop offset="1" stopColor="#aab1b3"/></linearGradient>

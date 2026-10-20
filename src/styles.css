@@ -1770,3 +1770,31 @@ html[data-curtain='reveal']::after { animation: curtain-reveal .2s cubic-bezier(
 @media (max-width: 600px) {
   .landing-page .landing-nav-hint { display: block; font-size: var(--landing-type-12); color: var(--landing-muted); }
 }
+
+/* Readability floor (Sol design review, 2026-10-20): informative labels >= 13px, sentences >= 14px, tap targets >= 44px.
+   Scoped under .site-shell so it outranks older per-section rules regardless of how the build orders them. */
+.site-shell .site-nav a, .site-shell .contact-nav a, .site-shell .brand, .site-shell .brand span { font-size: 13px; }
+.site-shell p.eyebrow { font-size: 13px; }
+.site-shell .light-table .sheet-top, .site-shell .light-table .sheet-bottom { font-size: 12px; letter-spacing: .08em; }
+.site-shell .light-table .sheet-cta { font-size: 13px; }
+.site-shell .light-table .table-footer { font-size: 13px; letter-spacing: .02em; }
+.site-shell .light-table .table-footer button { font-size: 13px; }
+.site-shell .goal-index, .site-shell .goal-label, .site-shell .goal-return span { font-size: 13px; }
+.site-shell .goal-caption { font-size: 14px; }
+.site-shell .switch-hint { font-size: 13px; }
+.site-shell .poster-form-field label, .site-shell .poster-form-topic legend, .site-shell .poster-form-topic span { font-size: 13px; }
+.site-shell .poster-form-field input { min-height: 44px; }
+.site-shell .poster-form-topic span { display: flex; align-items: center; justify-content: center; min-height: 44px; }
+.site-shell .poster-form-error { font-size: 14px; }
+.site-shell .poster-contact nav a, .site-shell .poster-contact-links a, .site-shell footer a, .site-shell footer p, .site-shell .text-link { font-size: 14px; }
+.site-shell .wire-topline { font-size: 12px; }
+.site-shell .wire-loader small { font-size: 13px; }
+.site-shell .wire-hud button { min-height: 44px; font-size: 13px; }
+.site-shell .wire-score { font-size: 13px; }
+.site-shell .wire-hint { font-size: 14px; }
+@media (max-width: 820px) {
+  /* Phones: card corners keep only the card number and the action, so the action can stay readable. */
+  .site-shell .light-table .sheet-bottom > span { display: none; }
+  .site-shell .light-table .sheet-bottom { justify-content: flex-end; }
+  .site-shell .wire-modes button, .site-shell .wire-sound { min-height: 44px; font-size: 13px; padding-block: 0; }
+}

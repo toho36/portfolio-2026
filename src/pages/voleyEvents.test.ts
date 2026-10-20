@@ -37,7 +37,7 @@ describe('GameOnVB Match Operations case study', () => {
   it('presents the approved rule, four sets, phone steps and closing in order', () => {
     const markup = render()
     const landmarks = ['class="ticker"', 'The rule I set myself', 'Four sets',
-      'Set 1 · computer time', 'Set 2 · the rebuild', 'Set 3 · scheduled jobs',
+      'Set 1 · server work', 'Set 2 · the rebuild', 'Set 3 · scheduled jobs',
       'Set 4 · background work', 'GameOnVB now runs entirely on the free plan.',
       'class="phone-col"', 'class="gv-steps"', 'When plans change',
       'Visit gameonvb.cz', 'aria-label="Case study navigation"']
@@ -119,7 +119,7 @@ describe('GameOnVB Match Operations case study', () => {
   it('offers the transferred upper-tread hero before the complete ungated story', () => {
     const markup = render()
     const hero = markup.slice(markup.indexOf('class="staircase-entry light-table-hero"'), markup.indexOf('class="gv gameonvb-story"'))
-    expect(hero).toContain('Grab the ball and throw it down the stairs.')
+    expect(hero).toContain('Drag the ball and let go to throw it down the stairs.')
     expect(hero.match(/data-ball-hero="true"/g)).toHaveLength(1)
     expect(hero).toContain('data-cold-ball-fallback="true"')
     expect(hero).toContain('The same volleyball landing on the upper stone tread')

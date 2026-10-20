@@ -60,3 +60,9 @@
 .playground-page .playground-study p { margin: 0 0 .75rem; line-height: 1.5; max-width: 60ch; }
 .playground-page .playground-study .playground-study-kind { margin: -.4rem 0 .9rem; font: 600 14px/1.4 ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; opacity: .75; }
 @media (max-width: 760px) { .playground-page .playground-study { grid-template-columns: 1fr; } .playground-page .playground-studies > h2, .playground-page .playground-study > div { padding-inline: 16px; } }
+
+/* Sol review: say what the page is and how to play before the game; tools stay a quiet line. */
+.playground-page .playground-heading .playground-intro { margin: .35rem 0 0; font-size: 16px; line-height: 1.5; opacity: .85; }
+.playground-page .playground-heading .playground-howto { margin: .35rem 0 0; font-size: 16px; line-height: 1.5; }
+.playground-page .playground-study .playground-study-tools { font-size: 14px; line-height: 1.5; opacity: .75; }
+.playground-page .playground-study .playground-study-link { display: inline-flex; align-items: center; gap: .35em; min-height: 44px; margin-top: .5rem; font-weight: 700; }
