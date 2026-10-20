@@ -101,6 +101,7 @@ export const VOLEYEVENTS = {
     eyebrow: 'GameOnVB / Match operations',
     title: 'Sign-ups, payments and check-in for regular recreational volleyball sessions.',
     lede: PROJECT_STORIES.voleyevents.preview,
+    play: 'Grab the ball and throw it down the stairs.',
   },
   ticker: ['Tue 19:00 Hall A', '3 spots left', 'Thu 18:30 Hall B', 'Full, waitlist open', 'Sun 10:00 Beach', '8 spots left'],
   rule: {

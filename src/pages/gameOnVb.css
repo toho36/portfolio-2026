@@ -130,6 +130,14 @@
 .gv .gv-cta span { transition: transform .2s; }
 .gv .gv-cta:hover span { transform: translateX(4px); }
 
+/* Hero: after landing, the ball can be grabbed and thrown down the stairs (mouse or finger). */
+.voleyevents .ball-play-handle { position: absolute; z-index: 2; margin: 0; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: grab; pointer-events: auto; touch-action: none; -webkit-tap-highlight-color: transparent; }
+.voleyevents .ball-play-handle[data-held] { cursor: grabbing; }
+/* The caption must not block the ball, and the hint only shows when the 3D ball can really be thrown. */
+.voleyevents .ball-entry-copy { pointer-events: none; }
+.voleyevents .staircase-entry:not(:has(.ball-presentation[data-runtime='webgl'])) .ball-play-hint { display: none; }
+.voleyevents .ball-entry-caption .ball-play-hint { margin-top: 12px; font: 700 14px/1.4 "Helvetica Neue", Arial, sans-serif; letter-spacing: .04em; color: #e3b84f; }
+.voleyevents .ball-play-handle:focus-visible { outline: 2px solid #e3b84f; outline-offset: 4px; }
 /* Mobile rules: text >= 12px for labels and >= 14px for sentences, section padding <= 72px, pinned band <= 3 screens. */
 .gv .step-screen { display: none; }
 .gv .set .was .limit::before { content: ' · '; }
@@ -169,7 +177,7 @@
   .voleyevents .entry-header a { max-width: none; }
   .voleyevents .ball-entry-caption h1 { font-size: 32px; line-height: 1.15; }
   .voleyevents .ball-entry-caption p { font-size: 12px; }
-  .voleyevents .ball-entry-caption p:last-child { font-size: 14px; }
+  .voleyevents .ball-entry-caption p:nth-of-type(2) { font-size: 14px; }
 }
 @media (min-width: 601px) and (max-width: 820px) {
   .gv .gv-steps .step { grid-template-columns: minmax(0,1fr) 320px; column-gap: 32px; }
@@ -186,6 +194,7 @@
   .gv .gv-cta { white-space: nowrap; padding-inline: 1rem; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .voleyevents .ball-play-hint { display: none; }
   .gv *, .gv *::before, .gv *::after { animation: none !important; transition: none !important; }
   .gv .reveal { opacity: 1; transform: none; }
   .gv .band { height: auto; }
@@ -215,7 +224,8 @@
   .gv .gv-jump { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
   .gv .gv-jump a { font-size: 14px; letter-spacing: .02em; white-space: nowrap; }
   .voleyevents .ball-entry-caption p { font-size: 14px; }
-  .voleyevents .ball-entry-caption p:last-child { font-size: 17px; }
+  .voleyevents .ball-entry-caption p:nth-of-type(2) { font-size: 17px; }
+  .voleyevents .ball-entry-caption .ball-play-hint { font-size: 15px; }
   .voleyevents .case-navigation .target-link { font-size: 15px; }
 }
 @media (max-width: 400px) {

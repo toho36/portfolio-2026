@@ -2,6 +2,7 @@ import React,{useEffect,useLayoutEffect,useRef} from 'react'
 import ballPreview from './assets/ball-preview.png'
 import { createSpin, brushSpin, stepSpin, followPosition } from './ballMotion.js'
 import { createBallFlow, BALL_DURATION, firstBallPose,advanceBallOrientation,bridgeBallSpin } from './ballFlow.js'
+import { createBallPlay } from './ballPlay.js'
 
 export function Volleyball({active,reduced,cold=false}) {
   const ref=useRef(null),timeRef=useRef(0),spinRef=useRef(createSpin()),previewRef=useRef(ballPreview),clockRef=useRef({time:cold?BALL_DURATION:0,velocity:0}),positionRef=useRef({x:0,y:0})
@@ -23,7 +24,7 @@ export function Volleyball({active,reduced,cold=false}) {
       timeRef.current+=dt;spinRef.current=stepSpin(spinRef.current,dt)
       const pos=positionRef.current,entry=host.ballEntry
       if(!entry){pos.x=followPosition(pos.x,tx,dt,following);pos.y=followPosition(pos.y,ty,dt,following);if(Math.abs(tx-pos.x)<.001)pos.x=tx;if(Math.abs(ty-pos.y)<.001)pos.y=ty}
-      if(entry){advanceBallOrientation(entry,state.time,dt,state.velocity);entry.clockVelocity=state.velocity;host.dataset.logicalOrientation=JSON.stringify(entry.orientation);const initial=firstBallPose(entry,state.time),pose=initial??{...pos,time:timeRef.current,spin:spinRef.current};entry.ambientPose=pose;view?.paintEntry(state.time,pose.x,pose.y,pose.time,pose.spin,entry);entry.paint(state.time,view?.entryProjection)}
+      if(entry){advanceBallOrientation(entry,state.time,dt,state.velocity);entry.clockVelocity=state.velocity;host.dataset.logicalOrientation=JSON.stringify(entry.orientation);const initial=firstBallPose(entry,state.time),pose=initial??{...pos,time:timeRef.current,spin:spinRef.current};entry.ambientPose=pose;host.ballPlay?.step(state,dt);view?.paintEntry(state.time,pose.x,pose.y,pose.time,pose.spin,entry);entry.paint(state.time,view?.entryProjection)}
       else if(view&&timeRef.current-lastPaint>=.033){view.paint(pos.x,pos.y,timeRef.current,spinRef.current);lastPaint=timeRef.current}
       host.dataset.pendingFrame=String(Boolean(view&&!reduced||entry&&state.time>0&&state.time<BALL_DURATION))
       return Boolean(view&&!reduced)
@@ -101,5 +102,11 @@ export function Volleyball({active,reduced,cold=false}) {
     if(host.ballEntry)flow.set(host.ballEntry.want,reduced)
     return ()=>{canceled=true;sourceObserver?.disconnect();release();flow.destroy();intersection?.disconnect();resize.disconnect();doc.defaultView?.removeEventListener('resize',resizePresentation);sheet.removeEventListener('pointermove',pointer);sheet.removeEventListener('pointerleave',reset);doc.removeEventListener('visibilitychange',visibility);surface.removeEventListener('webglcontextlost',contextLost,true);host.removeEventListener('ballentrychange',entryChanged);if(host.ballFlow===flow){delete host.ballFlow;delete host.captureBallPreview;delete host.bridgeBallOrientation}}
   },[active,reduced])
+  useEffect(()=>{
+    // The landed hero ball can be thrown down the stairs; the ball RAF steps it via host.ballPlay.
+    const host=ref.current,play=createBallPlay(host.ballSurface,{view:()=>reduced?null:host.ballView,entry:()=>host.ballEntry,wake:()=>host.ballFlow?.wake()})
+    host.ballPlay=play
+    return ()=>{play.destroy();if(host.ballPlay===play)delete host.ballPlay}
+  },[reduced])
   return <div className="volleyball-view" ref={ref} data-runtime="static" role="img" aria-label="Volleyball preview"/>
 }

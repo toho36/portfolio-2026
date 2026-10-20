@@ -103,7 +103,7 @@ describe('GameOnVB Match Operations case study', () => {
     rules.walkRules(rule => {
       if (rule.parent?.type === 'atrule' && rule.parent.name === 'keyframes') return
       // Page rules stay under .gv; only the phone-size hero text fixes reach the shared hero, under .voleyevents.
-      rule.selectors.forEach(selector => expect(selector).toMatch(/^\.gv(?:[ :.]|$)|^\.voleyevents \.(?:entry-header|ball-entry-caption|ball-story-links|case-navigation)\b/))
+      rule.selectors.forEach(selector => expect(selector).toMatch(/^\.gv(?:[ :.]|$)|^\.voleyevents \.(?:entry-header|ball-entry-caption|ball-story-links|case-navigation|ball-play-handle|ball-play-hint|ball-entry-copy|staircase-entry)\b/))
     })
     const reduced: Record<string, string> = {}
     rules.walkAtRules('media', media => {

@@ -206,7 +206,7 @@ export function createVolleyball(T,host,surface=host) {
       renderer.render(scene,camera);record(x,y,time,spin,motion)
     }
     const endCamera=new T.OrthographicCamera();endCamera.position.set(7,8,15);endCamera.lookAt(0,.6,0)
-    const startQuaternion=new T.Quaternion(),right=new T.Vector3(),up=new T.Vector3(),forward=new T.Vector3()
+    const zAxis=new T.Vector3(0,0,1),startQuaternion=new T.Quaternion(),right=new T.Vector3(),up=new T.Vector3(),forward=new T.Vector3()
     let contactShadow=null,entryFanFrame=null,entryCardAffine=null
     function paintEntry(age,x,y,time,spin,entry={}){
       if(disposed)return
@@ -216,6 +216,8 @@ export function createVolleyball(T,host,surface=host) {
       ball.position.set(...flight.position)
       if(entry.orientation)ball.quaternion.fromArray(entry.orientation.quaternion);else if(spin?.basis)ball.quaternion.fromArray(ballPoseQuaternion({x,y,time,spin}));else ball.rotation.set(...motion.rotation)
       ball.scale.setScalar(flight.radius)
+      // After landing the hero is the old staircase world: the visitor may throw the same ball down the treads.
+      if(entry.play&&age>=3.10){ball.position.set(entry.play.x,entry.play.y,0);ball.rotateOnWorldAxis(zAxis,entry.play.angle-.3)}
       camera.position.set(...c.anchor).add(new T.Vector3(0,0,6));camera.quaternion.copy(startQuaternion).slerp(endCamera.quaternion,orientationP)
       camera.far=80;lights(new T.Vector3(...c.anchor).multiplyScalar(1-p),p)
       framing(span,orientationP,age)
