@@ -50,16 +50,16 @@ it('reserves the measured shell header for native chapter scrolling', () => {
   }
 })
 
-it('keeps the hero to the stairs, the ball and the caption; chapter links start the story below', () => {
+it('keeps the hero to the stairs, the ball and the throw hint; title and chapter links start the story below', () => {
   const html = render('/gameonvb')
   for (const width of [390, 1440]) {
     expect(declarations('.ball-entry-caption', width).position ?? 'static').toBe('static')
     expect(declarations('.ball-entry-copy', width)).toMatchObject({ position: 'absolute', bottom: '8px', display: 'flex', 'flex-direction': 'column' })
-    expect(declarations('.ball-entry-caption h1', width)['max-width']).toBe('none')
   }
   expect(/class="ball-entry-copy"><div class="ball-entry-caption">[\s\S]*?<\/div><\/div>/.test(html)).toBe(true)
   expect(html).not.toContain('ball-story-links')
-  expect(html.indexOf('class="gv-jump wrap"')).toBeGreaterThan(html.indexOf('class="ball-entry-copy"'))
+  expect(html.indexOf('class="gv-jump"')).toBeGreaterThan(html.indexOf('class="ball-entry-copy"'))
+  expect(html.indexOf('<h1 id="voleyevents-title">')).toBeGreaterThan(html.indexOf('class="ball-entry-copy"'))
   for (const id of ['event-opens', 'player-registers', 'payment-matches', 'attendance-resolves']) expect(html).toContain(`href="#${id}"`)
 })
 it('renders three real-path fan sheets with native supporting content on project routes', () => {

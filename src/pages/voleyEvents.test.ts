@@ -21,9 +21,11 @@ describe('GameOnVB Match Operations case study', () => {
     )
 
     expect(hero).toContain('GameOnVB / Match operations')
-    expect(hero).toContain(
-      'Sign-ups, payments and check-in for regular recreational volleyball sessions.',
-    )
+    // The title and summary open the story right below the hero; the hero itself is the stairs and the ball.
+    const intro = markup.slice(markup.indexOf('class="gv-intro wrap"'), markup.indexOf('class="gv-jump"'))
+    expect(intro).toContain('<h1 id="voleyevents-title">More time on court.</h1>')
+    expect(intro).toContain('Sign-ups, payments and check-in for regular recreational volleyball sessions.')
+    expect(hero).not.toContain('More time on court.')
     expect(hero).not.toContain(
       'A registration and operations system for recurring recreational volleyball events.',
     )
@@ -71,7 +73,7 @@ describe('GameOnVB Match Operations case study', () => {
       expect(steps).toContain(step.body)
     }
     expect(steps).not.toMatch(/<h2[^>]*aria-hidden|<p[^>]*aria-hidden/)
-    const hero = markup.slice(markup.indexOf('class="gv-jump wrap"'), markup.indexOf('class="ticker"'))
+    const hero = markup.slice(markup.indexOf('class="gv-jump"'), markup.indexOf('class="ticker"'))
     for (const [, id] of hero.matchAll(/href="#([^"]+)"/g)) {
       expect(markup.match(new RegExp(`id="${id}"`, 'g'))).toHaveLength(1)
     }
@@ -103,7 +105,7 @@ describe('GameOnVB Match Operations case study', () => {
     rules.walkRules(rule => {
       if (rule.parent?.type === 'atrule' && rule.parent.name === 'keyframes') return
       // Page rules stay under .gv; only the phone-size hero text fixes reach the shared hero, under .voleyevents.
-      rule.selectors.forEach(selector => expect(selector).toMatch(/^\.gv(?:[ :.]|$)|^\.voleyevents \.(?:entry-header|ball-entry-caption|ball-story-links|case-navigation|ball-play-handle|ball-play-hint|ball-entry-copy|staircase-entry)\b/))
+      rule.selectors.forEach(selector => expect(selector).toMatch(/^\.gv(?:[ :.]|$)|^\.voleyevents \.(?:entry-header|ball-entry-caption|ball-story-links|case-navigation|ball-play-handle|ball-play-hint|ball-entry-copy|staircase-entry|light-table-hero)\b/))
     })
     const reduced: Record<string, string> = {}
     rules.walkAtRules('media', media => {
@@ -117,14 +119,14 @@ describe('GameOnVB Match Operations case study', () => {
   it('offers the transferred upper-tread hero before the complete ungated story', () => {
     const markup = render()
     const hero = markup.slice(markup.indexOf('class="staircase-entry light-table-hero"'), markup.indexOf('class="gv gameonvb-story"'))
-    expect(hero).toContain('More time on court.')
+    expect(hero).toContain('Grab the ball and throw it down the stairs.')
     expect(hero.match(/data-ball-hero="true"/g)).toHaveLength(1)
     expect(hero).toContain('data-cold-ball-fallback="true"')
     expect(hero).toContain('The same volleyball landing on the upper stone tread')
     expect(hero).toContain('assets/ball-preview.png')
     expect(hero).not.toMatch(/data-stair-root|Release the ball|Catch\. Pull\.|Reset /)
     // Chapter links live in the first story section, not in the hero.
-    const jump = markup.slice(markup.indexOf('class="gv-jump wrap"'), markup.indexOf('class="ticker"'))
+    const jump = markup.slice(markup.indexOf('class="gv-jump"'), markup.indexOf('class="ticker"'))
     for (const stage of VOLEYEVENTS.steps) { expect(hero).not.toContain(`href="#${stage.id}"`); expect(jump).toContain(`href="#${stage.id}"`) }
     expect(markup).not.toMatch(/playable-court|Scroll follows one participant|Separate full case|landing prototype/)
   })
@@ -221,7 +223,7 @@ function motionFixture(reduced = false, width = 1440) {
   const doc = { defaultView: view, addEventListener: docAdd, removeEventListener: docRemove }
   const disconnect = vi.fn(), observe = vi.fn()
   const root = { ownerDocument: doc, clientWidth: width, dataset: {} as Record<string, string>,
-    querySelector: (selector: string) => elements[selector], querySelectorAll: (selector: string) => lists[selector],
+    querySelector: (selector: string) => elements[selector], querySelectorAll: (selector: string) => lists[selector] ?? [],
     closest: () => null, getAnimations: () => [cssAnimation] }
   vi.stubGlobal('IntersectionObserver', class { observe = observe; unobserve() {}; disconnect = disconnect })
   vi.stubGlobal('ResizeObserver', class { observe() {}; disconnect = disconnect })

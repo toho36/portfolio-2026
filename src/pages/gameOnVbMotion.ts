@@ -11,6 +11,7 @@ export function mountGameOnVbMotion(root: HTMLElement): () => void {
   const scoreText = { beaten: scoreLabel?.textContent ?? '', set: root.dataset.scoreSet ?? 'Set' }
   const pips = [...root.querySelectorAll<HTMLElement>('.pips i')]
   const steps = [...root.querySelectorAll<HTMLElement>('[data-step]')]
+  const jumps = [...root.querySelectorAll<HTMLElement>('.gv-jump a')]
   const screens = [...root.querySelectorAll<HTMLElement>('[data-screen]')]
   const bandBall = root.querySelector<HTMLElement>('[data-band-ball]')!
   const stepBall = root.querySelector<HTMLElement>('[data-step-ball]')!
@@ -88,6 +89,9 @@ export function mountGameOnVbMotion(root: HTMLElement): () => void {
       screen.classList.toggle('past', index < active)
     })
     steps.forEach((step, index) => step.classList.toggle('on', index === active))
+    // The sticky chapter bar marks the step being read, only while the steps are on screen.
+    const reading = steps.length > 0 && steps[0].getBoundingClientRect().top < height && steps[steps.length - 1].getBoundingClientRect().bottom > 0
+    jumps.forEach((link, index) => link.classList.toggle('on', reading && index === active))
 
     const pin = bandBall.parentElement!.getBoundingClientRect()
     const top = track.getBoundingClientRect().top - pin.top - 56

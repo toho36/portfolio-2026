@@ -84,6 +84,16 @@ function ScreenContent({ screen }: { readonly screen: PhoneScreen }) {
   </>
 }
 
+// In-page chapter links glide inside the dialog scroller instead of jumping.
+function smoothJump(event: MouseEvent<HTMLAnchorElement>) {
+  const hash = event.currentTarget.hash, target = hash ? document.getElementById(hash.slice(1)) : null
+  if (!target || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+  event.preventDefault()
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' })
+  history.replaceState(history.state, '', hash)
+}
+
 export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
   const [landing, setLanding] = useState<LandingIndex>(0)
   const story = useRef<HTMLDivElement>(null)
@@ -94,11 +104,11 @@ export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
     <article className="voleyevents staircase-case">
       {hero ?? <section
         className="staircase-entry"
-        aria-labelledby="voleyevents-title"
+        aria-labelledby="voleyevents-fallback-title"
       >
         <div className="staircase-intro">
           <p className="eyebrow">{VOLEYEVENTS.hero.eyebrow}</p>
-          <h1 id="voleyevents-title">Gravity, by hand.</h1>
+          <h1 id="voleyevents-fallback-title">Gravity, by hand.</h1>
           <p>Catch. Pull. Let go.</p>
         </div>
         <Staircase landing={landing} onLanding={setLanding} />
@@ -106,8 +116,15 @@ export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
       </section>}
 
       <div className="gv gameonvb-story" ref={story} data-score-set={VOLEYEVENTS.band.scoreSet}>
-        {/* Chapter links start the story below the hero, so the hero stays the stairs and the ball. */}
-        <nav className="gv-jump wrap" aria-label="Match operations stages">{VOLEYEVENTS.steps.map(step => <a className="target-link" href={`#${step.id}`} key={step.id}>{step.label}</a>)}</nav>
+        {/* The hero stays the stairs and the ball; the title and chapter links start the story below it. */}
+        {hero && <section className="gv-intro wrap" aria-labelledby="voleyevents-title">
+          <p className="tag">{VOLEYEVENTS.hero.eyebrow}</p>
+          <h1 id="voleyevents-title">More time on court.</h1>
+          <p>{VOLEYEVENTS.hero.title}</p>
+        </section>}
+        <nav className="gv-jump" aria-label="Match operations stages">{VOLEYEVENTS.steps.map((step, index) => (
+          <a className="target-link" href={`#${step.id}`} key={step.id} onClick={smoothJump}><b>{index + 1}</b>{step.short}</a>
+        ))}</nav>
         <div className="ticker" aria-hidden="true">
           <img className="tick-ball" src={ballPreview} alt="" aria-hidden="true" />
           <div>{[0, 1].map(repeat => VOLEYEVENTS.ticker.map((text, index) => (

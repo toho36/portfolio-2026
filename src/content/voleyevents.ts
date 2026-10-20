@@ -13,15 +13,16 @@ interface GameOnVbSet {
 interface GameOnVbStep {
   readonly id: string
   readonly label: string
+  readonly short: string
   readonly title: string
   readonly body: string
 }
 
 const STEPS: readonly GameOnVbStep[] = [
-  { id: 'event-opens', label: 'Pick a session', title: 'Pick a session.', body: 'Players see what is on this week and how many spots are left.' },
-  { id: 'player-registers', label: 'Scan to pay', title: 'Scan to pay.', body: 'A QR code for Czech banking apps. No card details needed.' },
-  { id: 'payment-matches', label: 'Payment matched', title: 'Matched automatically.', body: 'GameOnVB reads the bank account and confirms the spot. Nobody checks a spreadsheet.' },
-  { id: 'attendance-resolves', label: 'Check in', title: 'Check in at the door.', body: 'The organizer sees who paid and who came, and records cash for walk-ins.' },
+  { id: 'event-opens', label: 'Pick a session', short: 'Session', title: 'Pick a session.', body: 'Players see what is on this week and how many spots are left.' },
+  { id: 'player-registers', label: 'Scan to pay', short: 'Pay', title: 'Scan to pay.', body: 'A QR code for Czech banking apps. No card details needed.' },
+  { id: 'payment-matches', label: 'Payment matched', short: 'Matched', title: 'Matched automatically.', body: 'GameOnVB reads the bank account and confirms the spot. Nobody checks a spreadsheet.' },
+  { id: 'attendance-resolves', label: 'Check in', short: 'Check-in', title: 'Check in at the door.', body: 'The organizer sees who paid and who came, and records cash for walk-ins.' },
 ]
 
 const SETS: readonly GameOnVbSet[] = [

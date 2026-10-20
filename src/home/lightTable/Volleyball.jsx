@@ -24,6 +24,8 @@ export function Volleyball({active,reduced,cold=false}) {
       timeRef.current+=dt;spinRef.current=stepSpin(spinRef.current,dt)
       const pos=positionRef.current,entry=host.ballEntry
       if(!entry){pos.x=followPosition(pos.x,tx,dt,following);pos.y=followPosition(pos.y,ty,dt,following);if(Math.abs(tx-pos.x)<.001)pos.x=tx;if(Math.abs(ty-pos.y)<.001)pos.y=ty}
+      // While the visitor scrolls past a resting, landed ball, skip WebGL repaints so the scroll stays smooth.
+      if(entry&&state.time>=BALL_DURATION&&host.scrolling?.()&&!host.ballPlay?.moving){host.dataset.pendingFrame='true';return Boolean(view&&!reduced)}
       if(entry){advanceBallOrientation(entry,state.time,dt,state.velocity);entry.clockVelocity=state.velocity;host.dataset.logicalOrientation=JSON.stringify(entry.orientation);const initial=firstBallPose(entry,state.time),pose=initial??{...pos,time:timeRef.current,spin:spinRef.current};entry.ambientPose=pose;host.ballPlay?.step(state,dt);view?.paintEntry(state.time,pose.x,pose.y,pose.time,pose.spin,entry);entry.paint(state.time,view?.entryProjection)}
       else if(view&&timeRef.current-lastPaint>=.033){view.paint(pos.x,pos.y,timeRef.current,spinRef.current);lastPaint=timeRef.current}
       host.dataset.pendingFrame=String(Boolean(view&&!reduced||entry&&state.time>0&&state.time<BALL_DURATION))
@@ -91,6 +93,8 @@ export function Volleyball({active,reduced,cold=false}) {
     const resizePresentation=()=>{
       if(detail()){
         if(!eligible())return
+        // Mobile browser bars change only the height while scrolling; re-buffering then stretched the stairs and stalled the scroll.
+        if(innerWidth===host.ballEntry.screenWidth&&Math.abs(innerHeight-host.ballEntry.screenHeight)<160)return
         host.ballEntry.resize(innerWidth,innerHeight);view?.resizeEntry(innerWidth,innerHeight);draw(flow.state,0)
       }else{view?.resize();flow.wake()}
     }
@@ -104,9 +108,12 @@ export function Volleyball({active,reduced,cold=false}) {
   },[active,reduced])
   useEffect(()=>{
     // The landed hero ball can be thrown down the stairs; the ball RAF steps it via host.ballPlay.
-    const host=ref.current,play=createBallPlay(host.ballSurface,{view:()=>reduced?null:host.ballView,entry:()=>host.ballEntry,wake:()=>host.ballFlow?.wake()})
-    host.ballPlay=play
-    return ()=>{play.destroy();if(host.ballPlay===play)delete host.ballPlay}
+    const host=ref.current,doc=host.ownerDocument,play=createBallPlay(host.ballSurface,{view:()=>reduced?null:host.ballView,entry:()=>host.ballEntry,wake:()=>host.ballFlow?.wake()})
+    let lastScroll=-1e9
+    const scrolled=()=>{lastScroll=performance.now()}
+    host.ballPlay=play;host.scrolling=()=>performance.now()-lastScroll<180
+    doc.addEventListener('scroll',scrolled,{capture:true,passive:true})
+    return ()=>{play.destroy();doc.removeEventListener('scroll',scrolled,true);if(host.ballPlay===play){delete host.ballPlay;delete host.scrolling}}
   },[reduced])
   return <div className="volleyball-view" ref={ref} data-runtime="static" role="img" aria-label="Volleyball preview"/>
 }

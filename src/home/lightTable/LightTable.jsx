@@ -324,7 +324,7 @@ export function LightTable({pathname,onNavigate}) {
     </dialog>
     <dialog className="ball-entry" ref={ballDialogRef} open={coldRef.current||undefined} onCancel={event=>{event.preventDefault();ballBack()}} aria-labelledby="voleyevents-title" data-phase={ballPhase}>
       {ballMounted&&<VoleyEventsPage onNavigate={event=>event.currentTarget.getAttribute('href')==='/'?ballBack(event):onNavigate(event)} hero={
-        <section className="staircase-entry light-table-hero" data-ball-hero aria-labelledby="voleyevents-title">
+        <section className="staircase-entry light-table-hero" data-ball-hero aria-label="GameOnVB: the volleyball on the stairs">
           <div className="entry-ball-slot" role="group" aria-label="The same volleyball landing on the upper stone tread">
             <div className="ball-entry-wash" aria-hidden="true"/>
             {coldRef.current&&<div className="cold-ball-fallback" data-cold-ball-fallback aria-hidden="true">
@@ -334,7 +334,7 @@ export function LightTable({pathname,onNavigate}) {
           </div>
           <nav className="entry-header" aria-label="GameOnVB presentation"><a className="target-link" href="/" ref={backRef} onClick={ballBack}>← Back to homepage</a><span>GameOnVB / Match operations</span></nav>
           <div className="ball-entry-copy">
-            <div className="ball-entry-caption"><p>{VOLEYEVENTS.hero.eyebrow}</p><h1 id="voleyevents-title">More time on court.</h1><p>{VOLEYEVENTS.hero.title}</p><p className="ball-play-hint">{VOLEYEVENTS.hero.play}</p></div>
+            <div className="ball-entry-caption"><p className="ball-play-hint">{VOLEYEVENTS.hero.play}</p></div>
           </div>
         </section>
       }/>}
