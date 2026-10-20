@@ -185,3 +185,22 @@
 /* Keep the static story readable before mounting and stop CSS motion on cleanup. */
 .gv:not([data-motion]) *, .gv:not([data-motion]) *::before, .gv:not([data-motion]) *::after { animation: none !important; transition: none !important; }
 .gv:not([data-motion]) .reveal { opacity: 1; transform: none; }
+/* Phones: one size step above the minimum rules (owner asked for bigger text, 2026-10-20). */
+@media (max-width: 820px) {
+  .gv p { font-size: 19px; line-height: 1.55; }
+  .gv .tag { font-size: 14px; letter-spacing: .12em; line-height: 1.25; }
+  .gv .score { font-size: 14px; }
+  .gv .set .big small { font-size: .28em; }
+  .gv .set .was { font-size: 16px; letter-spacing: .06em; }
+  .gv .set .tech { font-size: 14px; }
+  .gv .gv-end .chips span { font-size: 16px; }
+  .gv .gv-cta { font-size: 17px; }
+  .gv .step-screen { font-size: 16px; }
+  .gv .step-screen .sbar { font-size: 13px; }
+  .gv .step-screen .pill { font-size: 13px; }
+  .voleyevents .entry-header { font-size: 15px; padding-block: 12px; }
+  .voleyevents .ball-entry-caption p { font-size: 14px; }
+  .voleyevents .ball-entry-caption p:last-child { font-size: 17px; }
+  .voleyevents .ball-story-links { font-size: 15px; white-space: nowrap; }
+  .voleyevents .case-navigation .target-link { font-size: 15px; }
+}
