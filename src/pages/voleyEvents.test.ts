@@ -91,7 +91,8 @@ describe('GameOnVB Match Operations case study', () => {
     expect(css).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/)
     expect(css).toMatch(/@media\s*\(max-width:\s*820px\)/)
     expect(css).toMatch(/@media\s*\(max-width:\s*600px\)/)
-    expect(css).toMatch(/\.gv \.band \{ height: 300svh; \}/)
+    expect(css).toMatch(/scroll-snap-type: x mandatory/)
+    expect(css).toMatch(/\.gv \.band \{ height: auto; \}/)
     expect(css).toMatch(/\.gv \.phone-col \{ display: none; \}/)
     expect(css).toMatch(/padding: clamp\(48px, 10vw, 72px\) 0/)
     expect(css).toMatch(/height:\s*3px/)
@@ -189,7 +190,8 @@ function motionFixture(reduced = false, width = 1440) {
     classList: classes(), style: { transform: '', removeProperty: vi.fn() }, textContent: '',
     getBoundingClientRect: () => ({ top, height, width, bottom: top + height }),
   })
-  const band = element(0, 4200), track = { ...element(400), scrollWidth: 3000 }
+  const band = element(0, 4200), track = { ...element(400), scrollWidth: 3000, scrollLeft: 0, clientWidth: 1440 }
+  const scoreLabel = { ...element(), textContent: 'Limits beaten' }
   const won = element(), pips = Array.from({ length: 4 }, () => element())
   const number = { offsetLeft: 0, offsetWidth: 140, offsetTop: 0, offsetHeight: 80 }
   const steps = Array.from({ length: 4 }, (_, i) => ({ ...element(i * 620),
@@ -200,9 +202,9 @@ function motionFixture(reduced = false, width = 1440) {
   const bandBall = { ...element(), parentElement: element() }
   const reveal = element(), phone = element(42, 330)
   const elements: Record<string, unknown> = { '[data-band]': band, '[data-track]': track,
-    '[data-won]': won, '.phone-col': phone, '[data-band-ball]': bandBall, '[data-step-ball]': stepBall }
+    '[data-won]': won, '[data-score-label]': scoreLabel, '.phone-col': phone, '[data-band-ball]': bandBall, '[data-step-ball]': stepBall }
   const lists: Record<string, unknown[]> = { '[data-step]': steps, '[data-screen]': screens,
-    '.pips i': pips, '.reveal': [reveal], '[data-track] .set': Array.from({ length: 5 }, (_, i) => ({ offsetLeft: 24 + i * 330 })) }
+    '.pips i': pips, '.reveal': [reveal] }
   const listeners = new Map<string, EventListener>()
   const add = vi.fn((name: string, fn: EventListener) => listeners.set(name, fn))
   const remove = vi.fn((name: string) => listeners.delete(name))
@@ -221,7 +223,7 @@ function motionFixture(reduced = false, width = 1440) {
     closest: () => null, getAnimations: () => [cssAnimation] }
   vi.stubGlobal('IntersectionObserver', class { observe = observe; unobserve() {}; disconnect = disconnect })
   vi.stubGlobal('ResizeObserver', class { observe() {}; disconnect = disconnect })
-  return { root: root as unknown as HTMLElement, band, track, won, pips, steps, screens,
+  return { root: root as unknown as HTMLElement, band, track, won, scoreLabel, pips, steps, screens,
     stepBall, bandBall, reveal, media, listeners, add: docAdd, remove: docRemove, frames, disconnect, hopAnimation, cssAnimation,
     scroll() { listeners.get('scroll')!(new Event('scroll')); this.flush() },
     flush() { const pending = [...frames.values()]; frames.clear(); pending.forEach(fn => fn(0)) } }
@@ -273,15 +275,19 @@ describe('GameOnVB dialog motion', () => {
     } finally { cleanup(); vi.unstubAllGlobals() }
   })
 
-  it('rests the band on each card on phones and moves only between cards', async () => {
+  it('lets phones swipe the cards natively and reads the score from the swipe position', async () => {
     const { mountGameOnVbMotion } = await import('./gameOnVbMotion')
     const h = motionFixture(false, 390)
-    const at = (progress: number) => { h.band.getBoundingClientRect = () => ({ top: -progress * 3200, height: 4200, width: 390, bottom: 4200 - progress * 3200 }); h.scroll() }
+    Object.assign(h.track, { scrollLeft: 0, clientWidth: 390, scrollWidth: 2390 })
     const cleanup = mountGameOnVbMotion(h.root)
     try {
-      at(.05); expect(h.track.style.transform).toBe('translateX(0px)')
-      at(.3); expect(h.track.style.transform).toBe('translateX(-330px)')
-      at(.125); expect(h.track.style.transform).toBe('translateX(-165px)')
+      expect(h.track.style.removeProperty).toHaveBeenCalledWith('transform')
+      // The card in view counts as beaten: Set 1 shows 1 / 4.
+      expect(h.won.textContent).toBe('1')
+      h.track.scrollLeft = 1000; h.scroll(); expect(h.won.textContent).toBe('3')
+      expect(h.scoreLabel.textContent).toBe('Set')
+      h.track.scrollLeft = 2000; h.scroll(); expect(h.won.textContent).toBe('4')
+      expect(h.scoreLabel.textContent).toBe('Limits beaten')
     } finally { cleanup(); vi.unstubAllGlobals() }
   })
 
@@ -293,7 +299,8 @@ describe('GameOnVB dialog motion', () => {
     try {
       expect(h.screens[0].classList.contains('on')).toBe(true)
       expect(h.won.textContent).toBe('4')
-      expect(h.track.style.transform).toBe('translateX(0px)')
+      // Phones never transform the track; the cards scroll natively.
+      expect(h.track.style.removeProperty).toHaveBeenCalledWith('transform')
       const ball = h.bandBall.style.transform
       h.steps[2].getBoundingClientRect = () => ({ top: 410, height: 200, width: 390, bottom: 610 })
       h.scroll()

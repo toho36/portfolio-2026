@@ -105,7 +105,7 @@ export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
         <p className="staircase-summary">{VOLEYEVENTS.hero.title}</p>
       </section>}
 
-      <div className="gv gameonvb-story" ref={story}>
+      <div className="gv gameonvb-story" ref={story} data-score-set={VOLEYEVENTS.band.scoreSet}>
         <div className="ticker" aria-hidden="true">
           <img className="tick-ball" src={ballPreview} alt="" aria-hidden="true" />
           <div>{[0, 1].map(repeat => VOLEYEVENTS.ticker.map((text, index) => (
@@ -133,11 +133,12 @@ export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
             <div className="band-head">
               <h2 id="gv-band-title">{VOLEYEVENTS.band.title[0]}<br />{VOLEYEVENTS.band.title[1]}</h2>
               <div className="score" data-score>
-                <span>{VOLEYEVENTS.band.score}</span><b data-won>0</b><em>{VOLEYEVENTS.band.total}</em>
+                <span data-score-label>{VOLEYEVENTS.band.score}</span><b data-won>0</b><em>{VOLEYEVENTS.band.total}</em>
                 <span className="pips" aria-hidden="true">{[0, 1, 2, 3].map(index => <i key={index} />)}</span>
               </div>
             </div>
-            <div className="track" data-track>
+            <p className="swipe-hint" aria-hidden="true">{VOLEYEVENTS.band.swipe}</p>
+            <div className="track" data-track role="region" aria-label={VOLEYEVENTS.band.trackLabel} tabIndex={0}>
               {VOLEYEVENTS.sets.map(set => (
                 <article className={`set${set.win ? ' win' : ''}`} key={set.label}>
                   <h3 className="tag">{set.label}</h3>

@@ -51,7 +51,7 @@
 
 /* the pass: five stations, pinned while the page scrolls */
 .goal-loop-kitchen .k-pass{height:520vh;position:relative}
-.goal-loop-kitchen .k-pin{position:sticky;top:0;height:100vh;display:grid;align-content:center;gap:2.4rem;width:min(64rem,calc(100% - 3rem));margin:auto;padding-top:3rem}
+.goal-loop-kitchen .k-pin{position:sticky;top:0;height:100vh;height:100svh;display:grid;align-content:center;gap:2.4rem;width:min(64rem,calc(100% - 3rem));margin:auto;padding-top:3rem}
 .goal-loop-kitchen .k-intro{text-align:center}
 .goal-loop-kitchen .k-intro .label{margin:0 auto .5rem}
 .goal-loop-kitchen .k-intro h2{font-size:clamp(1.6rem,2.8vw,2.4rem)}
@@ -125,7 +125,7 @@
 .goal-loop-kitchen .k-wait{padding:8vh 0 18vh;display:grid;gap:1.3rem}
 .goal-loop-kitchen .k-row{display:grid;grid-template-columns:6rem minmax(0,1fr) 10rem;gap:1.2rem;align-items:center}
 .goal-loop-kitchen .k-row .name{font:600 12px/1.4 ui-monospace,Menlo,monospace;letter-spacing:.16em;text-transform:uppercase}
-.goal-loop-kitchen .k-row b{display:flex;align-items:center;gap:.6rem;font:700 2rem/1 Georgia,serif;white-space:nowrap}
+.goal-loop-kitchen .k-row b{display:flex;align-items:center;gap:.6rem;font:700 2rem/1 Georgia,serif;white-space:nowrap;font-variant-numeric:tabular-nums}
 .goal-loop-kitchen .k-tbar{height:40px;border:2px solid var(--ink);border-radius:3px;background:var(--paper)}
 .goal-loop-kitchen .k-tbar i{display:block;height:100%;width:100%;background:var(--steel-d)}
 .goal-loop-kitchen .k-tbar.new i{background:var(--basil);width:100%;transition:width 2.2s cubic-bezier(.22,1,.36,1) .3s}
@@ -169,7 +169,8 @@
 /* Phone rhythm: section padding <= 72px; sentences >= 14px. */
 .goal-loop-kitchen .soft, .goal-loop-kitchen .k-pane .soft{font-size:14px}
 .goal-loop-kitchen .k-pane .note{font-size:13px}
-.goal-loop-kitchen .k-bar{margin-top:96px}
+.goal-loop-kitchen .k-bar{margin-top:108px}
+.goal-loop-kitchen .k-tag{bottom:calc(100% + 70px)}
 .goal-loop-kitchen .k-cmp{padding:clamp(48px,10vw,72px) 0;gap:2.4rem}
 .goal-loop-kitchen .k-wait{padding:clamp(48px,10vw,72px) 0}}
 @media (prefers-reduced-motion:reduce){ .goal-loop-kitchen .k-pass{height:auto}
@@ -203,7 +204,9 @@
  .goal-loop-kitchen .k-hero{padding-top:92px}
  .goal-loop-kitchen .label{font-size:14px;letter-spacing:.08em;text-wrap:balance}
  .goal-loop-kitchen p:not(.label):not(.soft):not(.note){font-size:18px}
- .goal-loop-kitchen .soft{font-size:15px}
+ .goal-loop-kitchen .soft{font-size:15px;color:#414741}
+ .goal-loop-kitchen .k-stations li.now b{color:var(--tomato)}
+ .goal-loop-kitchen .k-stations b{text-wrap:balance}
  .goal-loop-kitchen .k-pane .note{font-size:14px}
  .goal-loop-kitchen .k-stations b{font-size:14px;white-space:normal;line-height:1.15}
  .goal-loop-kitchen .k-stations span{font-size:14px;letter-spacing:.02em}

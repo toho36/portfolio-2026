@@ -6,8 +6,9 @@ export function mountGameOnVbMotion(root: HTMLElement): () => void {
   const media = view.matchMedia('(prefers-reduced-motion: reduce)')
   const band = root.querySelector<HTMLElement>('[data-band]')!
   const track = root.querySelector<HTMLElement>('[data-track]')!
-  const cards = [...root.querySelectorAll<HTMLElement>('[data-track] .set')]
   const won = root.querySelector<HTMLElement>('[data-won]')!
+  const scoreLabel = root.querySelector<HTMLElement>('[data-score-label]')
+  const scoreText = { beaten: scoreLabel?.textContent ?? '', set: root.dataset.scoreSet ?? 'Set' }
   const pips = [...root.querySelectorAll<HTMLElement>('.pips i')]
   const steps = [...root.querySelectorAll<HTMLElement>('[data-step]')]
   const screens = [...root.querySelectorAll<HTMLElement>('[data-screen]')]
@@ -33,7 +34,7 @@ export function mountGameOnVbMotion(root: HTMLElement): () => void {
 
   const hop = (index: number) => {
     const number = steps[index].querySelector<HTMLElement>('.n')!
-    const to = { x: number.offsetLeft + number.offsetWidth - 70, y: number.offsetTop + number.offsetHeight - 60 }
+    const to = { x: number.offsetLeft + number.offsetWidth - 64, y: number.offsetTop + number.offsetHeight - 60 }
     hopAnimation?.cancel()
     stepBall.style.transform = `translate(${to.x}px, ${to.y}px)`
     if (ballAt && !media.matches) {
@@ -57,23 +58,21 @@ export function mountGameOnVbMotion(root: HTMLElement): () => void {
     const reduced = media.matches
     const height = viewport?.clientHeight || view.innerHeight
     const width = root.clientWidth || view.innerWidth
+    // Phones swipe the cards natively; wider screens drive the band from vertical scroll.
+    const swipe = view.innerWidth <= 820
     const rect = band.getBoundingClientRect()
-    const progress = Math.min(1, Math.max(0, -rect.top / Math.max(1, rect.height - height)))
-    const b = reduced ? 1 : progress
-    const max = reduced ? 0 : Math.max(0, track.scrollWidth - width + 48)
-    let shift = b * max
-    if (!reduced && width <= 600 && cards.length > 1) {
-      // On phones one card fills the screen, so rest on each card and move only between them.
-      const stops = cards.map(card => Math.min(max, card.offsetLeft - cards[0].offsetLeft))
-      const segment = Math.min(cards.length - 1.0001, b * (cards.length - 1))
-      const index = Math.floor(segment)
-      const t = Math.min(1, Math.max(0, (segment - index - .3) / .4))
-      shift = stops[index] + (stops[index + 1] - stops[index]) * t * t * (3 - 2 * t)
-    }
-    track.style.transform = `translateX(${-shift}px)`
-    const count = Math.min(4, Math.floor(b * 5.2))
+    const progress = swipe
+      ? track.scrollLeft / Math.max(1, track.scrollWidth - track.clientWidth)
+      : Math.min(1, Math.max(0, -rect.top / Math.max(1, rect.height - height)))
+    const b = reduced && !swipe ? 1 : progress
+    if (swipe) track.style.removeProperty('transform')
+    else track.style.transform = `translateX(${-b * (reduced ? 0 : Math.max(0, track.scrollWidth - width + 48))}px)`
+    const count = reduced ? 4 : swipe ? Math.min(4, Math.round(progress * 4) + 1) : Math.min(4, Math.floor(b * 5.2))
     // Avoid announcing the same score on every scroll event.
     if (won.textContent !== String(count)) won.textContent = String(count)
+    // While swiping, the numbered cards show their position; the last card shows the result.
+    const label = swipe && !reduced && progress < .95 ? scoreText.set : scoreText.beaten
+    if (scoreLabel && scoreLabel.textContent !== label) scoreLabel.textContent = label
     pips.forEach((pip, index) => pip.classList.toggle('on', index < count))
 
     const mid = height / 2
@@ -92,7 +91,7 @@ export function mountGameOnVbMotion(root: HTMLElement): () => void {
 
     const pin = bandBall.parentElement!.getBoundingClientRect()
     const top = track.getBoundingClientRect().top - pin.top - 56
-    const x = 24 + (reduced ? 0 : progress) * (pin.width - 56 - 72)
+    const x = 24 + (reduced && !swipe ? 0 : progress) * (pin.width - 56 - 72)
     bandBall.style.transform = `translate(${x}px, ${top}px) rotate(${x / 28}rad)`
     if (active !== ballStep) { ballStep = active; hop(active) }
   }
@@ -124,6 +123,7 @@ export function mountGameOnVbMotion(root: HTMLElement): () => void {
     if (pending) view.cancelAnimationFrame(pending)
     hopAnimation?.cancel()
     delete root.dataset.motion
+    if (scoreLabel) scoreLabel.textContent = scoreText.beaten
     root.getAnimations({ subtree: true }).forEach(animation => animation.cancel())
     reveals.forEach(element => element.classList.remove('in'))
     for (const element of [track, bandBall, stepBall]) element.style.removeProperty('transform')
