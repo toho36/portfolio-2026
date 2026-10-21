@@ -264,6 +264,7 @@ h1 {
 
 .voleyevents .hero-jump,
 .voleyevents .back-link,
+.voleyevents .contact-link,
 .voleyevents .next-link {
   color: var(--court-ink);
 }
@@ -322,6 +323,7 @@ h1 {
   border-top: 2px solid var(--court-ink);
 }
 
+.contact-link,
 .next-link {
   width: fit-content;
   gap: 0.55rem;

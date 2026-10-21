@@ -335,3 +335,9 @@ it('underlines only the words of project footer links and uses one arrow style',
     expect(footer.match(/<span aria-hidden="true">[←→]<\/span>/g)).toHaveLength(3)
   }
 })
+
+it('gives Get in touch the same footer type style as Back and Next', () => {
+  const css = readFileSync(new URL('../styles.css', import.meta.url), 'utf8')
+  expect(css).toMatch(/\.voleyevents \.back-link,\n\.voleyevents \.contact-link,\n\.voleyevents \.next-link \{\n  color: var\(--court-ink\);/)
+  expect(css).toMatch(/\n\.contact-link,\n\.next-link \{\n  width: fit-content;[^}]*font-weight: 800;[^}]*text-transform: uppercase;/)
+})
