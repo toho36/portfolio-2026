@@ -142,38 +142,11 @@
 /* Court story: the interactive field owns motion, HTML owns the product. */
 .route-voleyevents .voleyevents { --court-chalk: var(--ink); --court-ink: var(--paper); --court-blue: var(--signal); --court-orange: var(--world-accent); --court-line: var(--line); background: none; }
 .route-voleyevents main { width: 100%; }
-.voleyevents .case-section, .voleyevents .case-pair, .voleyevents .lifecycle, .voleyevents .case-navigation { width: min(86rem, calc(100% - clamp(2rem, 6vw, 7rem))); margin-inline: auto; }
-.voleyevents .case-section, .voleyevents .lifecycle { padding-block: 3.5rem; }
-.voleyevents .case-pair section { padding-block: 3rem; }
-.voleyevents .case-section h2, .voleyevents .lifecycle h2 { font-size: clamp(2rem, 4vw, 3.6rem); }
-.voleyevents .case-section > p, .voleyevents .case-pair section > p:last-child, .voleyevents .lifecycle-heading > p:last-child, .voleyevents .lifecycle-stage > p { color: var(--muted); }
-.voleyevents .lifecycle-heading { margin-bottom: 2rem; }
-.voleyevents .lifecycle-track { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 2rem; border-width: 1px; }
-.voleyevents .lifecycle-stage:nth-child(n) { width: 100%; min-height: 0; justify-self: stretch; grid-template-columns: 1fr; padding: 2rem 0; background: none; }
+.voleyevents .case-navigation { width: min(86rem, calc(100% - clamp(2rem, 6vw, 7rem))); margin-inline: auto; }
 .voleyevents .stage-heading h3 { font-size: clamp(1.7rem, 2.6vw, 2.8rem); }
 .voleyevents .stage-handles { color: var(--muted); }
 
 /* Goal Loop illustration and reference */
-.route-goal-loop .goal-loop { --run-field: var(--ink); --run-ink: var(--paper); --run-muted: var(--muted); --run-line: var(--line); --run-evidence: var(--signal); background: none; overflow: visible; }
-.calibre-meaning { display: grid; grid-template-columns: 1fr 1fr; gap: 9vw; padding: 4rem 5.5%; border-block: 1px solid var(--line); }
-.calibre-meaning h2 { margin: 0; font-size: clamp(1.8rem, 3.6vw, 3rem); line-height: 1.07; letter-spacing: -.06em; }
-.calibre-meaning p { margin: 0 0 1.1rem; max-width: 65ch; color: var(--muted); font-size: .9rem; line-height: 1.55; }
-.calibre-meaning a { color: var(--paper); font-size: .8rem; }
-.goal-loop .run-section, .goal-loop .run-tape, .goal-loop .run-pair, .goal-loop .run-navigation { margin-inline: 0; }
-.goal-loop .run-section, .goal-loop .run-tape { padding-block: 3rem; }
-.goal-loop .run-section h2, .goal-loop .run-tape h2 { font-size: clamp(2rem, 4vw, 3.6rem); }
-.goal-loop .run-tape-heading { margin-bottom: 2rem; }
-.goal-loop .run-tape-layout { display: block; }
-.goal-loop .run-stage { min-height: 0; padding: 0; }
-.run-reference summary { cursor: pointer; min-height: 80px; padding-block: 1.2rem; }
-.run-reference summary::after { content: '+'; color: var(--signal); font-size: 1.5rem; }
-.run-reference[open] summary::after { content: '−'; }
-.goal-loop .run-reference h3 { font-size: clamp(1.5rem, 2.6vw, 2.4rem); }
-.goal-loop .run-reference .run-role { margin-bottom: 0.35rem; }
-.goal-loop .run-reference .run-state { margin-left: auto; }
-.goal-loop .run-reference dl { padding-bottom: 1rem; }
-.goal-loop .run-reference .run-outcomes { padding-bottom: 1.5rem; }
-.goal-loop .run-pair .run-section { padding-block: 2.5rem; }
 
 /* Field: preserve native-scroll geometry, change the visual language. */
 .route-playground .playground { background: none; }
@@ -193,7 +166,6 @@
 }
 
 @media (max-width: 760px) {
-  .calibre-meaning { grid-template-columns: 1fr; gap: 1.5rem; padding: 2.5rem 6%; }
   .site-header { min-height: 72px; }
   .site-header .brand { font-size: 0.66rem; letter-spacing: -0.02em; }
   .site-nav a { font-size: 0.72rem; letter-spacing: 0; }
@@ -216,14 +188,7 @@
   .world-section h2 { font-size: 2.1rem; }
   .world-positioning { font-size: 0.95rem; }
   .world-project-list .world-number { flex: 0 0 29px; margin-right: 0.3rem; }
-
-  .voleyevents .case-section, .voleyevents .lifecycle { padding-block: 2rem; }
-  .voleyevents .case-pair section { padding-block: 2rem; }
-  .voleyevents .lifecycle-track { grid-template-columns: 1fr; }
   .voleyevents .stage-heading { flex-wrap: wrap; gap: 0.5rem; }
-  .goal-loop .run-section, .goal-loop .run-tape { padding-block: 2rem; }
-  .goal-loop .run-reference .run-state { display: none; }
-  .goal-loop .run-reference .run-stage-heading { gap: 1rem; }
   .route-playground .relay-hero { padding-block: 1.5rem 1rem; }
   .route-playground .relay-hero h1 { font-size: clamp(3rem, 14vw, 5rem); }
   .route-playground .relay-stage { top: 5rem; }

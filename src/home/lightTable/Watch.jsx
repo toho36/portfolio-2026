@@ -14,24 +14,21 @@ export function Watch({active,reduced}) {
   useEffect(()=>{
     const host=ref.current,surface=host.watchSurface;if(!active)return
     const sheet=host.closest('.sheet'),doc=host.ownerDocument,image=surface.querySelector('img')
-    let canceled=false,view=null,frame=0,last=null,lastPaint=0,target=0,pulseStart=poseRef.current.time,loading=false,generation=0,failed=false,wasDetail=false,onScreen=true,observed=null
+    let canceled=false,view=null,frame=0,last=null,lastPaint=0,target=0,pulseStart=poseRef.current.time,loading=false,generation=0,failed=false,onScreen=true
     const coarse=matchMedia('(pointer: coarse)').matches
-    const detail=()=>Boolean(surface.closest('dialog[open]'))
-    const eligible=()=>!canceled&&!doc.hidden&&onScreen&&(detail()||(!sheet.closest('[inert]')&&!doc.querySelector('dialog[open]')))
+    const eligible=()=>!canceled&&!doc.hidden&&onScreen&&!sheet.closest('[inert]')&&!doc.querySelector('dialog[open]')
     function stop(){cancelAnimationFrame(frame);frame=0;last=null;host.dataset.pendingFrame='false'}
     function schedule(){if(view&&eligible()&&!frame){frame=requestAnimationFrame(tick);host.dataset.pendingFrame='true'}}
     function tick(stamp){
       frame=0;host.dataset.pendingFrame='false';if(!eligible())return
       const dt=last===null?0:Math.max(0,Math.min(.05,(stamp-last)/1000));last=stamp
-      const pose=poseRef.current,inDetail=detail();pose.time+=dt
-      if(inDetail&&!wasDetail)pose.amount=view.pose.open
-      wasDetail=inDetail
+      const pose=poseRef.current;pose.time+=dt
       const age=pose.time-pulseStart
-      if(!inDetail)pose.amount=revealStep(pose.amount,coarse?(age>.2&&age<.85?.65:0):target,dt)
+      pose.amount=revealStep(pose.amount,coarse?(age>.2&&age<.85?.65:0):target,dt)
       if(stamp-lastPaint>33){view.paint(pose.time,pose.amount);lastPaint=stamp}schedule()
     }
     function pointer(e){
-      if(e.pointerType==='touch'||!view||coarse||detail())return
+      if(e.pointerType==='touch'||!view||coarse)return
       if(e.target.closest('.sheet-cta')||sheet.querySelector('.sheet-cta')===doc.activeElement){target=1;return}
       const b=sheet.getBoundingClientRect(),m=new DOMMatrix(getComputedStyle(sheet.parentElement).transform);m.e=m.f=0
       const p=new DOMPoint(e.clientX-b.x-b.width/2,e.clientY-b.y-b.height/2).matrixTransform(m.inverse())
@@ -57,21 +54,18 @@ export function Watch({active,reduced}) {
     const intersection=typeof IntersectionObserver==='undefined'?null:new IntersectionObserver(entries=>{
       onScreen=entries.some(entry=>entry.isIntersecting);reconcile()
     })
+    intersection?.observe(host)
     function reconcile(){
-      const entry=host.watchEntry
-      if(entry?.pose&&!entry.captured){Object.assign(poseRef.current,{time:entry.pose.time,amount:entry.pose.open});entry.captured=true;last=null}
-      const target=surface.closest('.entry-watch-slot')||host
-      if(target!==observed){intersection?.disconnect();observed=target;onScreen=true;intersection?.observe(target)}
-      if(!eligible()){entry?.flow?.pause();release()}
-      else{entry?.flow?.resume();load()}
+      if(!eligible())release()
+      else load()
     }
     function visibility(){reconcile()}
     function lost(e){e.preventDefault();failed=true;release(false)}
     sheet.addEventListener('pointermove',pointer);sheet.addEventListener('pointerover',pointer);sheet.addEventListener('pointerleave',reset);sheet.addEventListener('focusin',focus);sheet.addEventListener('focusout',reset)
-    host.addEventListener('watchentrychange',reconcile);doc.addEventListener('visibilitychange',visibility);surface.addEventListener('webglcontextlost',lost,true)
+    doc.addEventListener('visibilitychange',visibility);surface.addEventListener('webglcontextlost',lost,true)
     const resize=new ResizeObserver(()=>{if(view?.resize())view.paint(poseRef.current.time,poseRef.current.amount)});resize.observe(surface)
     reconcile()
-    return ()=>{canceled=true;release();resize.disconnect();intersection?.disconnect();host.removeEventListener('watchentrychange',reconcile);sheet.removeEventListener('pointermove',pointer);sheet.removeEventListener('pointerover',pointer);sheet.removeEventListener('pointerleave',reset);sheet.removeEventListener('focusin',focus);sheet.removeEventListener('focusout',reset);doc.removeEventListener('visibilitychange',visibility);surface.removeEventListener('webglcontextlost',lost,true)}
+    return ()=>{canceled=true;release();resize.disconnect();intersection?.disconnect();sheet.removeEventListener('pointermove',pointer);sheet.removeEventListener('pointerover',pointer);sheet.removeEventListener('pointerleave',reset);sheet.removeEventListener('focusin',focus);sheet.removeEventListener('focusout',reset);doc.removeEventListener('visibilitychange',visibility);surface.removeEventListener('webglcontextlost',lost,true)}
   },[active,reduced])
   return <div className="watch-view" ref={ref} data-runtime="static" role="img" aria-label="Skeleton wristwatch preview"/>
 }

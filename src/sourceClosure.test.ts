@@ -175,7 +175,7 @@ describe('retired source closure', () => {
       .filter(([path]) => path !== './sourceClosure.test.ts' && !path.endsWith('.test.ts'))
       .filter(([, source]) => importsRetiredDependency(source, 'three'))
       .map(([path]) => path)
-    expect(importingModules.sort()).toEqual(['./gameonvb/loadStaircaseView.ts', './goal-loop/calibre/loadView.ts', './home/lightTable/Volleyball.jsx', './home/lightTable/Watch.jsx', './home/loadPosterRuntime.ts', './playground/giantImpact/main.js', './playground/giantImpact/motion.js', './playground/giantImpact/terrain.js', './playground/loadWireRuntime.ts'])
+    expect(importingModules.sort()).toEqual(['./gameonvb/loadStaircaseView.ts', './home/lightTable/Volleyball.jsx', './home/lightTable/Watch.jsx', './home/loadPosterRuntime.ts', './playground/giantImpact/main.js', './playground/giantImpact/motion.js', './playground/giantImpact/terrain.js', './playground/loadWireRuntime.ts'])
     expect(sourceModules['./playground/GiantImpact.tsx'].match(/import\(['"]\.\/giantImpact\/main\.js['"]\)/g)).toHaveLength(1)
     expect(sourceModules['./playground/GiantImpact.tsx']).not.toMatch(/import\s+(?!type\b)[^\n]*\bfrom\s*['"]\.\/giantImpact\/main\.js['"]|\brequire\s*\(/)
     for (const [path, source] of Object.entries(sourceModules)) {
@@ -186,8 +186,6 @@ describe('retired source closure', () => {
       expect(sourceModules[wrapper].match(/import\(['"]three['"]\)/g)).toHaveLength(1)
       expect(sourceModules[wrapper]).not.toMatch(/\bfrom\s*['"]three|\brequire\s*\(['"]three/)
     }
-    expect(sourceModules['./goal-loop/calibre/loadView.ts'].match(/import\(['"]three['"]\)/g)).toHaveLength(1)
-    expect(sourceModules['./goal-loop/calibre/loadView.ts'].match(/import\(['"]three\/addons\/controls\/OrbitControls\.js['"]\)/g)).toHaveLength(1)
     expect(sourceModules['./gameonvb/loadStaircaseView.ts'].match(/import\(['"]three['"]\)/g)).toHaveLength(1)
     expect(sourceModules['./home/loadPosterRuntime.ts'].match(/import\(['"]three['"]\)/g)).toHaveLength(1)
     expect(sourceModules['./playground/loadWireRuntime.ts'].match(/import\(['"]three['"]\)/g)).toHaveLength(1)

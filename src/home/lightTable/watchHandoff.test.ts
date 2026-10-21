@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { expect, it, vi } from 'vitest'
 import { createWatchFlow } from './watchFlow.js'
+import { revealStep } from './watchModel.js'
 import { BALL_DURATION, createBallFlow, createBallChoreography, captureBallOrientation, ballEase, firstBallPose, advanceBallOrientation, bridgeBallSpin } from './ballFlow.js'
 import { stepSpin, followPosition } from './ballMotion.js'
 import { ballEntryPresentation, ballContactLayout } from './ballScene.js'
@@ -480,21 +481,20 @@ function runtime(reduced = false, hidden = false) {
   const queue = new Map<number, FrameRequestCallback>(); let id = 0, now = 0
   vi.stubGlobal('requestAnimationFrame', (fn: FrameRequestCallback) => { queue.set(++id, fn); return id })
   vi.stubGlobal('cancelAnimationFrame', (id: number) => queue.delete(id))
-  const events = new Map<string, (event?: any) => void>(), slot = {}, dialog = { open: true }
+  const events = new Map<string, (event?: any) => void>()
   let intersect: (entries: { isIntersecting: boolean }[]) => void = () => { throw new Error('watch did not observe its native hero') }
-  const image = { style: {}, src: '' }, surface = { dataset: {}, querySelector: () => image, closest: (selector: string) => selector === 'dialog[open]' ? dialog : slot,
+  const image = { style: {}, src: '' }, surface = { dataset: {}, querySelector: () => image,
     addEventListener: (key: string, fn: () => void) => events.set(key, fn), removeEventListener: (key: string) => events.delete(key) }
   const sheet = { closest: () => null, addEventListener() {}, removeEventListener() {} }
   const doc = { hidden, querySelector: () => null, addEventListener: (key: string, fn: () => void) => events.set(key, fn), removeEventListener: (key: string) => events.delete(key) }
-  const pose = { time: 8, amount: .73 }, flow = createWatchFlow(() => {}, () => {}, { position: .3, velocity: 1.2 })
-  const entry = { pose: { time: 8, open: .73 }, flow }
-  const host: any = { watchSurface: surface, ownerDocument: doc, closest: () => sheet, dataset: {}, watchEntry: entry,
+  const pose = { time: 8, amount: .73 }
+  const host: any = { watchSurface: surface, ownerDocument: doc, closest: () => sheet, dataset: {},
     addEventListener: (key: string, fn: () => void) => events.set(key, fn), removeEventListener: (key: string) => events.delete(key) }
   const pending: ((modules: any[]) => void)[] = [], views: any[] = []
-  const context: Record<string, any> = { ref: ref(host), poseRef: ref(pose), previewRef: ref(null), active: true, reduced,
+  const context: Record<string, any> = { ref: ref(host), poseRef: ref(pose), previewRef: ref(null), active: true, reduced, revealStep,
     matchMedia: () => ({ matches: false }),
     ResizeObserver: class { observe() {} disconnect() {} },
-    IntersectionObserver: class { constructor(fn: typeof intersect) { intersect = fn } observe(target: unknown) { expect(target).toBe(slot) } disconnect() {} },
+    IntersectionObserver: class { constructor(fn: typeof intersect) { intersect = fn } observe(target: unknown) { expect(target).toBe(host) } disconnect() {} },
     loadView: () => new Promise(resolve => pending.push(resolve)),
   }
   const resolve = async () => {
@@ -504,10 +504,10 @@ function runtime(reduced = false, hidden = false) {
     } }]); await Promise.resolve(); await Promise.resolve(); await Promise.resolve()
   }
   const cleanup = run(watchRuntime, context)
-  return { context, pose, entry, host, views, pending, flow, queue, resolve, events,
+  return { context, pose, host, views, pending, queue, resolve, events,
     tick() { now += 16; const batch = [...queue.values()]; queue.clear(); batch.forEach(fn => fn(now)) },
     hide() { intersect([{ isIntersecting: false }]) }, show() { intersect([{ isIntersecting: true }]) },
-    cleanup() { cleanup?.(); flow.destroy(); expect(queue.size).toBe(0); vi.unstubAllGlobals() } }
+    cleanup() { cleanup?.(); expect(queue.size).toBe(0); vi.unstubAllGlobals() } }
 }
 
 it('actual watch wrapper invalidates pending offscreen imports, freezes reveal and resumes one same-pose renderer', async () => {
@@ -515,12 +515,13 @@ it('actual watch wrapper invalidates pending offscreen imports, freezes reveal a
   try {
     expect(h.pending).toHaveLength(1)
     h.hide(); await h.resolve(); expect(h.views).toHaveLength(0); expect(h.queue.size).toBe(0)
-    const phase = { ...h.pose }, progress = h.flow.state
+    const phase = { ...h.pose }
     h.show(); h.show(); expect(h.pending).toHaveLength(1); await h.resolve()
     expect(h.views).toHaveLength(1); expect(h.views[0].pose).toEqual({ time: phase.time, open: phase.amount })
-    expect(h.flow.state).toEqual(progress)
     for (let i = 0; i < 12; i++) h.tick()
-    expect(h.pose.time).toBeGreaterThan(phase.time); expect(h.pose.amount).toBe(.73)
+    expect(h.pose.time).toBeGreaterThan(phase.time)
+    // The homepage reveal decays toward its idle target; no dialog detail pose holds it at .73.
+    expect(h.pose.amount).toBeLessThan(phase.amount); expect(h.pose.amount).toBeGreaterThanOrEqual(0)
     h.hide(); h.hide(); expect(h.views[0].destroy).toHaveBeenCalledTimes(1); expect(h.queue.size).toBe(0)
     const saved = { ...h.pose }; h.show(); await h.resolve()
     expect(h.views[1].pose).toEqual({ time: saved.time, open: saved.amount })
@@ -534,13 +535,13 @@ it('actual watch wrapper invalidates pending offscreen imports, freezes reveal a
   } finally { h.cleanup() }
 })
 
-it('hidden reduced watch defers snap until visible and root cleanup rejects late imports', async () => {
+it('reduced watch stays static across visibility and root cleanup rejects late imports', async () => {
   const h = runtime(true, true)
   try {
-    const progress = h.flow.state; h.flow.set(false, true)
-    expect(h.flow.state).toEqual(progress); expect(h.pending).toHaveLength(0)
+    const pose = { ...h.pose }
+    h.tick(); expect(h.pose).toEqual(pose); expect(h.pending).toHaveLength(0)
     h.context.ref.current.ownerDocument.hidden = false; h.events.get('visibilitychange')!()
-    expect(h.flow.state).toEqual({ position: 0, velocity: 0 }); expect(h.pending).toHaveLength(0)
+    h.tick(); expect(h.pose).toEqual(pose); expect(h.pending).toHaveLength(0); expect(h.queue.size).toBe(0)
   } finally { h.cleanup() }
   const late = runtime(); late.cleanup(); await late.resolve()
   expect(late.views).toHaveLength(0)

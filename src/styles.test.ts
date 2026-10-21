@@ -90,10 +90,6 @@ describe('Wire Playground styles', () => {
 })
 
 describe('VoleyEvents lifecycle styles', () => {
-  const mobileBreakpoint = styles.indexOf('@media (max-width: 760px)')
-  const desktop = styles.slice(0, mobileBreakpoint)
-  const mobile = styles.slice(mobileBreakpoint)
-
   it('retires the rally presentation without masking route overflow', () => {
     const route = styles.match(/\.voleyevents\s*\{([^}]+)\}/)?.[1]
 
@@ -101,30 +97,6 @@ describe('VoleyEvents lifecycle styles', () => {
     expect(route).not.toMatch(/overflow:\s*(?:hidden|clip)/)
     expect(styles).not.toMatch(/\.court-hero|\.rally-|data-rally-/)
     expect(styles).not.toContain('100vw')
-  })
-
-  it('alternates bounded desktop lifecycle reading zones', () => {
-    expect(desktop).toMatch(
-      /\.lifecycle-track\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/,
-    )
-    expect(desktop).toMatch(
-      /\.lifecycle-stage:nth-child\(odd\)\s*\{[^}]*width:\s*min\(72%,\s*52rem\)[^}]*justify-self:\s*start/,
-    )
-    expect(desktop).toMatch(
-      /\.lifecycle-stage:nth-child\(even\)\s*\{[^}]*width:\s*min\(72%,\s*52rem\)[^}]*justify-self:\s*end/,
-    )
-  })
-
-  it('uses one visible content column on mobile', () => {
-    expect(mobile).toMatch(
-      /\.lifecycle-track\s*\{[^}]*grid-template-columns:\s*1fr/,
-    )
-    expect(mobile).toMatch(
-      /\.lifecycle-stage,[\s\S]*\.lifecycle-stage:nth-child\(odd\),[\s\S]*\.lifecycle-stage:nth-child\(even\)\s*\{[^}]*width:\s*100%[^}]*grid-template-columns:\s*1fr[^}]*justify-self:\s*stretch/,
-    )
-    expect(mobile).not.toMatch(
-      /\.lifecycle-stage[^{]*\{[^}]*(?:display:\s*none|visibility:\s*hidden|opacity:\s*0(?:[;\s]))/,
-    )
   })
 
   it('retires both independent decorative motion owners', () => {
@@ -186,25 +158,6 @@ describe('poster home styles', () => {
 })
 
 describe('Goal Loop reference and history styles', () => {
-  it('keeps the graphite vocabulary scoped to Goal Loop', () => {
-    const goalLoopRule = styles.match(/\.goal-loop\s*\{([^}]+)\}/)?.[1]
-
-    expect(goalLoopRule).toBeDefined()
-    expect(goalLoopRule).toMatch(/--run-field:/)
-    expect(goalLoopRule).toMatch(/--run-ink:/)
-    expect(goalLoopRule).toMatch(/--run-decision:/)
-    expect(goalLoopRule).toMatch(/--run-evidence:/)
-    for (const property of [
-      '--run-field:',
-      '--run-ink:',
-      '--run-decision:',
-      '--run-evidence:',
-    ]) {
-      expect(styles.split(property)).toHaveLength(2)
-    }
-    expect(goalLoopRule).not.toMatch(/--court-/)
-  })
-
   it('retires the decorative trace, marker, and progress timeline', () => {
     expect(styles).not.toMatch(
       /run-trace|run-marker|run-block-mark|--run-progress/,
@@ -213,69 +166,8 @@ describe('Goal Loop reference and history styles', () => {
 
   it('renders status labels as text, not fake buttons', () => {
     const stageState = styles.match(/\.stage-state\s*\{([^}]+)\}/)?.[1]
-    const runState = styles.match(/\.goal-loop \.run-state\s*\{([^}]+)\}/)?.[1]
 
     expect(stageState).toBeDefined()
-    expect(runState).toBeDefined()
     expect(stageState).not.toMatch(/border:|background:/)
-    expect(runState).not.toMatch(/border:|background:/)
-  })
-
-  it('contains definition copy on mobile', () => {
-    const mobile = styles.slice(styles.indexOf('@media (max-width: 760px)'))
-
-    expect(mobile).toMatch(
-      /\.run-stage dl\s*\{[^}]*grid-template-columns:\s*1fr/,
-    )
-    expect(styles).toMatch(/\.run-stage\s*\{[^}]*min-width:\s*0/)
-    expect(styles).toMatch(/\.run-stage dd\s*\{[^}]*overflow-wrap:\s*anywhere/)
-    expect(styles).not.toContain('100vw')
-  })
-
-  it('keeps audited history geometry static and animates only its marker', () => {
-    const keyframes = styles.slice(
-      styles.indexOf('@keyframes run-history-mark-settle'),
-      styles.indexOf(
-        '@media (prefers-reduced-motion: no-preference)',
-        styles.indexOf('@keyframes run-history-mark-settle'),
-      ),
-    )
-    const beforeReducedMotion = styles.slice(
-      0,
-      styles.indexOf('@media (prefers-reduced-motion: reduce)'),
-    )
-
-    expect(keyframes).toMatch(/from\s*\{[^}]*opacity:[^}]*transform:/)
-    expect(keyframes).toMatch(/to\s*\{[^}]*opacity:[^}]*transform:/)
-    expect(keyframes).not.toMatch(/(?:left|top|width|height|animation):/)
-    expect(styles).toMatch(
-      /\.run-history-fill\s*\{[^}]*width:\s*calc\(var\(--after-scale\)\s*\*\s*1%\)/,
-    )
-    expect(styles).toMatch(
-      /\.run-history-mark\s*\{[^}]*left:\s*calc\(var\(--after-scale\)\s*\*\s*1%\)/,
-    )
-    expect(beforeReducedMotion).not.toMatch(
-      /\.run-history-(?:track|fill|values)\s*\{[^}]*animation:/,
-    )
-    expect(styles).toContain('view-timeline-name: --run-history-row')
-    expect(styles).toMatch(
-      /\.run-history-mark\s*\{[^}]*animation:\s*run-history-mark-settle linear both[^}]*animation-duration:\s*auto[^}]*animation-timeline:\s*--run-history-row/,
-    )
-  })
-
-  it('settles history motion and stacks its values on mobile', () => {
-    const mobile = styles.slice(styles.indexOf('@media (max-width: 760px)'))
-    const reduced = styles.slice(
-      styles.indexOf('@media (prefers-reduced-motion: reduce)'),
-    )
-
-    expect(mobile).toMatch(
-      /\.run-history-values\s*\{[^}]*grid-template-columns:\s*1fr/,
-    )
-    expect(mobile).toMatch(/\.run-history-row\s*\{[^}]*min-width:\s*0/)
-    expect(mobile).not.toContain('100vw')
-    expect(reduced).toMatch(
-      /\.run-history-mark\s*\{[^}]*opacity:\s*1[^}]*transform:\s*none\s*!important/,
-    )
   })
 })
