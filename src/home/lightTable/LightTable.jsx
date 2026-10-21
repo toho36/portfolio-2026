@@ -321,22 +321,33 @@ export function LightTable({pathname,onNavigate}) {
   })
   useLayoutEffect(()=>()=>{pendingFocusRef.current=null;flowRef.current?.destroy();flowRef.current=null;restoreRef.current?.();ballRestoreRef.current?.()},[])
   const active=Math.round(position)
-  // Phones: a sideways finger swipe deals the next or previous card; vertical scroll stays native.
-  const swipeRef=useRef(null)
-  function swipeStart(event){swipeRef.current=event.pointerType==='touch'?{x:event.clientX,y:event.clientY}:null}
-  function swipeEnd(event){
-    const start=swipeRef.current;swipeRef.current=null;if(!start)return
-    const dx=event.clientX-start.x,dy=event.clientY-start.y
-    if(Math.abs(dx)<48||Math.abs(dx)<Math.abs(dy)*1.5)return
-    const next=Math.max(0,Math.min(sheets.length-1,active+(dx<0?1:-1)))
-    // Run after the deck assist's own touchend settle, which would otherwise snap back.
-    setTimeout(()=>select(next),0)
-  }
+  // A sideways finger swipe or mouse/pen drag deals the next or previous card; vertical scroll stays native.
+  const swipeRef=useRef(null),draggedRef=useRef(false),activeRef=useRef(active),selectRef=useRef(select)
+  activeRef.current=active;selectRef.current=select
+  function swipeStart(event){draggedRef.current=false;swipeRef.current=event.isPrimary&&(event.pointerType==='touch'||event.button===0)?{x:event.clientX,y:event.clientY}:null}
+  // The release can land outside the fan, so one window listener finishes (or drops) every gesture.
+  useEffect(()=>{
+    let timer=0,expire=0
+    function end(event){
+      const start=swipeRef.current;swipeRef.current=null;if(!start)return
+      const dx=event.clientX-start.x,dy=event.clientY-start.y
+      if(Math.abs(dx)<48||Math.abs(dx)<Math.abs(dy)*1.5)return
+      // A mouse drag ends with a click on whatever is under the pointer; swallow only that click so a drag never opens a project.
+      if(event.pointerType!=='touch'){draggedRef.current=true;clearTimeout(expire);expire=setTimeout(()=>{draggedRef.current=false},0)}
+      const next=Math.max(0,Math.min(sheets.length-1,activeRef.current+(dx<0?1:-1)))
+      // Run after the deck assist's own touchend settle, which would otherwise snap back.
+      clearTimeout(timer);timer=setTimeout(()=>selectRef.current(next),0)
+    }
+    function cancel(){swipeRef.current=null}
+    addEventListener('pointerup',end);addEventListener('pointercancel',cancel)
+    return ()=>{removeEventListener('pointerup',end);removeEventListener('pointercancel',cancel);clearTimeout(timer);clearTimeout(expire);swipeRef.current=null;draggedRef.current=false}
+  },[])
   return <div data-light-table-shell data-pathname={pathname}>
     <section className="light-table" ref={deckRef} data-position={position.toFixed(3)} data-phase={ballPhase} inert={ballRestoreRef.current||restoreRef.current?true:undefined} aria-hidden={ballMounted||mounted?true:undefined}>
       <div className="table-sticky">
         <h1 className="table-title"><span>New tools.</span><span>Old standards.</span></h1>
-        <div className="sheet-fan" aria-label="Selected work" style={{touchAction:'pan-y'}} onPointerDown={swipeStart} onPointerUp={swipeEnd} onPointerCancel={()=>{swipeRef.current=null}}>
+        <div className="sheet-fan" aria-label="Selected work" style={{touchAction:'pan-y'}} onPointerDown={swipeStart}
+          onClickCapture={event=>{if(draggedRef.current){draggedRef.current=false;event.preventDefault();event.stopPropagation()}}} onDragStart={event=>event.preventDefault()}>
           {sheets.map((sheet,index)=>{
             const p=sheetPose(index,position)
             return <div className="sheet-position" data-sheet={sheet.id} key={sheet.id} style={{'--x':p.x,'--y':p.y,'--rotation':`${p.rotation}deg`,'--scale':p.scale,opacity:p.opacity,zIndex:p.z}} inert={p.opacity===0?true:undefined}>

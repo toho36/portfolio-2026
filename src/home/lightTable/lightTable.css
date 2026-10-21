@@ -1,4 +1,4 @@
-.light-table { height: 270svh; background: radial-gradient(ellipse at 5% 4%, #44443d55, transparent 55%), #171816; }
+.light-table { height: 270svh; background: radial-gradient(ellipse at 5% 4%, #44443d55, transparent 55%), #171816; -webkit-user-select: none; user-select: none; }
 .table-sticky { position: sticky; top: 0; height: 100svh; min-height: 580px; overflow: clip; perspective: 1500px; }
 .table-sticky::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .12; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' opacity='.36' filter='url(%23n)'/%3E%3C/svg%3E"); }
 .table-title { position: absolute; top: 15%; left: 5%; margin: 0; z-index: 2; font: 400 clamp(22px,2.9vw,40px)/1.1 Georgia,serif; letter-spacing: -.04em; }

@@ -113,3 +113,39 @@ it('real Goal Loop routes open the kitchen hero while the watch remains in its h
     }
   }
 })
+
+it('deals the next or previous card from a mouse, pen or finger drag and swallows only the click after a mouse drag', () => {
+  const source = readFileSync(new URL('./LightTable.jsx', import.meta.url), 'utf8')
+  const handlers = source.slice(source.indexOf('  const swipeRef=useRef(null)'), source.indexOf('  return <div data-light-table-shell'))
+  const selected: number[] = [], listeners = new Map<string, Set<(event: any) => void>>(), timers = new Map<number, () => void>()
+  let cleanup: (() => void) | undefined, id = 0
+  const context = { useRef: (current: unknown) => ({ current }), useEffect: (fn: () => () => void) => { cleanup = fn() }, active: 1, sheets: [{}, {}, {}], select: (i: number) => selected.push(i),
+    setTimeout: (fn: () => void) => { timers.set(++id, fn); return id }, clearTimeout: (t: number) => timers.delete(t),
+    addEventListener: (type: string, fn: (event: any) => void) => { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type)!.add(fn) },
+    removeEventListener: (type: string, fn: (event: any) => void) => listeners.get(type)?.delete(fn) }
+  const { swipeStart, draggedRef, swipeRef, activeRef } = new Function('context', `with(context){${handlers};return {swipeStart,draggedRef,swipeRef,activeRef}}`)(context)
+  const emit = (type: string, event: any = {}) => listeners.get(type)?.forEach(fn => fn(event))
+  const flush = () => { const run = [...timers.values()]; timers.clear(); run.forEach(fn => fn()) }
+  // Releases are handled at window level, so a pointer released outside the fan still finishes the gesture.
+  const drag = (pointerType: string, dx: number, dy = 0, button = 0) => {
+    swipeStart({ isPrimary: true, pointerType, button, clientX: 200, clientY: 300 })
+    emit('pointerup', { pointerType, clientX: 200 + dx, clientY: 300 + dy })
+  }
+  expect(listeners.get('pointerup')!.size).toBe(1); expect(listeners.get('pointercancel')!.size).toBe(1)
+  drag('mouse', -80); expect(draggedRef.current).toBe(true); flush(); expect(selected).toEqual([2]); expect(draggedRef.current).toBe(false)
+  drag('pen', 80); flush(); expect(selected).toEqual([2, 0])
+  drag('touch', -80); expect(draggedRef.current).toBe(false); flush(); expect(selected).toEqual([2, 0, 2])
+  drag('mouse', -30); drag('mouse', -60, 80); drag('mouse', -80, 0, 2); flush()
+  expect(selected).toEqual([2, 0, 2]); expect(draggedRef.current).toBe(false)
+  // A cancelled gesture leaves nothing behind for the next one, which uses the current card.
+  swipeStart({ isPrimary: true, pointerType: 'mouse', button: 0, clientX: 200, clientY: 300 }); emit('pointercancel'); expect(swipeRef.current).toBeNull()
+  emit('pointerup', { pointerType: 'mouse', clientX: 0, clientY: 300 }); flush(); expect(selected).toEqual([2, 0, 2])
+  activeRef.current = 2; drag('mouse', 80); flush(); expect(selected).toEqual([2, 0, 2, 1])
+  expect(listeners.get('pointerup')!.size).toBe(1); expect(listeners.get('pointercancel')!.size).toBe(1)
+  // Unmount removes both listeners and drops a pending selection.
+  drag('mouse', -80); cleanup!(); flush(); expect(selected).toEqual([2, 0, 2, 1])
+  expect(listeners.get('pointerup')!.size).toBe(0); expect(listeners.get('pointercancel')!.size).toBe(0)
+  expect(source).toMatch(/onClickCapture=\{event=>\{if\(draggedRef\.current\)\{draggedRef\.current=false;event\.preventDefault\(\);event\.stopPropagation\(\)\}\}\}/)
+  expect(source).toMatch(/onDragStart=\{event=>event\.preventDefault\(\)\}/)
+  expect(declarations('.light-table', 1440)['user-select']).toBe('none')
+})
