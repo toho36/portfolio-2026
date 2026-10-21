@@ -220,8 +220,8 @@ export const GOAL_LOOP_KITCHEN = {
     ]
   },
   "navigation": {
-    "back": "← Back to homepage",
-    "next": "Next: GameOnVB →"
+    "back": "Back to homepage",
+    "next": "Next: GameOnVB"
   }
 } as const satisfies {
   readonly hero: Readonly<Record<'label' | 'title' | 'emphasis' | 'body' | 'role', string>>

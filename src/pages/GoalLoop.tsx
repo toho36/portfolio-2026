@@ -17,7 +17,7 @@ export function GoalLoopPage({ onNavigate, backRef }: GoalLoopPageProps) {
   return (
     <article className="goal-loop-kitchen" ref={root}>
       <nav className="k-entry-header" aria-label="Goal Loop presentation">
-        <a className="target-link" href="/" ref={backRef} onClick={onNavigate}>{GOAL_LOOP_KITCHEN.navigation.back}</a>
+        <a className="target-link" href="/" ref={backRef} onClick={onNavigate}>{`← ${GOAL_LOOP_KITCHEN.navigation.back}`}</a>
       </nav>
 
  <section className="wrap k-hero" aria-labelledby="goal-loop-title">
@@ -90,9 +90,9 @@ export function GoalLoopPage({ onNavigate, backRef }: GoalLoopPageProps) {
  </section>
 
       <nav className="k-navigation wrap" aria-label="Case study navigation">
-        <a className="target-link" href="/" onClick={onNavigate}>{GOAL_LOOP_KITCHEN.navigation.back}</a>
-        <a className="target-link" href="/#contact" onClick={onNavigate}>Get in touch <span aria-hidden="true">↗</span></a>
-        <a className="target-link" href="/gameonvb" onClick={onNavigate}>{GOAL_LOOP_KITCHEN.navigation.next}</a>
+        <a className="target-link" href="/" onClick={onNavigate}><span aria-hidden="true">←</span> <span className="link-label">{GOAL_LOOP_KITCHEN.navigation.back}</span></a>
+        <a className="target-link" href="/#contact" onClick={onNavigate}><span className="link-label">Get in touch</span> <span aria-hidden="true">→</span></a>
+        <a className="target-link" href="/gameonvb" onClick={onNavigate}><span className="link-label">{GOAL_LOOP_KITCHEN.navigation.next}</span> <span aria-hidden="true">→</span></a>
       </nav>
     </article>
   )

@@ -19,7 +19,7 @@ describe('Goal Loop kitchen story', () => {
     expect(page).toContain('<h1 id="goal-loop-title">Quality first.<br/><em>Speed follows.</em></h1>')
     expect(page).toContain('Goal Loop · how I deliver software')
     expect(page).toContain(GOAL_LOOP_KITCHEN.hero.body)
-    expect(page).toMatch(/<a[^>]*href="\/"[^>]*>← Back to homepage<\/a>/)
+    expect(page).toMatch(/<a[^>]*href="\/"[^>]*><span aria-hidden="true">←<\/span> <span class="link-label">Back to homepage<\/span><\/a>/)
     expect(markup.match(/class="watch-view"/g)).toHaveLength(1)
     expect(markup).toContain('Precision,<br/>in motion.')
     expect(page).not.toMatch(/entry-watch-slot|data-watch-hero|data-calibre|class="calibre"|run-tape|Calibre|Open movement|run-reference/)
@@ -125,7 +125,7 @@ describe('Goal Loop kitchen story', () => {
       expect(markup).toContain('href="mailto:tohoangviet1998@gmail.com"')
       expect(markup).toContain('href="/hoang-viet-to-cv-en.docx"')
       expect(markup).toContain('href="/hoang-viet-to-cv-cz.docx"')
-      expect(markup).toMatch(/aria-label="Case study navigation"><a[^>]*href="\/"[^>]*>← Back to homepage<\/a><a[^>]*href="\/#contact"[^>]*>Get in touch <span aria-hidden="true">↗<\/span><\/a><a[^>]*href="\/gameonvb"[^>]*>Next: GameOnVB →<\/a>/)
+      expect(markup).toMatch(/aria-label="Case study navigation"><a[^>]*href="\/"[^>]*><span aria-hidden="true">←<\/span> <span class="link-label">Back to homepage<\/span><\/a><a[^>]*href="\/#contact"[^>]*><span class="link-label">Get in touch<\/span> <span aria-hidden="true">→<\/span><\/a><a[^>]*href="\/gameonvb"[^>]*><span class="link-label">Next: GameOnVB<\/span> <span aria-hidden="true">→<\/span><\/a>/)
       const ids = [...markup.matchAll(/\bid="([^"]+)"/g)].map(match => match[1])
       expect(new Set(ids).size).toBe(ids.length)
     }
@@ -219,4 +219,9 @@ it.each([true, false])('reduced motion=%s lists every pane and finishes immediat
     expect(h.panes.every(pane => pane.classList.contains('on') && !pane.attributes.has('aria-hidden'))).toBe(true)
   } finally { h.cleanup() }
   expect(h.queue.size).toBe(0)
+})
+
+it('keeps the Goal Loop header back link text unchanged', () => {
+  const page = renderToStaticMarkup(createElement(App, { initialPath: '/goal-loop' }))
+  expect(page).toMatch(/aria-label="Goal Loop presentation"><a class="target-link" href="\/">← Back to homepage<\/a><\/nav>/)
 })

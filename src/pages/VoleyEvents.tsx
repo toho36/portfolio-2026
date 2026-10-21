@@ -205,17 +205,17 @@ export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
 
       <nav className="case-navigation" aria-label="Case study navigation">
         <RouteAnchor className="back-link" href="/" onNavigate={onNavigate}>
-          <span aria-hidden="true">←</span> Back to homepage
+          <span aria-hidden="true">←</span> <span className="link-label">Back to homepage</span>
         </RouteAnchor>
         <RouteAnchor className="contact-link" href="/#contact" onNavigate={onNavigate}>
-          Get in touch <span aria-hidden="true">↗</span>
+          <span className="link-label">Get in touch</span> <span aria-hidden="true">→</span>
         </RouteAnchor>
         <RouteAnchor
           className="next-link"
           href="/goal-loop"
           onNavigate={onNavigate}
         >
-          Next: Goal Loop <span aria-hidden="true">→</span>
+          <span className="link-label">Next: Goal Loop</span> <span aria-hidden="true">→</span>
         </RouteAnchor>
       </nav>
     </article>

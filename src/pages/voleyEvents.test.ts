@@ -167,7 +167,7 @@ describe('GameOnVB Match Operations case study', () => {
       expect(markup).toContain('href="/goal-loop"')
       expect(markup).toContain('Back to homepage')
       expect(markup).toContain('Next: Goal Loop')
-      expect(markup).toMatch(/aria-label="Case study navigation">[\s\S]*?<a class="target-link contact-link" href="\/#contact">Get in touch <span aria-hidden="true">↗<\/span><\/a>/)
+      expect(markup).toMatch(/aria-label="Case study navigation">[\s\S]*?<a class="target-link contact-link" href="\/#contact"><span class="link-label">Get in touch<\/span> <span aria-hidden="true">→<\/span><\/a>/)
       expect(markup).not.toMatch(/<canvas|data-rally-runtime/)
     }
   })
@@ -319,4 +319,19 @@ describe('GameOnVB dialog motion', () => {
       expect(h.stepBall.animate).not.toHaveBeenCalled()
     } finally { cleanup(); vi.unstubAllGlobals() }
   })
+})
+
+it('underlines only the words of project footer links and uses one arrow style', () => {
+  const css = readFileSync(new URL('../styles.css', import.meta.url), 'utf8')
+  expect(css).toMatch(/:is\(\.case-navigation, \.k-navigation\) a \{[^}]*text-decoration: none/)
+  expect(css).toMatch(/:is\(\.case-navigation, \.k-navigation\) \.link-label \{[^}]*text-decoration: underline/)
+  for (const path of ['/gameonvb', '/goal-loop']) {
+    const html = renderToStaticMarkup(createElement(App, { initialPath: path }))
+    const nav = html.slice(html.indexOf('aria-label="Case study navigation"'))
+    const footer = nav.slice(0, nav.indexOf('</nav>'))
+    expect(footer).not.toContain('↗')
+    expect(footer.match(/<a /g)).toHaveLength(3)
+    expect(footer.match(/<span class="link-label">/g)).toHaveLength(3)
+    expect(footer.match(/<span aria-hidden="true">[←→]<\/span>/g)).toHaveLength(3)
+  }
 })

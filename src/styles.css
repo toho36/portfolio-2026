@@ -309,6 +309,10 @@ h1 {
   content: "";
 }
 
+/* Footer links: one arrow style, underline only the words. */
+:is(.case-navigation, .k-navigation) a { gap: 0.55rem; text-decoration: none; }
+:is(.case-navigation, .k-navigation) .link-label { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.35em; }
+
 .case-navigation {
   display: flex;
   flex-wrap: wrap;
