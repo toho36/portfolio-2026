@@ -20,4 +20,14 @@ describe('home posters', () => {
     expect(POSTERS.map((p) => p.heading).join(' ')).not.toMatch(/\bAI\b/)
     expect(JSON.stringify({ POSTERS, HOME_COPY }).toLowerCase()).not.toMatch(/independent software systems builder|in use|czech/)
   })
+  it('shows the owner-confirmed facts and says where each project link goes', () => {
+    for (const [id, cta] of [['gameonvb', 'Read the GameOnVB case study'], ['goal-loop', 'Read the Goal Loop case study']]) {
+      const poster = POSTERS.find((p) => p.id === id)!
+      expect(poster.cta).toBe(cta)
+      expect(poster.facts?.map((f) => f.label)).toEqual(['What I own', 'What shipped', 'Result'])
+    }
+    expect(POSTERS.find((p) => p.id === 'gameonvb')!.facts![2].text).toContain('73 limit errors in one week')
+    expect(POSTERS.find((p) => p.id === 'goal-loop')!.facts![2].text).toContain('39.4 → 4.8 min')
+    expect(JSON.stringify(POSTERS)).not.toMatch(/150 players|31 sessions|entirely on the free plan|Several models/)
+  })
 })

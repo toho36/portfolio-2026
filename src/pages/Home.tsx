@@ -77,9 +77,10 @@ export function HomePage({ onNavigate }: { readonly onNavigate: (event: MouseEve
       <p className="eyebrow">{poster.label}</p>
       <h2>{poster.heading}</h2>
       <p>{poster.body}</p>
+      {poster.facts ? <dl className="poster-facts">{poster.facts.map(fact => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.text}</dd></div>)}</dl> : null}
       {index === 0 ? <p>{HOME_COPY.positioning}</p> : null}
       {poster.id === 'goal-loop' ? <GoalLoopVisual /> : poster.id === 'tools' ? <ScreenSwitch /> : null}
-      {poster.href ? <a className="target-link" href={poster.href} onClick={onNavigate}>{HOME_COPY.cta}<span aria-hidden="true">↗</span></a> : null}
+      {poster.href ? <a className="target-link" href={poster.href} onClick={onNavigate}>{poster.cta ?? HOME_COPY.cta}<span aria-hidden="true">↗</span></a> : null}
       {poster.id === 'contact' ? <ContactPoster /> : null}
     </section>)}
   </div>
