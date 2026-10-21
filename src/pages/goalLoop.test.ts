@@ -46,6 +46,30 @@ describe('Goal Loop kitchen story', () => {
     expect(markup).toContain('Service!')
   })
 
+  it('shortens only the phone chef label while retaining its full native expansion and desktop name', () => {
+    const stations = render().match(/<ol class="k-stations">([\s\S]*?)<\/ol>/)![1]
+    const items = [...stations.matchAll(/<li>([\s\S]*?)<\/li>/g)].map(match => match[1])
+    expect(items).toHaveLength(5)
+    expect(items[1]).toContain('<b class="k-chef-desktop">Head chef</b>')
+    expect(items[1]).toContain('<b class="k-chef-phone"><abbr title="Head chef">Chef</abbr></b>')
+    for (const index of [0, 2, 3, 4]) expect(items[index]).toContain(`<b>${GOAL_LOOP_KITCHEN.stations[index].name}</b>`)
+    GOAL_LOOP_KITCHEN.stations.forEach((station, index) => expect(items[index]).toContain(`<span>${station.role}</span>`))
+
+    const css = parse(stylesheet)
+    const displayRules: [string, string, string][] = []
+    css.walkDecls('display', declaration => {
+      const rule = declaration.parent
+      if (rule?.type !== 'rule' || !rule.selector.includes('k-chef-')) return
+      const media = rule.parent
+      displayRules.push([rule.selector, media?.type === 'atrule' ? media.params : 'all', declaration.value])
+    })
+    expect(displayRules).toEqual([
+      ['.goal-loop-kitchen .k-stations .k-chef-phone', 'all', 'none'],
+      ['.goal-loop-kitchen .k-stations .k-chef-desktop', '(max-width:480px)', 'none'],
+      ['.goal-loop-kitchen .k-stations .k-chef-phone', '(max-width:480px)', 'block'],
+    ])
+  })
+
   it('includes the shared plate slots, three swaying tickets, lamps, steam, bell and the two kitchens', () => {
     const markup = render()
     expect(markup.match(/data-plate=""/g)).toHaveLength(4)

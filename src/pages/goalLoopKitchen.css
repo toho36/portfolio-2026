@@ -62,6 +62,8 @@
 .goal-loop-kitchen .k-ico g{transform-box:fill-box;transform-origin:50% 100%}
 .goal-loop-kitchen .k-ico *{transition:stroke .4s}
 .goal-loop-kitchen .k-stations b{font:700 1.05rem/1.2 Georgia,serif;white-space:nowrap;margin-top:.2rem}
+.goal-loop-kitchen .k-stations .k-chef-phone{display:none}
+.goal-loop-kitchen .k-chef-phone abbr{text-decoration:none}
 .goal-loop-kitchen .k-stations span{font:600 12px/1 ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .goal-loop-kitchen .k-stations li.lit .k-ico{background:#e4efe8;border-color:var(--basil)}
 .goal-loop-kitchen .k-stations li.now .k-ico{background:var(--ink);border-color:var(--ink);transform:scale(1.1)}
@@ -156,6 +158,8 @@
 .goal-loop-kitchen h1{font-size:min(2.8rem,10.8vw)}
 .goal-loop-kitchen .k-line{padding-top:0}
 .goal-loop-kitchen .k-stations b{font-size:13px;letter-spacing:-.02em}
+.goal-loop-kitchen .k-stations .k-chef-desktop{display:none}
+.goal-loop-kitchen .k-stations .k-chef-phone{display:block}
 .goal-loop-kitchen .k-stations span{font-size:12px;letter-spacing:.04em}
 .goal-loop-kitchen .k-ico{width:44px;height:44px;padding:7px}
 .goal-loop-kitchen .k-intro h2{font-size:1.45rem}
