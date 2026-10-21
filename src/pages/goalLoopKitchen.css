@@ -50,7 +50,7 @@
 @keyframes k-steam{0%{opacity:0;transform:translateY(10px)}40%{opacity:.75}100%{opacity:0;transform:translateY(-26px)}}
 
 /* the pass: five stations, pinned while the page scrolls */
-.goal-loop-kitchen .k-pass{height:520vh;position:relative}
+.goal-loop-kitchen .k-pass{height:360vh;position:relative}
 .goal-loop-kitchen .k-pin{position:sticky;top:0;height:100vh;height:100svh;display:grid;align-content:center;gap:2.4rem;width:min(64rem,calc(100% - 3rem));margin:auto;padding-top:3rem}
 .goal-loop-kitchen .k-intro{text-align:center}
 .goal-loop-kitchen .k-intro .label{margin:0 auto .5rem}

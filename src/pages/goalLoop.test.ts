@@ -225,3 +225,9 @@ it('keeps the Goal Loop header back link text unchanged', () => {
   const page = renderToStaticMarkup(createElement(App, { initialPath: '/goal-loop' }))
   expect(page).toMatch(/aria-label="Goal Loop presentation"><a class="target-link" href="\/">← Back to homepage<\/a><\/nav>/)
 })
+
+it('keeps the desktop kitchen pin short and the phone pin at 300svh', () => {
+  const css = readFileSync(new URL('./goalLoopKitchen.css', import.meta.url), 'utf8')
+  expect(css).toContain('.goal-loop-kitchen .k-pass{height:360vh;position:relative}')
+  expect(css.slice(css.indexOf('@media (max-width:820px)'))).toContain('.goal-loop-kitchen .k-pass{height:300svh}')
+})
