@@ -39,10 +39,10 @@ const SETS: readonly GameOnVbSet[] = [
     tech: 'Next.js → Astro, static pages',
   },
   {
-    label: 'Set 3 · scheduled jobs', value: '1', unit: 'scheduled job',
+    label: 'Set 3 · scheduled jobs', value: '5', unit: 'of 5 allowed',
     before: { prefix: 'Before: ', struck: '9', suffix: 'Limit: 5' },
-    body: 'The free plan allows five scheduled jobs. I had nine, so I combined them into one that starts the others.',
-    tech: 'Cron triggers: 9 → 1 hub',
+    body: 'The free plan allows five scheduled jobs. I had nine, so I moved the scheduling into the database.',
+    tech: 'Cron triggers: 9 → 5, scheduling in SpacetimeDB',
   },
   {
     label: 'Set 4 · background work', value: '4', unit: 'services fixed',
@@ -51,8 +51,8 @@ const SETS: readonly GameOnVbSet[] = [
     tech: 'Durable Objects, per-isolate caching',
   },
   {
-    label: 'Final score', value: '0 Kč', unit: 'a month', win: true,
-    body: 'GameOnVB now runs entirely on the free plan.',
+    label: 'Final score', value: '0 Kč', unit: 'a month, the goal', win: true,
+    body: 'The paid plan ends on 8 November 2026. GameOnVB is moving to the free plan.',
   },
 ]
 

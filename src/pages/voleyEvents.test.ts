@@ -38,7 +38,7 @@ describe('GameOnVB Match Operations case study', () => {
     const markup = render()
     const landmarks = ['class="ticker"', 'The rule I set myself', 'Four sets',
       'Set 1 · server work', 'Set 2 · the rebuild', 'Set 3 · scheduled jobs',
-      'Set 4 · background work', 'GameOnVB now runs entirely on the free plan.',
+      'Set 4 · background work', 'The paid plan ends on 8 November 2026. GameOnVB is moving to the free plan.',
       'class="phone-col"', 'class="gv-steps"', 'When plans change',
       'Visit gameonvb.cz', 'aria-label="Case study navigation"']
     landmarks.forEach(landmark => expect(markup).toContain(landmark))
@@ -47,8 +47,8 @@ describe('GameOnVB Match Operations case study', () => {
     })
     expect(markup).toContain('Run a real product for free.')
     expect(VOLEYEVENTS.sets.map(({ value, unit }) => [value, unit])).toEqual([
-      ['<10', 'ms per visit'], ['81', 'ready-made pages'], ['1', 'scheduled job'],
-      ['4', 'services fixed'], ['0 Kč', 'a month'],
+      ['<10', 'ms per visit'], ['81', 'ready-made pages'], ['5', 'of 5 allowed'],
+      ['4', 'services fixed'], ['0 Kč', 'a month, the goal'],
     ])
     expect(markup).toContain('0 Kč')
     expect(markup).toContain('aria-label="0 Kč a month"')
