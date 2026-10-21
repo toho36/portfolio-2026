@@ -149,3 +149,11 @@ it('deals the next or previous card from a mouse, pen or finger drag and swallow
   expect(source).toMatch(/onDragStart=\{event=>event\.preventDefault\(\)\}/)
   expect(declarations('.light-table', 1440)['user-select']).toBe('none')
 })
+
+it('returns from GameOnVB with the site header back at once and the case header fading in its dark theme', () => {
+  const source = readFileSync(new URL('./lightTable.css', import.meta.url), 'utf8')
+  const worlds = readFileSync(new URL('../../worlds.css', import.meta.url), 'utf8')
+  expect(source).toContain(".site-shell:has(.ball-entry[open]:not([data-phase='leaving']), .goal-entry[open]) > .site-header { display: none; }")
+  expect(source).toContain(".ball-entry[data-phase='leaving'] .entry-header { opacity: var(--progress); }")
+  expect(worlds).toMatch(/:is\(\.route-voleyevents, \.ball-entry\) \.voleyevents \{ --court-chalk: var\(--ink\); --court-ink: var\(--paper\);/)
+})

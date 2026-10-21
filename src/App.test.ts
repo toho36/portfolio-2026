@@ -350,7 +350,8 @@ describe('light-table route integration', () => {
     for (const other of ['/', '/playground', '/not-a-route']) expect(render(other)).not.toMatch(/<header class="site-header" hidden=/)
     const css = readFileSync(new URL('./home/lightTable/lightTable.css', import.meta.url), 'utf8')
     expect(css).toContain('.site-header[hidden]')
-    expect(css).toContain(':has(.ball-entry[open], .goal-entry[open])')
+    // Hidden while a project is open; the site header returns as soon as GameOnVB starts leaving.
+    expect(css).toContain(":has(.ball-entry[open]:not([data-phase='leaving']), .goal-entry[open])")
   })
   it.each(['/gameonvb', '/goal-loop'])('leaves navbar entry to %s native instead of flying an inactive card', path => {
     const n = provenanceNavigation()

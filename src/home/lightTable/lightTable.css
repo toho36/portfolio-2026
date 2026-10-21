@@ -114,11 +114,13 @@
 .site-shell:has([data-light-table-shell]) > main { width: 100%; margin: 0; }
 .site-shell:has([data-light-table-shell]) > .site-header { position: fixed; z-index: 30; top: 0; left: 0; width: 100%; min-height: 80px; padding-inline: clamp(1.25rem,3vw,3rem); background: #171816f0; }
 .site-shell:has([data-light-table-shell]) > .site-header[hidden],
-.site-shell:has(.ball-entry[open], .goal-entry[open]) > .site-header { display: none; }
+.site-shell:has(.ball-entry[open]:not([data-phase='leaving']), .goal-entry[open]) > .site-header { display: none; }
 .site-shell:has([data-light-table-shell]) > footer { display: grid; }
 .site-shell:has([data-light-table-shell]) > .skip-link { z-index: 40; }
 .ball-entry { z-index: 20; scrollbar-gutter: stable; }
 .ball-entry .entry-header { top: var(--shell-header-height,0px); }
+/* Returning home: the site header is back at once and the case header fades out with the page. */
+.ball-entry[data-phase='leaving'] .entry-header { opacity: var(--progress); }
 .ball-entry > .voleyevents { padding: 0; }
 .ball-entry .case-section,.ball-entry .case-pair,.ball-entry .lifecycle,.ball-entry .case-navigation { background: #171916; }
 .home-supporting .poster-contact { grid-column: auto; grid-row: auto; }

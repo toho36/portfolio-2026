@@ -140,7 +140,8 @@
 .display-swap[data-swapped='true'] .display-monitor:last-child .display-window { transform: translateX(calc(-100% / 0.6 - 32px)); }
 
 /* Court story: the interactive field owns motion, HTML owns the product. */
-.route-voleyevents .voleyevents { --court-chalk: var(--ink); --court-ink: var(--paper); --court-blue: var(--signal); --court-orange: var(--world-accent); --court-line: var(--line); background: none; }
+/* The dialog keeps the dark theme while it fades out after the route has already returned home. */
+:is(.route-voleyevents, .ball-entry) .voleyevents { --court-chalk: var(--ink); --court-ink: var(--paper); --court-blue: var(--signal); --court-orange: var(--world-accent); --court-line: var(--line); background: none; }
 .route-voleyevents main { width: 100%; }
 .voleyevents .case-navigation { width: min(86rem, calc(100% - clamp(2rem, 6vw, 7rem))); margin-inline: auto; }
 .voleyevents .stage-heading h3 { font-size: clamp(1.7rem, 2.6vw, 2.8rem); }
