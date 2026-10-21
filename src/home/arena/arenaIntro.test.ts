@@ -16,12 +16,35 @@ describe('arena intro', () => {
     expect(markup.indexOf('arena-intro')).toBeGreaterThan(markup.indexOf('</footer>'))
   })
 
+  it('offers Skip to work and native Contact alongside the controls from the first chapter', () => {
+    const markup = render('/')
+    const intro = markup.slice(markup.indexOf('class="arena arena-intro"'))
+    const controls = intro.match(/<nav aria-label="Six chapters">([\s\S]*?)<\/nav>/)?.[1]
+    expect(controls).toBeDefined()
+    expect(controls).toMatch(/<button id="skip" type="button">Skip to work<\/button>/)
+    expect(controls).toMatch(/<a\b[^>]*href="\/#contact">Contact<\/a>/)
+    expect(controls).not.toMatch(/\s(hidden|inert)="/)
+    expect(intro.match(/id="skip"/g)).toHaveLength(1)
+    expect(intro.match(/href="\/#contact"/g)).toHaveLength(1)
+    expect(intro).not.toContain('<form')
+    expect(markup.match(/<form /g)).toHaveLength(1)
+  })
+
   it('never opens on other routes', () => {
     for (const path of ['/gameonvb', '/goal-loop', '/playground', '/missing']) {
       const markup = render(path)
       expect(markup).not.toContain('arena-intro')
       expect(markup).not.toMatch(/<main[^>]*inert/)
     }
+  })
+
+  it('stacks status messages and navigation in one height-aware control group', () => {
+    const group = render('/').match(/<div class="intro-controls">([\s\S]*?)<\/nav><\/div>/)?.[1]
+    expect(group).toContain('id="finding"')
+    expect(group).toContain('id="error"')
+    const css = readFileSync(new URL('./arena.css', import.meta.url), 'utf8')
+    expect(css).toContain('.arena .intro-controls nav{position:static}')
+    expect(css).toContain('.arena .intro-controls .finding,.arena .intro-controls .error{position:static;')
   })
 
   it('shows the same stop copy as the 033 study', () => {

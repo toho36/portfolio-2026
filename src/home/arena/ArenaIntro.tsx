@@ -64,9 +64,12 @@ export function ArenaIntro({ onClose, onNavigate }: ArenaIntroProps) {
         <div className="copy" data-stop="3" hidden><h2>Goal Loop</h2><p className="tagline">One run, start to finish.</p><p>Check found a crack. Build used one of the two repair pieces, the same Check passed, and Review confirmed the fit.</p><a className="target-link more" href="/goal-loop" onClick={project}>View project <span aria-hidden="true">→</span></a></div>
         <div className="copy" data-stop="4" hidden><h2 className="screen-switch-title"><img src="/arena/screen-switch-icon.png" alt="" aria-hidden="true" width="32" height="32" /><span>Screen Switch</span></h2><p className="tagline">Small tools, finished properly.</p><p>A native macOS menu-bar utility that swaps eligible windows between displays.</p></div>
         <div className="copy" data-stop="5" hidden><h2>Playground</h2><p className="tagline">Interaction, studied closely.</p><p>Hot Wire, a 3D skill game, and Villa, a 3D scroll animation.</p><a className="target-link more" href="/playground" onClick={project}>Open playground <span aria-hidden="true">→</span></a></div>
-        <p id="finding" className="finding" role="status" hidden />
-        <nav aria-label="Six chapters"><button id="prev" type="button" disabled>Prev</button><span id="count" aria-hidden="true">01 / 06</span><button id="next" type="button">Next <span aria-hidden="true">↓</span></button><button id="skip" type="button">Skip</button></nav>
-        <p id="announcement" className="sr-only" aria-live="polite" aria-atomic="true" /><p id="error" className="error" hidden>Media unavailable or stalled. The last valid still is shown. You can continue or skip.</p>
+        <div className="intro-controls">
+          <p id="finding" className="finding" role="status" hidden />
+          <p id="error" className="error" hidden>Media unavailable or stalled. The last valid still is shown. You can continue or skip.</p>
+          <nav aria-label="Six chapters"><button id="prev" type="button" disabled>Prev</button><span id="count" aria-hidden="true">01 / 06</span><button id="next" type="button">Next <span aria-hidden="true">↓</span></button><div className="intro-exits"><button id="skip" type="button">Skip to work</button><a className="target-link" href="/#contact">Contact</a></div></nav>
+        </div>
+        <p id="announcement" className="sr-only" aria-live="polite" aria-atomic="true" />
       </section>
     </div>
   )
