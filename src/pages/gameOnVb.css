@@ -78,10 +78,10 @@
 .gv .pips i { width: 14px; height: 14px; border: 2px solid var(--muted); }
 .gv .pips i.on { background: var(--gold); border-color: var(--gold); }
 .gv .track { display: flex; gap: 2rem; padding-left: max(1.5rem, calc((100% - 84rem)/2)); will-change: transform; }
-.gv .set { flex: 0 0 min(78vw, 560px); background: linear-gradient(180deg,#272922,#1d1f1a); border: 1px solid #3a3b33; border-top: 2px solid var(--edge); padding: 2rem; box-shadow: 0 30px 60px #0009; color: var(--text); display: grid; gap: 1rem; }
+.gv .set { flex: 0 0 min(78vw, 560px); min-width: 0; background: linear-gradient(180deg,#272922,#1d1f1a); border: 1px solid #3a3b33; border-top: 2px solid var(--edge); padding: 2rem; box-shadow: 0 30px 60px #0009; color: var(--text); display: grid; gap: 1rem; }
 .gv .set .big { display: flex; align-items: baseline; gap: 1rem; font: 900 clamp(4rem,9vw,7.5rem)/.85 "Helvetica Neue", Arial, sans-serif; letter-spacing: -.05em; }
 .gv .set .big span { color: var(--gold); }
-.gv .set .big small { font-size: .24em; letter-spacing: 0; text-transform: uppercase; white-space: nowrap; }
+.gv .set .big small { font-size: .24em; letter-spacing: 0; text-transform: uppercase; }
 .gv .set .was { margin: -.4rem 0 0; font: 800 14px/1.3 "Helvetica Neue", Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .gv .set .was s { color: var(--text); text-decoration: none; position: relative; display: inline-block; white-space: nowrap; padding: 0 .25em; }
 .gv .set .was s::after { content: ''; position: absolute; left: -.2em; right: -.2em; top: 50%; height: 3px; margin-top: -1.5px; border-radius: 2px; background: #e2553a; transform: rotate(-8deg); }

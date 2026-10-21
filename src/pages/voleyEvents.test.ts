@@ -47,8 +47,8 @@ describe('GameOnVB Match Operations case study', () => {
     })
     expect(markup).toContain('Run a real product for free.')
     expect(VOLEYEVENTS.sets.map(({ value, unit }) => [value, unit])).toEqual([
-      ['<10', 'ms per visit'], ['81', 'ready-made pages'], ['5', 'of 5 allowed'],
-      ['4', 'services fixed'], ['0 Kč', 'a month, the goal'],
+      ['<10', 'ms for most requests'], ['0', 'server calls per page'], ['5', 'of 5 allowed'],
+      ['4', 'services reworked'], ['0 Kč', 'a month, the goal'],
     ])
     expect(markup).toContain('0 Kč')
     expect(markup).toContain('aria-label="0 Kč a month"')
@@ -94,6 +94,9 @@ describe('GameOnVB Match Operations case study', () => {
     expect(css).toMatch(/@media\s*\(max-width:\s*820px\)/)
     expect(css).toMatch(/@media\s*\(max-width:\s*600px\)/)
     expect(css).toMatch(/scroll-snap-type: x mandatory/)
+    // Long set units must wrap inside the card instead of widening it past the phone viewport.
+    expect(css).toMatch(/\.gv \.set \{ flex: 0 0 min\(78vw, 560px\); min-width: 0;/)
+    expect(css).not.toMatch(/\.gv \.set \.big small \{[^}]*nowrap/)
     expect(css).toMatch(/\.gv \.band \{ height: auto; \}/)
     expect(css).toMatch(/\.gv \.phone-col \{ display: none; \}/)
     expect(css).toMatch(/padding: clamp\(48px, 10vw, 72px\) 0/)

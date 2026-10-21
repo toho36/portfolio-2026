@@ -27,15 +27,15 @@ const STEPS: readonly GameOnVbStep[] = [
 
 const SETS: readonly GameOnVbSet[] = [
   {
-    label: 'Set 1 · server work', value: '<10', unit: 'ms per visit',
+    label: 'Set 1 · server work', value: '<10', unit: 'ms for most requests',
     before: { prefix: 'Before: ', struck: '62 ms', suffix: 'Limit: 10 ms' },
-    body: 'On the free plan, the server may spend 10 ms of computer time on each visit. Mine needed up to 62 ms, so some visitors got an error.',
+    body: 'On the free plan, the server may spend 10 ms of computer time on each request. My pages needed up to 62 ms, so some visitors got an error. Most requests now stay under 10 ms; a few sign-in steps still go over.',
     tech: 'Next.js on Cloudflare Workers',
   },
   {
-    label: 'Set 2 · the rebuild', value: '81', unit: 'ready-made pages',
+    label: 'Set 2 · the rebuild', value: '0', unit: 'server calls per page',
     before: { prefix: 'Before: every page was built on each visit' },
-    body: 'I rebuilt the website so pages are prepared in advance and sent as ready files. A visit now costs almost no server time.',
+    body: 'I rebuilt the website so pages are prepared in advance and sent as ready files. A public page now needs no server work at all.',
     tech: 'Next.js → Astro, static pages',
   },
   {
@@ -45,10 +45,10 @@ const SETS: readonly GameOnVbSet[] = [
     tech: 'Cron triggers: 9 → 5, scheduling in SpacetimeDB',
   },
   {
-    label: 'Set 4 · background work', value: '4', unit: 'services fixed',
+    label: 'Set 4 · background work', value: '4', unit: 'services reworked',
     before: { prefix: 'Bank checks, emails, login, scheduler' },
-    body: 'Each of these background services used too much time. I reorganised them so every request does less work.',
-    tech: 'Durable Objects, per-isolate caching',
+    body: 'Each of these services used too much time. Bank checks and login now stay well under the limit. The scheduler moved into the database. Email still goes over sometimes.',
+    tech: 'Durable Objects, per-isolate caching, SpacetimeDB',
   },
   {
     label: 'Final score', value: '0 Kč', unit: 'a month, the goal', win: true,
