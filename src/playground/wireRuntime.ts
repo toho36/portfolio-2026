@@ -14,6 +14,19 @@ export function attachWireInput(target: EventTarget, handlers: Record<string, (e
   return () => { for (const [name, handler] of Object.entries(handlers)) target.removeEventListener(name, handler) }
 }
 
+export function wireFraming(width: number, height: number, active: boolean, insets: { top: number; bottom: number }) {
+  const fullScale = Math.min((width - 64) / 16.1, (height - 130) / 7.3)
+  const follow = fullScale * LOOP.outerRadius * 2 < 44
+  const overview = follow && !active
+  if (!overview) return { follow, overview, scale: follow ? 56 / (LOOP.outerRadius * 2) : fullScale, centerY: 2.6 }
+  // Conservative camera-plane bounds around (7.7, 2.6): route, posts and letter marks.
+  // Reserve 40px at each side, 34px above for captions, 12px below for marks, plus 8px clearance.
+  const top = insets.top + 42, bottom = insets.bottom + 22
+  const scale = Math.max(0.1, Math.min((width - 80) / 16.1, (height - top - bottom) / 8.2))
+  const upY = Math.hypot(2.2, 17) / Math.hypot(2.2, 3.7, 17)
+  return { follow, overview, scale, centerY: 2.6 + (top - bottom) / (2 * scale * upY) }
+}
+
 export function createWireRuntime(three: any, opts: { host: HTMLElement; reducedMotion: boolean; hud: WireRuntimeHud; onFirstFrame(): void }): WireRuntime {
   const { host, reducedMotion, hud, onFirstFrame } = opts
   const path = buildVitekPath()
@@ -82,10 +95,10 @@ export function createWireRuntime(three: any, opts: { host: HTMLElement; reduced
   const grip = add(new three.CylinderGeometry(0.105, 0.105, 0.4, 16), lime)
   const collar = add(new three.SphereGeometry(0.075, 12, 8), ink)
   for (const part of [wand, grip, collar]) { part.castShadow = false; part.receiveShadow = false }
-  const captionStyle = 'position:absolute;z-index:2;pointer-events:none;font:700 10px/1 system-ui;letter-spacing:.2em;color:#090909'
+  const captionStyle = 'position:absolute;z-index:2;pointer-events:none;font-weight:700;font-family:system-ui;line-height:1;letter-spacing:.2em;color:#090909'
   const labels = [document.createElement('span'), document.createElement('span')]
   labels[0].textContent = 'START'; labels[1].textContent = 'FINISH'
-  for (const el of labels) { el.style.cssText = captionStyle; host.appendChild(el) }
+  for (const el of labels) { el.className = 'wire-end-label'; el.style.cssText = captionStyle; host.appendChild(el) }
   const letterMarks = [...'VITEK'].map((letter) => {
     const el = document.createElement('span')
     el.textContent = letter
@@ -93,7 +106,9 @@ export function createWireRuntime(three: any, opts: { host: HTMLElement; reduced
     host.appendChild(el)
     return el
   })
-  let width = 1, height = 1, scale = 70, follow = false, centerX = 7.7, cameraVelocity = 0
+  let width = 1, height = 1, scale = 70, centerX = 7.7, cameraVelocity = 0
+  let centerY = 2.6, verticalVelocity = 0, scaleVelocity = 0
+  let insets = { top: 0, bottom: 0 }, canFollow = false
   let mode: Mode = 'easy', sound = true, status: 'idle' | 'holding' | 'paused' | 'frozen' | 'finished' = 'idle'
   let pose: Vec2 = path.start, s = 0, maxS = 0
   let theta = Math.atan2(pointAt(path, 0).tangent.y, pointAt(path, 0).tangent.x)
@@ -120,32 +135,51 @@ export function createWireRuntime(three: any, opts: { host: HTMLElement; reduced
     return { x: v.x, y: v.y }
   }
   function frameCamera(dt = 0, immediate = false) {
+    const framing = wireFraming(width, height, status === 'holding' || status === 'paused', insets)
+    const follow = framing.follow && !framing.overview
     const desired = follow ? pose.x : 7.7
     const deadZone = follow ? 0.35 : 0
     const goal = Math.max(1.5, Math.min(13.8, desired - Math.max(-deadZone, Math.min(deadZone, desired - centerX))))
-    if (immediate || reducedMotion) { centerX = goal; cameraVelocity = 0 }
+    if (immediate || reducedMotion) {
+      centerX = goal; centerY = framing.centerY; scale = framing.scale
+      cameraVelocity = 0; verticalVelocity = 0; scaleVelocity = 0
+    }
     else {
       const omega = 9, decay = Math.exp(-omega * dt / 1000)
       const distance = centerX - goal, step = (cameraVelocity + omega * distance) * dt / 1000
       centerX = goal + (distance + step) * decay
       cameraVelocity = (cameraVelocity - omega * step) * decay
+      const verticalDistance = centerY - framing.centerY, verticalStep = (verticalVelocity + omega * verticalDistance) * dt / 1000
+      centerY = framing.centerY + (verticalDistance + verticalStep) * decay
+      verticalVelocity = (verticalVelocity - omega * verticalStep) * decay
+      const scaleDistance = scale - framing.scale, scaleStep = (scaleVelocity + omega * scaleDistance) * dt / 1000
+      scale = framing.scale + (scaleDistance + scaleStep) * decay
+      scaleVelocity = (scaleVelocity - omega * scaleStep) * decay
     }
-    camera.position.set(centerX + 2.2, 6.3, 17)
-    camera.lookAt(centerX, 2.6, 0)
+    camera.position.set(centerX + 2.2, 6.3 + (centerY - 2.6), 17)
+    camera.lookAt(centerX, centerY, 0)
     camera.left = -width / scale / 2; camera.right = width / scale / 2
     camera.top = height / scale / 2; camera.bottom = -height / scale / 2
     camera.updateProjectionMatrix()
   }
   function resize() {
+    const previousWidth = width, previousHeight = height
     width = Math.max(1, host.clientWidth); height = Math.max(1, host.clientHeight)
-    const fullScale = Math.min((width - 64) / 16.1, (height - 130) / 7.3)
-    follow = fullScale * LOOP.outerRadius * 2 < 44
-    scale = follow ? 56 / (LOOP.outerRadius * 2) : fullScale
-    frameCamera(0, true)
+    const rect = host.getBoundingClientRect()
+    insets = {
+      top: Math.max(0, (hudElement?.getBoundingClientRect().bottom ?? rect.top) - rect.top),
+      bottom: Math.max(0, rect.bottom - (footerElement?.getBoundingClientRect().top ?? rect.bottom)),
+    }
+    canFollow = wireFraming(width, height, false, insets).follow
+    frameCamera(0, width !== previousWidth || height !== previousHeight)
     renderer.setSize(width, height, false)
   }
+  const hudElement = host.parentElement?.querySelector('.wire-hud')
+  const footerElement = host.parentElement?.querySelector('.wire-footer')
   const observer = new ResizeObserver(resize)
   observer.observe(host)
+  if (hudElement) observer.observe(hudElement)
+  if (footerElement) observer.observe(footerElement)
   resize()
   function wandWorld() { return wandAt(pose, wandTilt, 0.26 * (mode === 'hard' ? 0.7 : 1)) }
   function reset() {
@@ -155,8 +189,7 @@ export function createWireRuntime(three: any, opts: { host: HTMLElement; reduced
     loop.scale.setScalar(mode === 'hard' ? 0.7 : 1)
     started = false; startedAt = 0; pausedMs = 0; primary = null
     pointers.clear(); lastTick = -1
-    cameraVelocity = 0
-    frameCamera(0, true); hud.onProgress(0); hud.onHold(false)
+    frameCamera(); hud.onProgress(0); hud.onHold(false)
   }
   function tone(freq: number, duration: number, kind: OscillatorType, gainValue: number, endFreq = freq) {
     if (!sound || !audio) return
@@ -211,8 +244,11 @@ export function createWireRuntime(three: any, opts: { host: HTMLElement; reduced
     if (!canRegrab(worldToScreen(wandWorld().grip), { x: e.clientX, y: e.clientY })) return
     primary = e.pointerId; pointers.set(primary, { x: e.clientX, y: e.clientY })
     lastMoveAt = performance.now()
+    const fromOverview = status === 'idle'
     if (status === 'paused') pausedMs += performance.now() - pauseAt
     status = 'holding'; hud.onHold(true)
+    // Leave the overview before the first move so finger precision matches today's game; a paused regrab keeps its spring.
+    if (fromOverview) frameCamera(0, true)
     if (!audio && typeof AudioContext !== 'undefined') audio = new AudioContext()
     void audio?.resume()
     try { canvas.setPointerCapture(e.pointerId) } catch { /* synthetic input */ }
@@ -247,10 +283,13 @@ export function createWireRuntime(three: any, opts: { host: HTMLElement; reduced
     grip.position.set(handle.x, handle.y, handle.z); grip.quaternion.copy(rotation)
     collar.position.set(attach.x, attach.y, attach.z)
     const starts = worldToScreen(path.start), ends = worldToScreen(path.finish)
-    labels[0].style.left = `${starts.x - host.getBoundingClientRect().left - 18}px`
-    labels[0].style.top = `${starts.y - host.getBoundingClientRect().top - 34}px`
-    labels[1].style.left = `${ends.x - host.getBoundingClientRect().left - 24}px`
-    labels[1].style.top = `${ends.y - host.getBoundingClientRect().top - 34}px`
+    const rect = host.getBoundingClientRect()
+    for (const [i, p] of [starts, ends].entries()) {
+      // Desktop keeps its original caption offsets; phone captions are centered and kept clear of the HUD and footer.
+      const top = p.y - rect.top - 34
+      labels[i].style.left = `${p.x - rect.left - (canFollow ? labels[i].offsetWidth / 2 : i ? 24 : 18)}px`
+      labels[i].style.top = `${canFollow ? Math.max(insets.top + 8, Math.min(height - insets.bottom - 8 - labels[i].offsetHeight, top)) : top}px`
+    }
     for (const [i, x] of [1.5, 3.7, 5.5, 8.8, 13].entries()) {
       const q = worldToScreen({ x, y: -1 })
       letterMarks[i].style.left = `${q.x - host.getBoundingClientRect().left}px`

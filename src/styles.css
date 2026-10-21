@@ -346,6 +346,7 @@ h1 {
 
 /* Hot Wire */
 .wire-stage { position: absolute; inset: 0; }
+.wire-end-label { font-size: 10px; }
 .wire-stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 .wire-flash { position: absolute; inset: 0; z-index: 1; background: #ff563b; opacity: 0; pointer-events: none; }
 .wire-flash.active { animation: wire-buzz 600ms ease-out both; }
@@ -361,7 +362,7 @@ h1 {
 .wire-modes { display: flex; border: 1px solid var(--ink); border-radius: 99px; padding: 3px; background: var(--paper); }
 .wire-modes button { border: 0; border-radius: 99px; padding: .7rem 1rem; transition: background .2s ease; }
 .wire-modes button[aria-pressed='true'] { background: var(--signal); }
-.wire-score { display: flex; flex-direction: column; align-items: center; gap: .15rem; padding: .1rem .5rem; font: 700 .68rem/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; text-transform: uppercase; letter-spacing: .11em; }
+.wire-score { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: .1rem .5rem; font: 700 .68rem/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; text-transform: uppercase; letter-spacing: .11em; text-align: center; }
 .wire-score strong { font: 800 clamp(2.2rem, 4.6vw, 4.7rem)/.9 Arial, sans-serif; letter-spacing: -.07em; }
 .wire-sound { border: 1px solid var(--ink); border-radius: 99px; padding: .7rem 1rem; white-space: nowrap; }
 .wire-sound[aria-pressed='false'] { opacity: .55; }
@@ -421,10 +422,11 @@ footer p {
   .wire-hud { top: 3rem; left: 1rem; right: 1rem; gap: .35rem; }
   .wire-modes button { padding: .6rem .65rem; font-size: .65rem; }
   .wire-sound { padding: .6rem .65rem; font-size: .65rem; }
-  .wire-score { font-size: .57rem; letter-spacing: 0; }
+  .wire-score { min-width: 0; padding-inline: 0; font-size: 13px; letter-spacing: 0; }
+  .wire-end-label { font-size: 13px; }
   .wire-score strong { font-size: 2.25rem; }
   .wire-footer { left: 1rem; right: 1rem; bottom: 1.1rem; flex-direction: column; align-items: stretch; gap: .8rem; }
-  .wire-hint { font-size: .65rem; }
+  .wire-hint { font-size: 14px; }
   .wire-minimap { width: 100%; }
 
 

@@ -98,7 +98,7 @@ export function HotWire({ onNavigate }: HotWireProps) {
         <div className="wire-modes" aria-label="Difficulty">
           {(['easy', 'hard'] as const).map((m) => <button type="button" key={m} aria-pressed={mode === m} onClick={() => changeMode(m)}>{m === 'easy' ? 'Easy' : 'Hard'}</button>)}
         </div>
-        <div className="wire-score" aria-live="polite"><strong>{progress} %</strong><span>best run {best.bestPercent} %{best.bestTimeMs !== null && ` · ${formatTime(best.bestTimeMs)}`}</span></div>
+        <div className="wire-score" aria-live="polite"><span>Progress</span><strong>{progress} %</strong><span>Best run {best.bestPercent} %{best.bestTimeMs !== null && ` · ${formatTime(best.bestTimeMs)}`}</span></div>
         <button className="wire-sound" type="button" aria-pressed={sound} onClick={toggleSound}>Sound {sound ? 'on' : 'off'}</button>
       </div>
       <div className="wire-footer"><p className="wire-hint">{hint}</p><div className="wire-minimap" aria-label={`Progress ${progress} percent`}><i style={{ width: `${progress}%` }} /></div></div>
