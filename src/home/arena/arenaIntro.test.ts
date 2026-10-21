@@ -51,6 +51,11 @@ describe('arena intro', () => {
     const study = readFileSync(new URL('../../../sketches/033-arena/index.html', import.meta.url), 'utf8')
     expect(stopText(render('/'))).toEqual(stopText(study))
     expect(stopText(study)).toHaveLength(6)
+    const stops = Object.fromEntries(stopText(render('/')))
+    expect(stops['1']).toContain('Read the GameOnVB case study')
+    expect(stops['2']).toContain('It passes only when every check agrees. Read the Goal Loop case study')
+    expect(stops['3']).toContain('Read the Goal Loop case study')
+    expect(JSON.stringify(stops)).not.toMatch(/View project|Several models/)
   })
 })
 
