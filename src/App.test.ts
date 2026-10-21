@@ -1,7 +1,10 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
-import App, { applyRouteMetadata, installRevealMotion, isLightTablePair, selectHomeTransition } from './App'
+import App, { applyRouteMetadata, focusHomeContact, installRevealMotion, isLightTablePair, selectHomeTransition } from './App'
+import { createWatchFlow } from './home/lightTable/watchFlow.js'
+import { createDeckAssist } from './home/lightTable/deckAssist.js'
+import { BALL_DURATION, createBallFlow } from './home/lightTable/ballFlow.js'
 import { readFileSync } from 'node:fs'
 import { getRouteNavigationUrl, normalizePathname, pushRouteNavigation, ROUTES, resolveRoute, routeMetadata } from './content/routes'
 
@@ -20,6 +23,16 @@ function createClassList() {
 }
 
 describe('light-table homepage and project shells', () => {
+  it('offers Contact beside the brand and retains the three project links and form CVs', () => {
+    for (const path of ['/', '/gameonvb', '/goal-loop', '/playground']) {
+      const html = render(path)
+      const header = html.slice(html.indexOf('<header'), html.indexOf('</header>'))
+      expect(header).toMatch(/class="target-link header-contact" href="\/#contact">Contact<\/a>/)
+      for (const href of ['/gameonvb', '/goal-loop', '/playground']) expect(header).toContain(`href="${href}"`)
+      expect(header).not.toMatch(/cv-|>CV/)
+    }
+  })
+
   it('renders the approved fan and all source-safe supporting sections in order', () => {
     const markup = render()
     expect(markup).toContain('New tools.')
@@ -390,4 +403,183 @@ it.each(['/gameonvb', '/goal-loop', '/playground'])('uses the explicit anchor fo
   const modified = provenanceNavigation()
   expect(modified.click(path, { metaKey: true }, true).preventDefault).not.toHaveBeenCalled()
   expect(modified.history.pushState).not.toHaveBeenCalled()
+})
+
+describe('contact navigation', () => {
+  it.each(['changed hash', 'same hash'])('cancels a settling deck before restoring contact with $0', activation => {
+    const source = readFileSync(new URL('./home/lightTable/LightTable.jsx', import.meta.url), 'utf8')
+    const start = source.indexOf('    const escape=event=>')
+    const effect = source.slice(start, source.indexOf('\n  },[])', start))
+    const frames = new Map<number, FrameRequestCallback>(), listeners = new Map<string, (event?: any) => void>()
+    let id = 0
+    const events = { addEventListener: (key: string, fn: () => void) => listeners.set(key, fn), removeEventListener: (key: string) => listeners.delete(key) }
+    const contact = { closest: () => null, style: {}, focus: vi.fn(), scrollIntoView: () => vi.stubGlobal('scrollY', 5000) }
+    const doc = { ...events, hidden: false, getElementById: () => contact, querySelector: () => null, dispatchEvent: vi.fn() }
+    vi.stubGlobal('document', doc); vi.stubGlobal('scrollY', 0); vi.stubGlobal('innerHeight', 844)
+    vi.stubGlobal('addEventListener', events.addEventListener); vi.stubGlobal('removeEventListener', events.removeEventListener)
+    vi.stubGlobal('requestAnimationFrame', (fn: FrameRequestCallback) => { frames.set(++id, fn); return id })
+    vi.stubGlobal('cancelAnimationFrame', (key: number) => frames.delete(key))
+    vi.stubGlobal('window', { scrollTo: ({ top }: { top: number }) => vi.stubGlobal('scrollY', top) })
+    vi.spyOn(performance, 'now').mockReturnValue(0)
+    const assist = createDeckAssist({ dataset: {} } as HTMLElement, () => false)
+    const context = { ...events, document: doc, location: new URL('https://portfolio.test/#contact'), getRouteNavigationUrl,
+      assistRef: { current: assist }, ballDesiredRef: { current: false }, desiredRef: { current: false }, scrollStoryAnchor: vi.fn() }
+    const cleanup = new Function('context', `with(context){${effect}}`)(context)
+    const tick = (time: number) => { const batch = [...frames.values()]; frames.clear(); batch.forEach(fn => fn(time)) }
+    try {
+      const cancel = vi.spyOn(assist, 'cancel')
+      for (const change of [{ button: 1 }, { metaKey: true }, { ctrlKey: true }, { defaultPrevented: true },
+        { target: { closest: () => ({ target: '_blank', hasAttribute: () => false }) } }]) {
+        listeners.get('click')!({ target: { closest: () => ({ target: '', hasAttribute: () => false }) }, button: 0, ...change })
+      }
+      expect(cancel).not.toHaveBeenCalled(); expect(doc.dispatchEvent).not.toHaveBeenCalled()
+      assist.move(1); tick(16)
+      expect(scrollY).toBeGreaterThan(0)
+      if (activation === 'changed hash') listeners.get('hashchange')!()
+      else listeners.get('click')?.({ target: { closest: () => ({ target: '', hasAttribute: () => false }) }, button: 0 })
+      focusHomeContact(doc as unknown as Document)
+      expect(scrollY).toBe(5000)
+      tick(32); tick(700)
+      expect(scrollY).toBe(5000)
+      expect(context.scrollStoryAnchor).not.toHaveBeenCalled()
+      if (activation === 'same hash') expect(doc.dispatchEvent.mock.calls[0][0].type).toBe('homecontactready')
+      cleanup(); expect(listeners.has('hashchange')).toBe(false); expect(listeners.has('click')).toBe(false)
+    } finally { cleanup(); assist.destroy(); vi.restoreAllMocks(); vi.unstubAllGlobals() }
+  })
+
+  it.each(['/gameonvb', '/gameonvb/', '/goal-loop', '/goal-loop/'])('routes a plain %s contact exit through home without using history.back', path => {
+    const n = provenanceNavigation(path, { lightTableFromHome: true })
+    expect(n.click('/#contact').preventDefault).toHaveBeenCalledOnce()
+    expect(n.location.pathname + n.location.hash).toBe('/#contact')
+    expect(n.history.pushState).toHaveBeenCalledExactlyOnceWith(null, '', '/#contact')
+    expect(n.history.replaceState).not.toHaveBeenCalled()
+  })
+
+  it('preserves native contact navigation on home/playground and all browser-owned clicks', () => {
+    for (const path of ['/', '/playground']) {
+      const n = provenanceNavigation(path)
+      expect(n.click('/#contact').preventDefault).not.toHaveBeenCalled()
+      expect(n.history.pushState).not.toHaveBeenCalled()
+    }
+    for (const path of ['/gameonvb', '/goal-loop']) {
+      for (const change of [{ button: 1 }, { metaKey: true }, { ctrlKey: true }, { altKey: true }, { shiftKey: true }, { defaultPrevented: true },
+        { currentTarget: { getAttribute: () => '/#contact', target: '_blank', hasAttribute: () => false } },
+        { currentTarget: { getAttribute: () => '/#contact', target: '', hasAttribute: () => true } }]) {
+        const n = provenanceNavigation(path)
+        expect(n.click('/#contact', change).preventDefault).not.toHaveBeenCalled()
+        expect(n.history.pushState).not.toHaveBeenCalled()
+      }
+    }
+  })
+
+  it('opens cold /#contact without the arena, while ordinary fresh home retains it', () => {
+    try {
+      vi.stubGlobal('window', { location: new URL('https://portfolio.test/#contact') })
+      const html = render('/')
+      expect(html).not.toContain('arena-intro')
+      expect(html).not.toMatch(/<main[^>]*inert/)
+      expect(html.match(/<form /g)).toHaveLength(1)
+      vi.stubGlobal('window', { location: new URL('https://portfolio.test/') })
+      expect(render('/')).toContain('arena-intro')
+    } finally { vi.unstubAllGlobals() }
+  })
+
+  it('focuses and scrolls contact below the measured header only when home is usable', () => {
+    let inert = true, open = true
+    const contact = { closest: () => inert ? {} : null, style: { scrollMarginTop: '' }, tabIndex: 0, focus: vi.fn(), scrollIntoView: vi.fn() }
+    const doc = { getElementById: () => contact, querySelector: (selector: string) => selector === '.site-header' ? { getBoundingClientRect: () => ({ height: 126.5 }) } : open ? {} : null } as unknown as Document
+    focusHomeContact(doc)
+    inert = false; focusHomeContact(doc)
+    expect(contact.focus).not.toHaveBeenCalled(); expect(contact.scrollIntoView).not.toHaveBeenCalled()
+    open = false; focusHomeContact(doc)
+    expect(contact.tabIndex).toBe(-1)
+    expect(contact.style.scrollMarginTop).toBe('143px')
+    expect(contact.focus).toHaveBeenCalledExactlyOnceWith({ preventScroll: true })
+    expect(contact.scrollIntoView).toHaveBeenCalledExactlyOnceWith({ behavior: 'instant', block: 'start' })
+  })
+
+  it('wires native fragment/load restoration and the post-dialog signal, and removes pending work on unmount', () => {
+    const source = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8')
+    const start = source.indexOf('    let frame = 0')
+    const effect = source.slice(start, source.indexOf('\n  }, [closeIntro])', start))
+    const listeners = new Map<string, () => void>(), frames = new Map<number, FrameRequestCallback>()
+    let id = 0, inert = true
+    const target = { closest: () => inert ? {} : null, style: {}, focus: vi.fn(), scrollIntoView: vi.fn() }
+    const main = { get inert() { return inert } }
+    const events = { addEventListener: (key: string, fn: () => void) => listeners.set(key, fn), removeEventListener: (key: string) => listeners.delete(key) }
+    const doc = { ...events, readyState: 'loading', getElementById: (key: string) => key === 'main-content' ? main : target, querySelector: () => null }
+    const location = new URL('https://portfolio.test/#contact')
+    const context = { window: { ...events, location }, document: doc, focusHomeContact,
+      closeIntro: vi.fn(() => { inert = false }),
+      requestAnimationFrame: (fn: FrameRequestCallback) => { frames.set(++id, fn); return id }, cancelAnimationFrame: (key: number) => frames.delete(key),
+    }
+    const cleanup = new Function('context', `with(context){${effect}}`)(context)
+    const tick = () => { const batch = [...frames.values()]; frames.clear(); batch.forEach(fn => fn(0)) }
+    expect(target.focus).not.toHaveBeenCalled()
+    listeners.get('load')!(); tick()
+    expect(target.focus).not.toHaveBeenCalled()
+    tick()
+    expect(context.closeIntro).toHaveBeenCalledOnce(); expect(target.focus).toHaveBeenCalledOnce()
+    listeners.get('homecontactready')!()
+    expect(context.closeIntro).toHaveBeenCalledOnce(); expect(target.focus).toHaveBeenCalledTimes(2)
+    location.hash = '#introduction'; listeners.get('hashchange')!()
+    expect(target.focus).toHaveBeenCalledTimes(2)
+    location.hash = '#contact'; listeners.get('hashchange')!()
+    expect(target.focus).toHaveBeenCalledTimes(3)
+    listeners.get('pageshow')!(); cleanup()
+    expect(listeners.size).toBe(0); expect(frames.size).toBe(0)
+  })
+
+  it.each(['/gameonvb', '/goal-loop'].flatMap(path => [false, true].map(reduced => ({ path, reduced }))))('delivers $path contact focus after flow landing and home commit (reduced=$reduced)', ({ path, reduced }) => {
+    const source = readFileSync(new URL('./home/lightTable/LightTable.jsx', import.meta.url), 'utf8')
+    const ball = path === '/gameonvb'
+    const handlers = source.slice(source.indexOf('  function back(event)'), source.indexOf('  useLayoutEffect(()=>{\n    if(!ballMounted)'))
+    const landStart = ball ? source.indexOf('      function land(p){') : source.lastIndexOf('      function land(p){')
+    const landEnd = source.indexOf(ball ? '\n      host.captureBallPreview' : '\n      paint(watchColdRef', landStart)
+    const focusStart = source.indexOf('    const pending=pendingFocusRef.current')
+    const focus = source.slice(focusStart, source.indexOf('\n  })', focusStart))
+    const run = (code: string, context: Record<string, any>) => new Function('context', `with(context){${code}}`)(context)
+    const frames = new Map<number, FrameRequestCallback>(); let id = 0, time = 0
+    vi.stubGlobal('requestAnimationFrame', (fn: FrameRequestCallback) => { frames.set(++id, fn); return id })
+    vi.stubGlobal('cancelAnimationFrame', (key: number) => frames.delete(key))
+    const ref = (current: any) => ({ current })
+    const contact = { style: {}, closest: () => homeInert ? {} : null, focus: vi.fn(), scrollIntoView: vi.fn() }
+    let open = true, homeInert = true
+    const doc = { getElementById: () => contact, querySelector: (selector: string) => selector === '.site-header' ? { getBoundingClientRect: () => ({ height: 128 }) } : open ? {} : null,
+      dispatchEvent: vi.fn((event: Event) => { expect(event.type).toBe('homecontactready'); expect(open || homeInert).toBe(false); focusHomeContact(doc as unknown as Document) }) }
+    const c: Record<string, any> = { location: new URL(path, 'https://portfolio.test/'), history: { state: { lightTableFromHome: true }, back: vi.fn() }, getRouteNavigationUrl,
+      desiredRef: ref(!ball), ballDesiredRef: ref(ball), restoreRef: ref(ball ? null : {}), ballRestoreRef: ref(ball ? {} : null), pendingFocusRef: ref(null),
+      mounted: !ball, ballMounted: ball, coldRef: ref(false), watchColdRef: ref(false), flowRef: ref(null), document: doc, Event,
+      ballIndex: 1, watchIndex: 0, innerHeight: 844, window: { scrollTo: vi.fn() }, setPosition: vi.fn(), setBallPhase: vi.fn(), setPhase: vi.fn(),
+      setDesired: vi.fn(), setBallDesired: vi.fn(), setMounted: vi.fn(), setBallMounted: vi.fn(),
+      restore() { open = false; c.restoreRef.current = null; c.ballRestoreRef.current = null },
+      onNavigate: vi.fn((event) => { event.preventDefault(); c.location.href = 'https://portfolio.test/#contact' }),
+    }
+    const event = (change = {}) => ({ currentTarget: { getAttribute: () => '/#contact', target: '' }, button: 0, defaultPrevented: false, altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, preventDefault: vi.fn(), ...change })
+    const exit = run(`${handlers};return ${ball ? 'ballBack' : 'back'}`, c)
+    const land = run(`${source.slice(landStart, landEnd)};return land`, c)
+    const flow = ball ? createBallFlow(() => false, land, { time: BALL_DURATION, velocity: 0 }) : createWatchFlow(() => {}, land, { position: 1, velocity: 0 })
+    if (!ball) c.flowRef.current = flow
+    try {
+      for (const change of [{ button: 1 }, { metaKey: true }, { ctrlKey: true }, { shiftKey: true }, { altKey: true }, { currentTarget: { getAttribute: () => '/#contact', target: '_blank' } }]) {
+        exit(event(change)); expect(ball ? c.ballDesiredRef.current : c.desiredRef.current).toBe(true)
+      }
+      exit(event())
+      expect(c.history.back).not.toHaveBeenCalled(); expect(c.onNavigate).toHaveBeenCalledOnce()
+      flow.set(false, reduced)
+      expect(open).toBe(reduced ? false : true); expect(contact.focus).not.toHaveBeenCalled()
+      for (let tick = 0; tick < 400 && frames.size; tick++) {
+        time += 16; const batch = [...frames.values()]; frames.clear(); batch.forEach(fn => fn(time))
+        run(focus, c)
+      }
+      expect(open).toBe(false)
+      // Landing has closed the dialog, but React has not committed non-inert home yet.
+      expect(contact.focus).not.toHaveBeenCalled()
+      c.ballMounted = c.mounted = false; homeInert = false
+      run(focus, c)
+      expect(doc.dispatchEvent).toHaveBeenCalledOnce(); expect(contact.focus).toHaveBeenCalledOnce()
+      expect(contact.scrollIntoView).toHaveBeenCalledOnce(); expect(c.pendingFocusRef.current).toBeNull()
+      run(focus, c); expect(contact.focus).toHaveBeenCalledOnce()
+    } finally { flow.destroy(); vi.unstubAllGlobals() }
+  })
 })

@@ -101,7 +101,7 @@ describe('Goal Loop kitchen story', () => {
       expect(markup).toContain('href="mailto:tohoangviet1998@gmail.com"')
       expect(markup).toContain('href="/hoang-viet-to-cv-en.docx"')
       expect(markup).toContain('href="/hoang-viet-to-cv-cz.docx"')
-      expect(markup).toMatch(/aria-label="Case study navigation"><a[^>]*href="\/"[^>]*>← Back to homepage<\/a><a[^>]*href="\/gameonvb"[^>]*>Next: GameOnVB →<\/a>/)
+      expect(markup).toMatch(/aria-label="Case study navigation"><a[^>]*href="\/"[^>]*>← Back to homepage<\/a><a[^>]*href="\/#contact"[^>]*>Get in touch <span aria-hidden="true">↗<\/span><\/a><a[^>]*href="\/gameonvb"[^>]*>Next: GameOnVB →<\/a>/)
       const ids = [...markup.matchAll(/\bid="([^"]+)"/g)].map(match => match[1])
       expect(new Set(ids).size).toBe(ids.length)
     }

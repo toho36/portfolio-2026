@@ -167,6 +167,7 @@ describe('GameOnVB Match Operations case study', () => {
       expect(markup).toContain('href="/goal-loop"')
       expect(markup).toContain('Back to homepage')
       expect(markup).toContain('Next: Goal Loop')
+      expect(markup).toMatch(/aria-label="Case study navigation">[\s\S]*?<a class="target-link contact-link" href="\/#contact">Get in touch <span aria-hidden="true">↗<\/span><\/a>/)
       expect(markup).not.toMatch(/<canvas|data-rally-runtime/)
     }
   })

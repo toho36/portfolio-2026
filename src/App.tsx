@@ -115,6 +115,16 @@ export function isLightTablePair(from: string, to: string) {
   return source !== destination && ['/', '/gameonvb', '/goal-loop'].includes(source) && ['/', '/gameonvb', '/goal-loop'].includes(destination)
 }
 
+export function focusHomeContact(doc: Document) {
+  const contact = doc.getElementById('contact')
+  if (!contact || contact.closest('[inert]') || doc.querySelector('.ball-entry[open], .goal-entry[open]')) return
+  const header = doc.querySelector('.site-header')
+  contact.style.scrollMarginTop = `${Math.ceil(header?.getBoundingClientRect().height ?? 0) + 16}px`
+  contact.tabIndex = -1
+  contact.focus({ preventScroll: true })
+  contact.scrollIntoView({ behavior: 'instant', block: 'start' })
+}
+
 export default function App({ initialPath }: AppProps) {
   const [unknownPath, setUnknownPath] = useState(() => {
     const path = normalizePathname(initialPath ?? (typeof window === 'undefined' ? '/' : window.location.pathname))
@@ -127,7 +137,7 @@ export default function App({ initialPath }: AppProps) {
     ),
   )
   // The arena intro opens only on a fresh homepage load, never after in-app navigation.
-  const [introOpen, setIntroOpen] = useState(() => route.path === '/' && !unknownPath)
+  const [introOpen, setIntroOpen] = useState(() => route.path === '/' && !unknownPath && (typeof window === 'undefined' || window.location.hash !== '#contact'))
   const showIntro = introOpen && route.path === '/' && !unknownPath
   const closeIntro = useCallback((focusMain = true) => {
     // Commit first so the main landmark is no longer inert when it takes focus.
@@ -137,8 +147,9 @@ export default function App({ initialPath }: AppProps) {
 
   const onNavigate = useCallback((event: MouseEvent<HTMLElement>, navigationAnchor?: HTMLAnchorElement) => {
     const anchor = navigationAnchor ?? event.currentTarget as HTMLAnchorElement
-    const destination = getRouteNavigationUrl({
-      href: anchor.getAttribute('href') ?? '',
+    const contactExit = anchor.getAttribute('href') === '/#contact' && ['/gameonvb', '/goal-loop'].includes(normalizePathname(window.location.pathname))
+    const routeDestination = getRouteNavigationUrl({
+      href: contactExit ? '/' : anchor.getAttribute('href') ?? '',
       currentUrl: window.location.href,
       button: event.button,
       defaultPrevented: event.defaultPrevented,
@@ -150,7 +161,8 @@ export default function App({ initialPath }: AppProps) {
       download: anchor.hasAttribute('download'),
     })
 
-    if (!destination) return
+    if (!routeDestination) return
+    const destination = contactExit ? '/#contact' : routeDestination
 
     if (anchor.closest('.site-header') && ['/gameonvb', '/goal-loop'].includes(new URL(destination, window.location.href).pathname)) return
 
@@ -186,6 +198,31 @@ export default function App({ initialPath }: AppProps) {
       }, 200)
     } else navigate()
   }, [])
+
+  useEffect(() => {
+    let frame = 0
+    const contact = () => {
+      if (window.location.pathname !== '/' || window.location.hash !== '#contact') return
+      if (document.getElementById('main-content')?.inert) closeIntro(false)
+      focusHomeContact(document)
+    }
+    const restore = () => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => { frame = requestAnimationFrame(contact) })
+    }
+    document.addEventListener('homecontactready', contact)
+    window.addEventListener('hashchange', contact)
+    window.addEventListener('load', restore)
+    window.addEventListener('pageshow', restore)
+    if (document.readyState === 'complete') restore()
+    return () => {
+      cancelAnimationFrame(frame)
+      document.removeEventListener('homecontactready', contact)
+      window.removeEventListener('hashchange', contact)
+      window.removeEventListener('load', restore)
+      window.removeEventListener('pageshow', restore)
+    }
+  }, [closeIntro])
 
   useEffect(() => {
     return subscribeToRouteChanges(window, (next) => {
@@ -266,6 +303,7 @@ export default function App({ initialPath }: AppProps) {
         >
           <span>Hoang Viet To</span>
         </RouteLink>
+        <a className="target-link header-contact" href="/#contact" onClick={onNavigate}>Contact</a>
         {route.path === '/' && !unknownPath ? <span className="home-role">Software Developer</span> : null}
         <nav aria-label="Primary" className="site-nav">
           {ROUTES.map((item) => (

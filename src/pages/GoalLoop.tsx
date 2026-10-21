@@ -91,6 +91,7 @@ export function GoalLoopPage({ onNavigate, backRef }: GoalLoopPageProps) {
 
       <nav className="k-navigation wrap" aria-label="Case study navigation">
         <a className="target-link" href="/" onClick={onNavigate}>{GOAL_LOOP_KITCHEN.navigation.back}</a>
+        <a className="target-link" href="/#contact" onClick={onNavigate}>Get in touch <span aria-hidden="true">↗</span></a>
         <a className="target-link" href="/gameonvb" onClick={onNavigate}>{GOAL_LOOP_KITCHEN.navigation.next}</a>
       </nav>
     </article>

@@ -149,6 +149,15 @@ footer {
   text-transform: uppercase;
 }
 
+.header-contact {
+  order: 1;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.goal-loop-kitchen .k-navigation a { font-size: max(13px, 1em); }
+
 .site-nav,
 .contact-nav {
   display: flex;
@@ -448,6 +457,7 @@ h1 {
 
 .case-navigation {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 1rem;
   padding-block: clamp(2rem, 5vw, 4rem);
@@ -1067,34 +1077,6 @@ footer p {
 }
 
 @media (max-width: 760px) {
-  .site-header {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding-block: 0.85rem;
-  }
-
-  .brand {
-    flex-wrap: wrap;
-  }
-
-  .site-nav {
-    display: grid;
-    width: 100%;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.5rem;
-  }
-
-  .site-nav a[href="/"] {
-    display: none;
-  }
-
-  .site-nav a {
-    min-width: 0;
-    justify-content: center;
-    padding-inline: 0.25rem;
-  }
-
   .goal-loop .run-hero {
     min-height: auto;
     align-content: start;
@@ -1809,4 +1791,43 @@ html[data-curtain='reveal']::after { animation: curtain-reveal .2s cubic-bezier(
 @media (orientation: landscape) and (max-width: 760px) {
   .site-shell .table-sticky { min-height: 46.25rem; }
   .site-shell .sheet-fan { --fan-width: min(77vw, calc((max(100svh, 46.25rem) - 19rem) * .6)); }
+}
+
+@media (max-width: 820px) {
+  .site-header {
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-block: 0.85rem;
+  }
+
+  .brand {
+    flex-wrap: wrap;
+  }
+
+  .header-contact {
+    order: 0;
+    margin-left: auto;
+  }
+
+  .site-header .home-role { display: none; }
+
+  .site-nav {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .site-nav a[href="/"] {
+    display: none;
+  }
+
+  .site-nav a {
+    min-width: 0;
+    justify-content: center;
+    padding-inline: 0.25rem;
+    white-space: nowrap;
+  }
 }

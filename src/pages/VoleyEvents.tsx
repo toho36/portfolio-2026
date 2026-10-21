@@ -19,7 +19,7 @@ function RouteAnchor({
 }: {
   readonly children: ReactNode
   readonly className: string
-  readonly href: '/' | '/goal-loop'
+  readonly href: '/' | '/goal-loop' | '/#contact'
   readonly onNavigate: VoleyEventsPageProps['onNavigate']
 }) {
   return (
@@ -206,6 +206,9 @@ export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
       <nav className="case-navigation" aria-label="Case study navigation">
         <RouteAnchor className="back-link" href="/" onNavigate={onNavigate}>
           <span aria-hidden="true">←</span> Back to homepage
+        </RouteAnchor>
+        <RouteAnchor className="contact-link" href="/#contact" onNavigate={onNavigate}>
+          Get in touch <span aria-hidden="true">↗</span>
         </RouteAnchor>
         <RouteAnchor
           className="next-link"
