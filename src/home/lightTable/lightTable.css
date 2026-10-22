@@ -142,12 +142,15 @@
 .home-supporting > [data-poster='contact'] > p:not(.eyebrow) { color: var(--muted); font-size: 17px; }
 .home-supporting > [data-poster='contact'] .poster-contact { max-width: none; margin-top: 28px; }
 .home-supporting > [data-poster='contact'] .poster-form-field label,.home-supporting > [data-poster='contact'] .poster-form-topic legend { color: var(--muted); font-weight: 600; }
-.home-supporting > [data-poster='contact'] .poster-form-field :is(input,textarea) { font-size: 17px; border-bottom-color: #343c3466; transition: border-color .15s, background-color .15s; }
-.home-supporting > [data-poster='contact'] .poster-form-field :is(input,textarea):focus { border-bottom: 2px solid var(--focus); background-color: #f3f1ea; }
-.home-supporting > [data-poster='contact'] .poster-form-field :is(input,textarea):focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.home-supporting > [data-poster='contact'] .poster-form-field :is(input,textarea) { font-size: 17px; border-bottom-color: #343c3466; transition: border-color .15s; }
+/* Focus is the line itself: it turns ink green and doubles (border, not box-shadow: a shadow draws
+   hairline sides on the rotated sheet), and the label follows. No box, no fill. */
+.home-supporting > [data-poster='contact'] .poster-form-field :is(input,textarea):is(:focus,:focus-visible) { outline: none; border-bottom: 2px solid var(--focus); padding-bottom: calc(.55rem - 1px); }
+.home-supporting > [data-poster='contact'] .poster-form-field:focus-within label { color: var(--focus); }
 /* Ruled paper: the message lines sit on the same 1.6em grid as the text. */
 .home-supporting > [data-poster='contact'] .poster-form-field textarea { line-height: 1.6em; padding-top: 0; background: repeating-linear-gradient(transparent 0 calc(1.6em - 1px), #343c3426 calc(1.6em - 1px) 1.6em) local; }
 .home-supporting > [data-poster='contact'] .poster-form-field :is(input,textarea)[aria-invalid='true'] { border-bottom-color: #a4301f; }
+.home-supporting > [data-poster='contact'] .poster-form-field :is(input,textarea)[aria-invalid='true']:focus { border-bottom-color: #a4301f; }
 .home-supporting > [data-poster='contact'] .poster-form-error { color: #a4301f; }
 .home-supporting > [data-poster='contact'] .poster-form-topic span { border-color: #343c3499; transition: background-color .15s, color .15s; }
 .home-supporting > [data-poster='contact'] .poster-form-topic input:not(:checked):hover + span { background: #343c3412; }
