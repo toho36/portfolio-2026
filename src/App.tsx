@@ -129,8 +129,9 @@ export function beginNavigation() {
   return () => ticket === navigationGeneration
 }
 
-// Project to project: LightTable snaps the old page shut and opens the next one
-// directly, so the homepage deck never shows; a short cross-fade covers the swap.
+// Project to project (or a project's Get in touch): LightTable snaps the old page
+// shut and opens the destination directly, so the deck animation never plays;
+// a short cross-fade covers the swap.
 let activeSwitch: object | undefined
 export function crossFadeProjects(update: () => void, doc: Document) {
   const reduced = doc.defaultView?.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -214,7 +215,7 @@ export default function App({ initialPath }: AppProps) {
         window.scrollTo({ top: 0, behavior: 'instant' })
       }
     }
-    if (livePair) { if (isProjectSwitch(window.location.pathname, destination)) crossFadeProjects(() => { if (current()) navigate() }, document); else navigate(); return }
+    if (livePair) { if (contactExit || isProjectSwitch(window.location.pathname, destination)) crossFadeProjects(() => { if (current()) navigate() }, document); else navigate(); return }
     const visual = anchor.closest('.poster')?.querySelector<HTMLElement>('.poster-visual')
     const transition = selectHomeTransition(!!visual, window.matchMedia('(prefers-reduced-motion: reduce)').matches, document.visibilityState === 'visible', !!document.startViewTransition)
     if (transition === 'shared' && visual) {

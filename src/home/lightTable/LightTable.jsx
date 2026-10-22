@@ -126,7 +126,8 @@ export function LightTable({pathname,onNavigate}) {
     const destination=getRouteNavigationUrl({href:'/',currentUrl:location.href,button:event.button,defaultPrevented:event.defaultPrevented,altKey:event.altKey,ctrlKey:event.ctrlKey,metaKey:event.metaKey,shiftKey:event.shiftKey,target:event.currentTarget.target,download:false})
     if(!destination)return
     if(!desiredRef.current){event.preventDefault();return}
-    desiredRef.current=false;setDesired(false)
+    // Contact leaves in the route commit, so the page can snap under the cross-fade.
+    if(!contact){desiredRef.current=false;setDesired(false)}
     if(!contact&&!location.hash&&history.state?.lightTableFromHome===true){event.preventDefault();history.back()}
     else onNavigate(event)
   }
@@ -136,7 +137,7 @@ export function LightTable({pathname,onNavigate}) {
     const destination=getRouteNavigationUrl({href:'/',currentUrl:location.href,button:event.button,defaultPrevented:event.defaultPrevented,altKey:event.altKey,ctrlKey:event.ctrlKey,metaKey:event.metaKey,shiftKey:event.shiftKey,target:event.currentTarget.target,download:false})
     if(!destination)return
     if(!ballDesiredRef.current){event.preventDefault();return}
-    ballDesiredRef.current=false;setBallDesired(false)
+    if(!contact){ballDesiredRef.current=false;setBallDesired(false)}
     if(!contact&&!location.hash&&history.state?.lightTableFromHome===true){event.preventDefault();history.back()}
     else onNavigate(event)
   }
@@ -251,8 +252,8 @@ export function LightTable({pathname,onNavigate}) {
     // before its passive setup on a cold route; the event starts that setup.
     if(!ballDesired){dialog.scrollTop=0;host.dispatchEvent(new Event('ballentrychange'))}
     host.ballEntry.want=ballDesired;host.ballEntry.reduced=reduced
-    // Leaving straight for Goal Loop (or arriving from it) snaps; the deck never shows.
-    host.ballFlow?.set(ballDesired,reduced||(!ballDesired&&desiredRef.current)||(ballDesired&&coldRef.current))
+    // Leaving straight for Goal Loop or the contact section (or arriving from Goal Loop) snaps; the deck never shows.
+    host.ballFlow?.set(ballDesired,reduced||(!ballDesired&&(desiredRef.current||location.hash==='#contact'))||(ballDesired&&coldRef.current))
   },[ballMounted,ballDesired,reduced,position])
   useLayoutEffect(()=>{
     if(!mounted)return
@@ -292,7 +293,7 @@ export function LightTable({pathname,onNavigate}) {
     }
     setPhase(desired?'entering':'leaving')
     if(!desired)dialog.scrollTop=0
-    flowRef.current.set(desired,reduced||(!desired&&ballDesiredRef.current)||(desired&&watchColdRef.current))
+    flowRef.current.set(desired,reduced||(!desired&&(ballDesiredRef.current||location.hash==='#contact'))||(desired&&watchColdRef.current))
   },[mounted,desired,reduced])
   useLayoutEffect(()=>{
     const pending=pendingFocusRef.current

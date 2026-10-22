@@ -364,6 +364,20 @@ it.each([['/goal-loop', '/gameonvb'], ['/gameonvb', '/goal-loop']])('direct real
   } finally { h.cleanup() }
 })
 
+it.each(['/goal-loop', '/gameonvb'])('Get in touch from %s snaps the page shut and hands focus to contact without the deck animation', path => {
+  const h = harness(), c = h.context, ball = path === '/gameonvb'
+  try {
+    h.path(path); h.settle()
+    c.document.dispatchEvent = vi.fn()
+    c.location.hash = '#contact'; h.path('/')
+    // Same commit, no frame: both dialogs are shut and contact owns focus.
+    expect(h.dialog.open).toBe(false); expect(h.ballDialog.open).toBe(false)
+    expect(c.restoreRef.current).toBeNull(); expect(c.ballRestoreRef.current).toBeNull()
+    expect(c.position).toBe(ball ? 1 : 0)
+    expect(c.document.dispatchEvent).toHaveBeenCalledOnce(); expect(c.pendingFocusRef.current).toBeNull()
+  } finally { h.cleanup() }
+})
+
 it('cold real watch route starts at rest and returns source zero without a home visit', () => {
   const h = harness(true)
   try {

@@ -629,6 +629,11 @@ describe('contact navigation', () => {
       }
       exit(event())
       expect(c.history.back).not.toHaveBeenCalled(); expect(c.onNavigate).toHaveBeenCalledOnce()
+      // Get in touch leaves in the route commit (the pathname effect on /#contact),
+      // so the outgoing page can snap under the cross-fade instead of flying home first.
+      expect(ball ? c.ballDesiredRef.current : c.desiredRef.current).toBe(true)
+      expect(ball ? c.setBallDesired : c.setDesired).not.toHaveBeenCalled()
+      if (ball) c.ballDesiredRef.current = false; else c.desiredRef.current = false
       flow.set(false, reduced)
       expect(open).toBe(reduced ? false : true); expect(contact.focus).not.toHaveBeenCalled()
       for (let tick = 0; tick < 400 && frames.size; tick++) {
