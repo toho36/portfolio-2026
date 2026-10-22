@@ -5,7 +5,9 @@
 .table-title span { display: block; clip-path: inset(0); animation: title-in .7s cubic-bezier(.2,.8,.2,1) both; }
 .table-title span+span { animation-delay: .09s; }
 @keyframes title-in { from { clip-path: inset(100% 0 0); transform: translateY(12px); } to { clip-path: inset(0); transform: none; } }
-.sheet-fan { position: absolute; width: min(68vw,930px); aspect-ratio: 1.5; left: 51%; top: 54%; transform: translate(-50%,-50%); transform-style: preserve-3d; }
+.sheet-fan { position: absolute; width: min(68vw,930px,calc((46svh - 75px)*2.65)); aspect-ratio: 1.5; left: 51%; top: 54%; transform: translate(-50%,-50%); transform-style: preserve-3d; }
+/* Short or narrow landscape windows: the height cap above and this shift keep the cards off the title and footer. */
+@media (min-width:761px) and (max-width:1023px) and (orientation:landscape) { .sheet-fan { left: 60%; top: 56%; } }
 .sheet-position { position: absolute; inset: 0; transform: translate(calc(var(--x)*100%),calc(var(--y)*100%)) rotate(var(--rotation)) scale(var(--scale)); transform-origin: 50% 50%; }
 .sheet { --paper: #e7e5de; --ink: #343c34; --mx: 0; --my: 0; position: absolute; inset: 0; display: block; overflow: hidden; color: #343c34; background: #e7e5de; border: 1px solid #edece255; box-shadow: 1px 3px 0 #888e7f, 0 25px 50px #0009, 0 5px 14px #000b; transition: box-shadow .15s,filter .15s; }
 .sheet:hover { box-shadow: 1px 3px 0 #949a8e, 0 35px 65px #0009, 0 8px 17px #000a; }
