@@ -16,7 +16,7 @@ import { deckPosition, sheetPose } from './model.js'
 import './lightTable.css'
 
 const sheets = [
-  { id: 'goal-loop', label: 'Goal Loop', title: <>Precision,<br/>in motion.</>, href: '/goal-loop' },
+  { id: 'goal-loop', label: 'Goal Loop', title: <>Quality first.<br/>Speed follows.</>, href: '/goal-loop' },
   { id: 'gameonvb', label: 'GameOnVB', title: <>More time<br/>on court.</>, href: '/gameonvb' },
   { id: 'intro', label: 'Hoang Viet To', title: <>New tools.<br/>Old standards.</>, href: '/#introduction' },
 ]
@@ -360,7 +360,7 @@ export function LightTable({pathname,onNavigate}) {
                 <div className="sheet-top"><span>0{index+1} / 03</span><span>{sheet.label}</span><i aria-hidden="true">+</i></div>
                 {index===0?<Watch active={position<.7&&!mounted&&!restoreRef.current&&!ballMounted} reduced={reduced}/>:index===1?<Volleyball cold={coldRef.current} active={Math.abs(position-1)<.7&&!mounted&&!restoreRef.current||ballMounted} reduced={reduced}/>:<div className="intro-art" aria-hidden="true"><span>HVT</span><i/><i/><i/></div>}
                 <h2>{sheet.title}</h2>
-                <div className="sheet-bottom"><span>{index===0?'Anatomy / movement':index===1?'Recreational volleyball':'Software / systems'}</span><a className="target-link sheet-cta" href={sheet.href} hidden={Math.abs(position-index)>.02} onClick={index<2?enter:undefined}
+                <div className="sheet-bottom"><span>{index===0?'Kitchen / the pass':index===1?'Recreational volleyball':'Software / systems'}</span><a className="target-link sheet-cta" href={sheet.href} hidden={Math.abs(position-index)>.02} onClick={index<2?enter:undefined}
                   onPointerDown={event=>{if(event.isPrimary&&event.button===0)event.currentTarget.dataset.pressed='true'}}
                   onPointerUp={event=>{delete event.currentTarget.dataset.pressed}}
                   onPointerCancel={event=>{delete event.currentTarget.dataset.pressed}}

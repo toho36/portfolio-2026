@@ -1,13 +1,15 @@
 import React,{useEffect,useLayoutEffect,useRef} from 'react'
-import watchPreview from './assets/watch-preview.png'
+// The Goal Loop card object. Historically a watch; now the owner-approved cloche (clocheScene.js).
+import clochePreview from './assets/cloche-preview.png'
 import { revealStep } from './watchModel.js'
 export function Watch({active,reduced}) {
   const ref=useRef(null),poseRef=useRef({time:0,amount:0}),previewRef=useRef(null)
   useLayoutEffect(()=>{
     const host=ref.current,surface=document.createElement('div'),image=document.createElement('img')
-    surface.className='watch-presentation';image.className='watch-static';image.src=watchPreview;image.alt='Static render of the same skeleton wristwatch'
+    surface.className='watch-presentation';image.className='watch-static';image.src=clochePreview;image.alt='Static render of the same silver cloche on a plate'
     surface.append(image);host.append(surface);host.watchSurface=surface
-    function fit(){if(previewRef.current)return;const w=surface.clientWidth,h=surface.clientHeight,size=h*6.2/Math.max(6.2,4.2/(w/Math.max(1,h)));image.style.width=image.style.height=`${size}px`}
+    // The preview was captured at the desktop art box (aspect 1.2): fill its height, or its width when narrower.
+    function fit(){if(previewRef.current)return;const wide=surface.clientWidth/Math.max(1,surface.clientHeight)>=1.2;image.style.height=wide?'100%':'auto';image.style.width=wide?'auto':'100%'}
     const resize=new ResizeObserver(fit);resize.observe(surface);fit()
     return ()=>{resize.disconnect();surface.remove();delete host.watchSurface}
   },[])
@@ -45,9 +47,9 @@ export function Watch({active,reduced}) {
     function load(){
       if(view||loading||failed||reduced||!eligible())return
       loading=true;const token=++generation
-      Promise.all([import('three'),import('./watchScene.js')]).then(([T,{createWatch}])=>{
+      Promise.all([import('three'),import('./clocheScene.js')]).then(([T,{createCloche}])=>{
         if(canceled||token!==generation||!eligible())return
-        view=createWatch(T,host,surface);view.paint(poseRef.current.time,poseRef.current.amount);host.watchView=view
+        view=createCloche(T,host,surface);view.paint(poseRef.current.time,poseRef.current.amount);host.watchView=view
         host.dataset.runtime=surface.dataset.runtime='webgl';schedule()
       }).catch(()=>{if(token===generation){failed=true;host.dataset.runtime=surface.dataset.runtime='static'}}).finally(()=>{if(token===generation)loading=false})
     }
@@ -55,6 +57,9 @@ export function Watch({active,reduced}) {
       onScreen=entries.some(entry=>entry.isIntersecting);reconcile()
     })
     intersection?.observe(host)
+    // The arena intro keeps the page inert; nothing else re-checks when it closes, so watch the gate.
+    const gate=sheet.closest('[inert]'),gateObserver=gate&&typeof MutationObserver!=='undefined'?new MutationObserver(()=>reconcile()):null
+    gateObserver?.observe(gate,{attributes:true,attributeFilter:['inert']})
     function reconcile(){
       if(!eligible())release()
       else load()
@@ -65,7 +70,7 @@ export function Watch({active,reduced}) {
     doc.addEventListener('visibilitychange',visibility);surface.addEventListener('webglcontextlost',lost,true)
     const resize=new ResizeObserver(()=>{if(view?.resize())view.paint(poseRef.current.time,poseRef.current.amount)});resize.observe(surface)
     reconcile()
-    return ()=>{canceled=true;release();resize.disconnect();intersection?.disconnect();sheet.removeEventListener('pointermove',pointer);sheet.removeEventListener('pointerover',pointer);sheet.removeEventListener('pointerleave',reset);sheet.removeEventListener('focusin',focus);sheet.removeEventListener('focusout',reset);doc.removeEventListener('visibilitychange',visibility);surface.removeEventListener('webglcontextlost',lost,true)}
+    return ()=>{canceled=true;release();resize.disconnect();intersection?.disconnect();gateObserver?.disconnect();sheet.removeEventListener('pointermove',pointer);sheet.removeEventListener('pointerover',pointer);sheet.removeEventListener('pointerleave',reset);sheet.removeEventListener('focusin',focus);sheet.removeEventListener('focusout',reset);doc.removeEventListener('visibilitychange',visibility);surface.removeEventListener('webglcontextlost',lost,true)}
   },[active,reduced])
-  return <div className="watch-view" ref={ref} data-runtime="static" role="img" aria-label="Skeleton wristwatch preview"/>
+  return <div className="watch-view" ref={ref} data-runtime="static" role="img" aria-label="A silver cloche on a plate, with a service bell"/>
 }

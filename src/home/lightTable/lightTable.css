@@ -45,6 +45,8 @@
 .watch-presentation canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 .watch-static { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); object-fit: contain; }
 .watch-presentation[data-runtime='webgl'] .watch-static { visibility: hidden; }
+.cloche-ding { position: absolute; z-index: 1; padding: 3px 9px; transform: translate(-50%,-120%); border: 1px solid #343c3455; border-radius: 999px; background: #fffdf6; color: #343c34; font: 700 14px/1.2 Georgia,serif; opacity: 0; transition: opacity .15s; pointer-events: none; }
+.cloche-ding[data-on='true'] { opacity: 1; }
 [data-sheet='gameonvb'] .sheet-bottom { border-color: #fff2da77; }
 [data-sheet='intro'] .sheet { --paper: #242923; --ink: #eeeae0; background: #242923; color: #eeeae0; border-color: #7e897a99; }
 [data-sheet='intro'] .sheet h2 { top: 28%; font-size: clamp(38px,5.5vw,74px); }

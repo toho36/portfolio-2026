@@ -138,15 +138,16 @@ it('preserves source-fan/watch preview primitives and exact approved module/asse
   expect(revealStep(.5, 0, .016)).toBeLessThan(.5)
   expect(strapPoint(0).y).toBeCloseTo(strapPoint(2 * Math.PI).y, 10)
   const study = new URL('../../../sketches/013-light-table/', import.meta.url)
-  for (const name of ['ballFlow', 'ballMotion', 'ballScene', 'ballSteps', 'ballGeometry', 'leatherMaps', 'model', 'deckAssist', 'watchModel', 'watchScene']) {
+  for (const name of ['ballFlow', 'ballMotion', 'ballScene', 'ballSteps', 'ballGeometry', 'leatherMaps', 'model', 'deckAssist', 'watchModel']) {
     const original = readFileSync(new URL(`${name}.js`, study), 'utf8')
     const promoted = readFileSync(new URL(`./${name}.js`, import.meta.url), 'utf8')
     // Owner-approved motion/framing refinements and the production scroll repair
     // have executable contracts; every unchanged module stays byte-exact.
-    if (name !== 'ballFlow' && name !== 'ballScene' && name !== 'deckAssist') expect(promoted).toBe(name === 'watchScene' ? original.replace('../../src/goal-loop/calibre/model.ts', '../../goal-loop/calibre/model') : original)
+    if (name !== 'ballFlow' && name !== 'ballScene' && name !== 'deckAssist') expect(promoted).toBe(original)
     expect(promoted).not.toMatch(/(?:from\s*|import\s*\()['"](?:three|.*sketches)/)
   }
-  for (const name of ['ball-preview.png', 'watch-preview.png']) {
+  // The watch scene and its preview were replaced by the owner-approved cloche (clocheScene.js, cloche-preview.png).
+  for (const name of ['ball-preview.png']) {
     expect(readBytes(new URL(`./assets/${name}`, import.meta.url))).toEqual(readBytes(new URL(`public/${name}`, study)))
   }
 })

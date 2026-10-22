@@ -494,8 +494,8 @@ it('revalidates incoming GameOnVB after the outgoing watch restores but before s
 })
 
 const watchSource = readFileSync(new URL('./Watch.jsx', import.meta.url), 'utf8')
-const watchRuntime = watchSource.slice(watchSource.indexOf('  useEffect(()=>{') + '  useEffect(()=>{'.length, watchSource.indexOf('  },[active,reduced])')).replace("Promise.all([import('three'),import('./watchScene.js')])", 'loadView()')
-function runtime(reduced = false, hidden = false) {
+const watchRuntime = watchSource.slice(watchSource.indexOf('  useEffect(()=>{') + '  useEffect(()=>{'.length, watchSource.indexOf('  },[active,reduced])')).replace("Promise.all([import('three'),import('./clocheScene.js')])", 'loadView()')
+function runtime(reduced = false, hidden = false, intro = false) {
   const queue = new Map<number, FrameRequestCallback>(); let id = 0, now = 0
   vi.stubGlobal('requestAnimationFrame', (fn: FrameRequestCallback) => { queue.set(++id, fn); return id })
   vi.stubGlobal('cancelAnimationFrame', (id: number) => queue.delete(id))
@@ -503,7 +503,9 @@ function runtime(reduced = false, hidden = false) {
   let intersect: (entries: { isIntersecting: boolean }[]) => void = () => { throw new Error('watch did not observe its native hero') }
   const image = { style: {}, src: '' }, surface = { dataset: {}, querySelector: () => image,
     addEventListener: (key: string, fn: () => void) => events.set(key, fn), removeEventListener: (key: string) => events.delete(key) }
-  const sheet = { closest: () => null, addEventListener() {}, removeEventListener() {} }
+  // `intro`: the arena intro keeps <main> inert at mount and lifts it later.
+  const gate = { inert: intro }, sheet = { closest: () => gate.inert ? gate : null, addEventListener() {}, removeEventListener() {} }
+  let gateChanged = () => {}
   const doc = { hidden, querySelector: () => null, addEventListener: (key: string, fn: () => void) => events.set(key, fn), removeEventListener: (key: string) => events.delete(key) }
   const pose = { time: 8, amount: .73 }
   const host: any = { watchSurface: surface, ownerDocument: doc, closest: () => sheet, dataset: {},
@@ -513,20 +515,30 @@ function runtime(reduced = false, hidden = false) {
     matchMedia: () => ({ matches: false }),
     ResizeObserver: class { observe() {} disconnect() {} },
     IntersectionObserver: class { constructor(fn: typeof intersect) { intersect = fn } observe(target: unknown) { expect(target).toBe(host) } disconnect() {} },
+    MutationObserver: class { constructor(fn: () => void) { gateChanged = fn } observe(target: unknown, options: unknown) { expect(target).toBe(gate); expect(options).toEqual({ attributes: true, attributeFilter: ['inert'] }) } disconnect() {} },
     loadView: () => new Promise(resolve => pending.push(resolve)),
   }
   const resolve = async () => {
-    pending.shift()?.([{}, { createWatch() {
-      const view = { pose: { time: 0, open: 0 }, resize: () => false, paint(time: number, open: number) { this.pose = { time, open } }, snapshotPose: () => 'same-watch-pose', destroy: vi.fn() }
+    pending.shift()?.([{}, { createCloche() {
+      const view = { pose: { time: 0, open: 0 }, resize: () => false, paint(time: number, open: number) { this.pose = { time, open } }, snapshotPose: () => 'same-cloche-pose', destroy: vi.fn() }
       views.push(view); return view
     } }]); await Promise.resolve(); await Promise.resolve(); await Promise.resolve()
   }
   const cleanup = run(watchRuntime, context)
-  return { context, pose, host, views, pending, queue, resolve, events,
+  return { context, pose, host, views, pending, queue, resolve, events, closeIntro() { gate.inert = false; gateChanged() },
     tick() { now += 16; const batch = [...queue.values()]; queue.clear(); batch.forEach(fn => fn(now)) },
     hide() { intersect([{ isIntersecting: false }]) }, show() { intersect([{ isIntersecting: true }]) },
     cleanup() { cleanup?.(); expect(queue.size).toBe(0); vi.unstubAllGlobals() } }
 }
+
+it('the card object loads once the arena intro closes, without needing a scroll', async () => {
+  const h = runtime(false, false, true)
+  try {
+    expect(h.pending).toHaveLength(0) // inert page: nothing allocated
+    h.closeIntro(); expect(h.pending).toHaveLength(1)
+    await h.resolve(); expect(h.views).toHaveLength(1); expect(h.host.dataset.runtime).toBe('webgl')
+  } finally { h.cleanup() }
+})
 
 it('actual watch wrapper invalidates pending offscreen imports, freezes reveal and resumes one same-pose renderer', async () => {
   const h = runtime()

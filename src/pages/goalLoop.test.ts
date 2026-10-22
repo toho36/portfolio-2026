@@ -21,7 +21,10 @@ describe('Goal Loop kitchen story', () => {
     expect(page).toContain(GOAL_LOOP_KITCHEN.hero.body)
     expect(page).toMatch(/<a[^>]*href="\/"[^>]*><span aria-hidden="true">←<\/span> <span class="link-label">Back to homepage<\/span><\/a>/)
     expect(markup.match(/class="watch-view"/g)).toHaveLength(1)
-    expect(markup).toContain('Precision,<br/>in motion.')
+    // The homepage card now carries the cloche and the kitchen line (owner 2026-10-22).
+    expect(markup).toContain('<h2>Quality first.<br/>Speed follows.</h2>')
+    expect(markup).toContain('aria-label="A silver cloche on a plate, with a service bell"')
+    expect(markup).toContain('Kitchen / the pass')
     expect(page).not.toMatch(/entry-watch-slot|data-watch-hero|data-calibre|class="calibre"|run-tape|Calibre|Open movement|run-reference/)
     expect(ROUTES.find(route => route.path === '/goal-loop')?.title).toBe('Goal Loop: Quality first, speed follows — Hoang Viet To')
   })
