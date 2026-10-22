@@ -7,7 +7,7 @@ import { stepSpin, followPosition } from './ballMotion.js'
 import { ballEntryPresentation, ballContactLayout } from './ballScene.js'
 import { staticLanding, staticStepImage } from './ballSteps.js'
 import { deckPosition } from './model.js'
-import { isLightTablePair, selectHomeTransition } from '../../App'
+import { beginNavigation, crossFadeProjects, isLightTablePair, isProjectSwitch, selectHomeTransition } from '../../App'
 import { getRouteNavigationUrl, normalizePathname, pushRouteNavigation } from '../../content/routes'
 
 const source = readFileSync(new URL('./LightTable.jsx', import.meta.url), 'utf8')
@@ -165,7 +165,7 @@ function navigation(h: ReturnType<typeof harness>) {
     replaceState(state: unknown, _unused: string, url: string) { entries[index] = { url, state }; c.location.href = url },
   }
   Object.assign(c.window, { location: c.location, history: c.history })
-  Object.assign(c, { navigationAnchor: undefined, normalizePathname, pushRouteNavigation, isLightTablePair, selectHomeTransition,
+  Object.assign(c, { navigationAnchor: undefined, normalizePathname, pushRouteNavigation, isLightTablePair, isProjectSwitch, crossFadeProjects, beginNavigation, selectHomeTransition,
     setUnknownPath() {}, setRoute(route: { path: string }) { h.path(route.path) },
   })
   const navigate = new Function('event', 'context', `with(context){${appNavigation}}`)
@@ -342,21 +342,25 @@ it('actual production kitchen entry fades without moving the watch and restores 
   } finally { h.cleanup() }
 })
 
-it.each([['/goal-loop', '/gameonvb'], ['/gameonvb', '/goal-loop']])('serial real-path %s -> %s waits for restore and cancels interrupted incoming mounts', (outgoing, incoming) => {
-  const h = harness()
+it.each([['/goal-loop', '/gameonvb'], ['/gameonvb', '/goal-loop']])('direct real-path %s -> %s snaps the outgoing page shut and opens the incoming page without a deck visit', (outgoing, incoming) => {
+  const h = harness(), c = h.context
+  const open = (path: string) => { expect(h.dialog.open).toBe(path === '/goal-loop'); expect(h.ballDialog.open).toBe(path === '/gameonvb') }
   try {
-    h.path(outgoing); h.settle()
-    const watchFlow = h.context.flowRef.current, ballFlow = h.ball.host.ballFlow
-    h.path(incoming)
-    expect(h.context[outgoing === '/goal-loop' ? 'ballMounted' : 'mounted']).toBe(false)
-    for (let i = 0; i < 8; i++) h.tick()
-    h.path(outgoing)
-    expect(h.context[outgoing === '/goal-loop' ? 'ballMounted' : 'mounted']).toBe(false)
-    expect(outgoing === '/goal-loop' ? h.context.flowRef.current : h.ball.host.ballFlow).toBe(outgoing === '/goal-loop' ? watchFlow : ballFlow)
-    h.settle(); h.path(incoming); h.settle()
-    expect(h.dialog.open).toBe(incoming === '/goal-loop'); expect(h.ballDialog.open).toBe(incoming === '/gameonvb')
-    h.path('/'); h.settle()
-    expect(h.context.restoreRef.current).toBeNull(); expect(h.context.ballRestoreRef.current).toBeNull()
+    h.path(outgoing); h.settle(); open(outgoing)
+    // No frame passes between the two pages: the outgoing flow snaps to the deck
+    // and the incoming page opens already open, so the deck is never painted.
+    h.path(incoming); open(incoming)
+    expect(c[outgoing === '/goal-loop' ? 'restoreRef' : 'ballRestoreRef'].current).toBeNull()
+    expect(c[outgoing === '/goal-loop' ? 'mounted' : 'ballMounted']).toBe(false)
+    expect(((incoming === '/goal-loop' ? h.dialog : h.ballDialog).dataset as Record<string, string>).progress).toBe('1.00000')
+    h.settle(); open(incoming)
+    expect(c[incoming === '/goal-loop' ? 'phase' : 'ballPhase']).toBe('open')
+    expect(h.focus.at(-1)).toBe(incoming === '/goal-loop' ? 'watch-back' : 'ball-back')
+    // Rapid back-and-forth still ends with exactly the last requested page open.
+    h.path(outgoing); h.path(incoming); h.path(outgoing); open(outgoing); h.settle(); open(outgoing)
+    h.path('/'); h.settle(); open('/')
+    expect(c.restoreRef.current).toBeNull(); expect(c.ballRestoreRef.current).toBeNull()
+    expect(c.position).toBe(outgoing === '/gameonvb' ? 1 : 0)
   } finally { h.cleanup() }
 })
 

@@ -1,7 +1,7 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
-import App, { applyRouteMetadata, focusHomeContact, installRevealMotion, isLightTablePair, selectHomeTransition } from './App'
+import App, { applyRouteMetadata, beginNavigation, crossFadeProjects, focusHomeContact, installRevealMotion, isLightTablePair, isProjectSwitch, selectHomeTransition } from './App'
 import { createWatchFlow } from './home/lightTable/watchFlow.js'
 import { createDeckAssist } from './home/lightTable/deckAssist.js'
 import { BALL_DURATION, createBallFlow } from './home/lightTable/ballFlow.js'
@@ -283,7 +283,7 @@ function provenanceNavigation(path = '/', state: Record<string, unknown> | null 
   const anchorForDelegation = { getAttribute: () => '/gameonvb', target: '', hasAttribute: () => false, closest: () => null }
   const context = { navigationAnchor: undefined as typeof anchorForDelegation | undefined, window: { location, history, matchMedia: () => ({ matches: false }), scrollTo() {} },
     document: { visibilityState: 'visible', getElementById: () => null },
-    getRouteNavigationUrl, normalizePathname, pushRouteNavigation, isLightTablePair, selectHomeTransition,
+    getRouteNavigationUrl, normalizePathname, pushRouteNavigation, isLightTablePair, isProjectSwitch, crossFadeProjects, beginNavigation, selectHomeTransition,
     setUnknownPath() {}, setRoute: vi.fn(),
   }
   const navigate = new Function('event', 'context', `with(context){${code}}`)
@@ -390,6 +390,68 @@ describe('light-table route integration', () => {
     expect(isLightTablePair('/', '/gameonvb')).toBe(true)
     expect(isLightTablePair('/goal-loop', '/')).toBe(true)
     expect(isLightTablePair('/goal-loop', '/gameonvb')).toBe(true)
+  })
+})
+
+describe('project to project switch', () => {
+  it('a newer navigation supersedes every earlier ticket', () => {
+    const first = beginNavigation(), second = beginNavigation()
+    expect(first()).toBe(false); expect(second()).toBe(true)
+  })
+  it('Forward during a pending Back cross-fade keeps the newer route', () => {
+    const source = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8')
+    const start = source.indexOf('    return subscribeToRouteChanges(window, (next) => {')
+    const effect = source.slice(start, source.indexOf('\n  }, [])', start))
+    const pending: (() => void)[] = [], location = { pathname: '/gameonvb' }
+    let listener: (next: { path: string }) => void = () => {}
+    const context = { window: { location }, document: {}, ROUTES: [{ path: '/gameonvb' }, { path: '/goal-loop' }], shownPath: { current: '/gameonvb' },
+      normalizePathname, isProjectSwitch, beginNavigation, setUnknownPath: vi.fn(), setRoute: vi.fn(),
+      subscribeToRouteChanges: (_: unknown, fn: typeof listener) => { listener = fn; return () => {} },
+      crossFadeProjects: (update: () => void) => { pending.push(update) } }
+    new Function('context', `with(context){${effect}}`)(context)
+    location.pathname = '/goal-loop'; listener({ path: '/goal-loop' })   // Back: deferred cross-fade
+    location.pathname = '/gameonvb'; listener({ path: '/gameonvb' })     // Forward: same page, instant
+    expect(context.setRoute).toHaveBeenLastCalledWith({ path: '/gameonvb' })
+    pending.forEach(update => update())                                  // the stale Back callback runs late
+    expect(context.setRoute).toHaveBeenCalledTimes(1)
+    expect(context.setRoute).toHaveBeenLastCalledWith({ path: '/gameonvb' })
+  })
+  it('only the two case studies switch directly', () => {
+    expect(isProjectSwitch('/gameonvb', '/goal-loop')).toBe(true)
+    expect(isProjectSwitch('/goal-loop/', '/gameonvb')).toBe(true)
+    for (const [from, to] of [['/', '/goal-loop'], ['/gameonvb', '/'], ['/gameonvb', '/gameonvb'], ['/goal-loop', '/playground']]) expect(isProjectSwitch(from, to)).toBe(false)
+  })
+  it('cross-fades with a view transition and falls back to an instant swap', async () => {
+    const fake = (reduced: boolean, visible = 'visible', transitions = true) => {
+      const root = { dataset: {} as Record<string, string> }, done: Promise<void>[] = []
+      const doc = { documentElement: root, visibilityState: visible, defaultView: { matchMedia: () => ({ matches: reduced }) },
+        startViewTransition: transitions ? (cb: () => void) => { const p = Promise.resolve(cb()); done.push(p); return { finished: p } } : undefined }
+      return { doc: doc as unknown as Document, root, done }
+    }
+    // A frame wait inside the update callback would freeze a real transition, so no frame ever runs here.
+    vi.stubGlobal('requestAnimationFrame', () => { throw new Error('the swap must not wait for a frame') })
+    try {
+      const motion = fake(false), update = vi.fn(() => expect(motion.root.dataset.projectSwitch).toBe('true'))
+      crossFadeProjects(update, motion.doc)
+      expect(update).toHaveBeenCalledTimes(1)
+      await Promise.all(motion.done); await Promise.resolve()
+      expect(motion.root.dataset.projectSwitch).toBeUndefined()
+      // An interrupted switch that finishes after its successor started keeps the newer scope.
+      let finishFirst = () => {}, finishSecond = () => {}
+      const overlap = { dataset: {} as Record<string, string> }
+      const deferred = (finish: (r: () => void) => void) => ({ documentElement: overlap, visibilityState: 'visible', defaultView: { matchMedia: () => ({ matches: false }) },
+        startViewTransition: (cb: () => void) => { cb(); return { finished: new Promise<void>(resolve => finish(resolve)) } } }) as unknown as Document
+      crossFadeProjects(() => {}, deferred(r => { finishFirst = r }))
+      crossFadeProjects(() => {}, deferred(r => { finishSecond = r }))
+      finishFirst(); await Promise.resolve(); await Promise.resolve()
+      expect(overlap.dataset.projectSwitch).toBe('true')
+      finishSecond(); await Promise.resolve(); await Promise.resolve()
+      expect(overlap.dataset.projectSwitch).toBeUndefined()
+      for (const still of [fake(true), fake(false, 'hidden'), fake(false, 'visible', false)]) {
+        const instant = vi.fn(); crossFadeProjects(instant, still.doc)
+        expect(instant).toHaveBeenCalledTimes(1); expect(still.root.dataset.projectSwitch).toBeUndefined(); expect(still.done).toHaveLength(0)
+      }
+    } finally { vi.unstubAllGlobals() }
   })
 })
 

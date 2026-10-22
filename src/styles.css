@@ -860,6 +860,12 @@ footer p {
 :is(.route-voleyevents, .route-goal-loop, .route-playground) #main-content { view-transition-name: poster-visual; }
 ::view-transition-old(poster-visual), ::view-transition-new(poster-visual) { animation-duration: .4s; animation-timing-function: cubic-bezier(.76,0,.24,1); }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .4s; animation-timing-function: cubic-bezier(.76,0,.24,1); }
+/* Project to project: the whole page fades and drifts, nothing morphs. */
+html[data-project-switch] #main-content { view-transition-name: none; }
+html[data-project-switch]::view-transition-old(root) { animation: project-out .2s cubic-bezier(.4,0,1,1) both; }
+html[data-project-switch]::view-transition-new(root) { animation: project-in .26s cubic-bezier(0,0,.2,1) .14s both; }
+@keyframes project-out { to { opacity: 0; transform: translateY(-12px); } }
+@keyframes project-in { from { opacity: 0; transform: translateY(12px); } }
 html[data-curtain]::after { content: ''; position: fixed; z-index: 1000; inset: 0; pointer-events: none; background: #0b0b0b; }
 html[data-curtain='cover']::after { animation: curtain-cover .2s cubic-bezier(.76,0,.24,1) both; }
 html[data-curtain='reveal']::after { animation: curtain-reveal .2s cubic-bezier(.76,0,.24,1) both; }

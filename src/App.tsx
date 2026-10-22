@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
   type MouseEvent,
   type ReactNode,
@@ -115,6 +116,35 @@ export function isLightTablePair(from: string, to: string) {
   return source !== destination && ['/', '/gameonvb', '/goal-loop'].includes(source) && ['/', '/gameonvb', '/goal-loop'].includes(destination)
 }
 
+export function isProjectSwitch(from: string, to: string) {
+  const source = normalizePathname(from), destination = normalizePathname(to), projects = ['/gameonvb', '/goal-loop']
+  return source !== destination && projects.includes(source) && projects.includes(destination)
+}
+
+// Every navigation takes a ticket. A deferred cross-fade update applies only
+// while no newer navigation (click, Back or Forward, animated or not) started.
+let navigationGeneration = 0
+export function beginNavigation() {
+  const ticket = ++navigationGeneration
+  return () => ticket === navigationGeneration
+}
+
+// Project to project: LightTable snaps the old page shut and opens the next one
+// directly, so the homepage deck never shows; a short cross-fade covers the swap.
+let activeSwitch: object | undefined
+export function crossFadeProjects(update: () => void, doc: Document) {
+  const reduced = doc.defaultView?.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (!doc.startViewTransition || reduced || doc.visibilityState !== 'visible') { update(); return }
+  const root = doc.documentElement, id = {}
+  activeSwitch = id
+  root.dataset.projectSwitch = 'true'
+  // An interrupted switch finishes after its successor started; only the newest clears the scope.
+  const done = () => { if (activeSwitch === id) { activeSwitch = undefined; delete root.dataset.projectSwitch } }
+  // The swap is synchronous: both flows snap inside this commit. Rendering is
+  // paused during the update callback, so it must not wait for animation frames.
+  doc.startViewTransition(() => flushSync(update)).finished.then(done, done)
+}
+
 export function focusHomeContact(doc: Document) {
   const contact = doc.getElementById('contact')
   if (!contact || contact.closest('[inert]') || doc.querySelector('.ball-entry[open], .goal-entry[open]')) return
@@ -139,6 +169,8 @@ export default function App({ initialPath }: AppProps) {
   // The arena intro opens only on a fresh homepage load, never after in-app navigation.
   const [introOpen, setIntroOpen] = useState(() => route.path === '/' && !unknownPath && (typeof window === 'undefined' || window.location.hash !== '#contact'))
   const showIntro = introOpen && route.path === '/' && !unknownPath
+  const shownPath = useRef(route.path)
+  useEffect(() => { shownPath.current = route.path }, [route])
   const closeIntro = useCallback((focusMain = true) => {
     // Commit first so the main landmark is no longer inert when it takes focus.
     flushSync(() => setIntroOpen(false))
@@ -167,6 +199,7 @@ export default function App({ initialPath }: AppProps) {
     if (anchor.closest('.site-header') && ['/gameonvb', '/goal-loop'].includes(new URL(destination, window.location.href).pathname)) return
 
     event.preventDefault()
+    const current = beginNavigation()
     const livePair = isLightTablePair(window.location.pathname, new URL(destination, window.location.href).pathname)
     const navigate = () => {
       setUnknownPath(false)
@@ -181,18 +214,18 @@ export default function App({ initialPath }: AppProps) {
         window.scrollTo({ top: 0, behavior: 'instant' })
       }
     }
-    if (livePair) { navigate(); return }
+    if (livePair) { if (isProjectSwitch(window.location.pathname, destination)) crossFadeProjects(() => { if (current()) navigate() }, document); else navigate(); return }
     const visual = anchor.closest('.poster')?.querySelector<HTMLElement>('.poster-visual')
     const transition = selectHomeTransition(!!visual, window.matchMedia('(prefers-reduced-motion: reduce)').matches, document.visibilityState === 'visible', !!document.startViewTransition)
     if (transition === 'shared' && visual) {
       visual.dataset.transitioning = 'true'
       visual.style.viewTransitionName = 'poster-visual'
       const clearName = () => { visual.style.viewTransitionName = ''; delete visual.dataset.transitioning }
-      void document.startViewTransition(() => flushSync(navigate)).finished.then(clearName, clearName)
+      void document.startViewTransition(() => flushSync(() => { if (current()) navigate() })).finished.then(clearName, clearName)
     } else if (transition === 'curtain') {
       document.documentElement.dataset.curtain = 'cover'
       window.setTimeout(() => {
-        navigate()
+        if (current()) navigate()
         document.documentElement.dataset.curtain = 'reveal'
         window.setTimeout(() => { delete document.documentElement.dataset.curtain }, 200)
       }, 200)
@@ -226,9 +259,13 @@ export default function App({ initialPath }: AppProps) {
 
   useEffect(() => {
     return subscribeToRouteChanges(window, (next) => {
-      const path = normalizePathname(window.location.pathname)
-      setUnknownPath(path !== '/voleyevents' && !ROUTES.some((route) => route.path === path))
-      setRoute(next)
+      const path = normalizePathname(window.location.pathname), current = beginNavigation()
+      const update = () => {
+        if (!current()) return
+        setUnknownPath(path !== '/voleyevents' && !ROUTES.some((route) => route.path === path))
+        setRoute(next)
+      }
+      if (isProjectSwitch(shownPath.current, path)) crossFadeProjects(update, document); else update()
     })
   }, [])
 

@@ -236,7 +236,7 @@ export function LightTable({pathname,onNavigate}) {
         restore();coldRef.current=false;setBallMounted(false);setBallPhase('table');window.scrollTo({top:ballIndex*innerHeight*.85,behavior:'instant'})
         setPosition(ballIndex)
         pendingFocusRef.current=desiredRef.current?null:{id:'gameonvb',entry:false}
-        if(desiredRef.current)setMounted(true)
+        if(desiredRef.current){watchColdRef.current=true;setMounted(true)}
 
       }
       host.captureBallPreview?.()
@@ -251,7 +251,8 @@ export function LightTable({pathname,onNavigate}) {
     // before its passive setup on a cold route; the event starts that setup.
     if(!ballDesired){dialog.scrollTop=0;host.dispatchEvent(new Event('ballentrychange'))}
     host.ballEntry.want=ballDesired;host.ballEntry.reduced=reduced
-    host.ballFlow?.set(ballDesired,reduced)
+    // Leaving straight for Goal Loop (or arriving from it) snaps; the deck never shows.
+    host.ballFlow?.set(ballDesired,reduced||(!ballDesired&&desiredRef.current)||(ballDesired&&coldRef.current))
   },[ballMounted,ballDesired,reduced,position])
   useLayoutEffect(()=>{
     if(!mounted)return
@@ -281,7 +282,7 @@ export function LightTable({pathname,onNavigate}) {
         watchColdRef.current=false;setMounted(false);setPhase('table')
         window.scrollTo({top:watchIndex*innerHeight*.85,behavior:'instant'});setPosition(watchIndex)
         pendingFocusRef.current=ballDesiredRef.current?null:{id:'goal-loop',entry:false}
-        if(ballDesiredRef.current)setBallMounted(true)
+        if(ballDesiredRef.current){coldRef.current=true;setBallMounted(true)}
       }
       paint(watchColdRef.current?1:0)
       if(dialog.open)dialog.close();dialog.show();dialog.scrollTop=0;dialog.dataset.watchReady='true';pendingFocusRef.current={id:'goal-loop',entry:true};document.body.style.overflow='hidden'
@@ -291,7 +292,7 @@ export function LightTable({pathname,onNavigate}) {
     }
     setPhase(desired?'entering':'leaving')
     if(!desired)dialog.scrollTop=0
-    flowRef.current.set(desired,reduced)
+    flowRef.current.set(desired,reduced||(!desired&&ballDesiredRef.current)||(desired&&watchColdRef.current))
   },[mounted,desired,reduced])
   useLayoutEffect(()=>{
     const pending=pendingFocusRef.current
