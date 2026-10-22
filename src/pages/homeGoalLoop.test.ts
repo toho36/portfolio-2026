@@ -13,6 +13,6 @@ describe('Goal Loop poster', () => {
     for (const index of ['01', '02', '03', '04', '05']) expect(goal).toContain(`>${index}</span>`)
     expect(goal).toContain('Every change passes each check, or it goes back for repair.')
     expect(goal).toContain('<dl class="poster-facts"><div><dt>What I own</dt><dd>I set the goal, the rules and the checks.</dd></div>')
-    expect(goal).toContain('href="/goal-loop">Read the Goal Loop case study<span aria-hidden="true">↗</span></a>')
+    expect(goal).toMatch(/href="\/goal-loop">Read the Goal Loop case study<svg class="arrow-up-right"[^>]*aria-hidden="true"/)
   })
 })

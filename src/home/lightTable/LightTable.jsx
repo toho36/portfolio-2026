@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { HomePage } from '../../pages/Home'
+import { ArrowUpRight, HomePage } from '../../pages/Home'
 import { GoalLoopPage } from '../../pages/GoalLoop'
 import { createWatchFlow } from './watchFlow.js'
 import { VoleyEventsPage } from '../../pages/VoleyEvents'
@@ -365,7 +365,7 @@ export function LightTable({pathname,onNavigate}) {
                   onPointerUp={event=>{delete event.currentTarget.dataset.pressed}}
                   onPointerCancel={event=>{delete event.currentTarget.dataset.pressed}}
                   onPointerLeave={event=>{delete event.currentTarget.dataset.pressed}}
-                  onBlur={event=>{delete event.currentTarget.dataset.pressed}}>View project <b aria-hidden="true">↗</b></a></div>
+                  onBlur={event=>{delete event.currentTarget.dataset.pressed}}>View project <b aria-hidden="true"><ArrowUpRight/></b></a></div>
               </div>
             </div>
           })}

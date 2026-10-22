@@ -25,7 +25,13 @@
 .sheet-top { top: 5%; }
 .sheet-top i { font-style: normal; font-size: 22px; }
 .sheet-bottom { bottom: 4%; padding-top: 15px; border-top: 1px solid #74796566; }
-.sheet-bottom b { font-size: 23px; padding-left: 10px; font-weight: 400; }
+.sheet-bottom b { display: inline-flex; padding-left: 10px; }
+/* One arrow for every homepage link: about cap height, as heavy as the label beside it. */
+.arrow-up-right { flex: none; width: .85em; height: .85em; margin-left: .35em; vertical-align: -.05em; transition: transform .15s; }
+.magnetic-cta .arrow-up-right { margin-left: 0; }
+.sheet-bottom b .arrow-up-right { width: 12px; height: 12px; margin: 0; }
+:is(.target-link:not(.sheet-cta),.magnetic-cta):is(:hover,:focus-visible) .arrow-up-right { transform: translate(2px,-2px); }
+@media (prefers-reduced-motion:reduce) { .arrow-up-right { transition: none; } }
 .sheet h2 { position: absolute; z-index: 2; top: 15%; left: 6%; margin: 0; font: 400 clamp(22px,2.4vw,34px)/1.05 Georgia,serif; letter-spacing: -.035em; }
 
 [data-sheet='gameonvb'] .sheet { --paper: #bb461a; --ink: #fff2da; background: #bb461a; color: #fff2da; }
