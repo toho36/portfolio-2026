@@ -74,7 +74,9 @@ function GoalLoopVisual() {
 export function HomePage({ onNavigate }: { readonly onNavigate: (event: MouseEvent<HTMLAnchorElement>) => void }) {
   return <div className="home-supporting">
     {POSTERS.map((poster, index) => <section id={poster.id === 'hero' ? 'introduction' : poster.id === 'contact' ? 'contact' : undefined} data-poster={poster.id} key={poster.id}>
-      <p className="eyebrow">{poster.label}</p>
+      {poster.id === 'contact'
+        ? <p className="eyebrow contact-card-top"><span aria-hidden="true">Hoang Viet To</span><span>{poster.label}</span><i aria-hidden="true">+</i></p>
+        : <p className="eyebrow">{poster.label}</p>}
       <h2>{poster.heading}</h2>
       <p>{poster.body}</p>
       {poster.facts ? <dl className="poster-facts">{poster.facts.map(fact => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.text}</dd></div>)}</dl> : null}
