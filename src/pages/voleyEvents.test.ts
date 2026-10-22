@@ -183,8 +183,12 @@ describe('GameOnVB Match Operations case study', () => {
     const story = markup.slice(markup.indexOf('class="gv gameonvb-story"'))
     expect(story).not.toMatch(/<canvas|<video|data:image|dashboard screenshot/i)
     expect(markup).not.toMatch(/<canvas|<video|dashboard screenshot/i)
-    const images = [...markup.matchAll(/<(?:img|image)[^>]*(?:src|href)="([^"]+)"/g)].map(m => m[1])
+    // The case study lives in the ball-entry dialog; the homepage section behind it has its own single ball.
+    const caseStudy = markup.slice(markup.indexOf('<dialog class="ball-entry"'))
+    const images = [...caseStudy.matchAll(/<(?:img|image)[^>]*(?:src|href)="([^"]+)"/g)].map(m => m[1])
     expect(images).toHaveLength(7)
+    const homeSection = markup.slice(markup.indexOf('data-poster="gameonvb"'), markup.indexOf('data-poster="solidpixels"'))
+    expect([...homeSection.matchAll(/<img[^>]*src="([^"]+)"/g)].map(m => m[1])).toEqual([expect.stringMatching(/\/assets\/ball-preview\.png$/)])
     expect(images[0]).toMatch(/^data:image\/svg\+xml,/)
     for (const image of images.slice(1)) expect(image).toMatch(/\/assets\/ball-preview\.png$/)
     expect(story.match(/aria-hidden="true"/g)?.length).toBeGreaterThanOrEqual(5)

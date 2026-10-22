@@ -1,6 +1,7 @@
-import { useRef, useState, type CSSProperties, type MouseEvent } from 'react'
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react'
 import { CONTACT } from '../content/systems'
-import { HOME_COPY, POSTERS } from '../content/homePosters'
+import { HOME_COPY, POSTERS, type Poster } from '../content/homePosters'
+import { BallRun, ContactEnvelope, IntroHeading, SharedPage, TicketRun, WireTeaser } from '../home/living/LivingVisuals'
 import { isClick } from '../home/sliderMath'
 import { type ContactTopic } from '../home/contactForm'
 import { useContactForm } from '../home/useContactForm'
@@ -33,14 +34,29 @@ function ContactPoster() {
   </div>
 }
 
-export function ScreenSwitch() {
+export function ScreenSwitch({ autoSwap = false }: { autoSwap?: boolean } = {}) {
   const [swapped, setSwapped] = useState(false)
   const [touched, setTouched] = useState(false)
   const pointerStart = useRef(0)
   const pointerDistance = useRef(0)
+  const root = useRef<HTMLDivElement>(null)
+  // On the homepage it demonstrates itself once when it comes into view; clicks still own it after that.
+  useEffect(() => {
+    const el = root.current
+    if (!autoSwap || !el || typeof IntersectionObserver === 'undefined') return
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const io = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return
+      io.disconnect()
+      // Reduced motion: show the swapped arrangement at once (no data-touched, so no animation).
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) { setSwapped(true); return }
+      timer = setTimeout(() => { setTouched(true); setSwapped(true) }, 400)
+    }, { threshold: .6 })
+    io.observe(el); return () => { io.disconnect(); clearTimeout(timer) }
+  }, [autoSwap])
   const trackPointer = (x: number) => { pointerDistance.current = Math.max(pointerDistance.current, Math.abs(x - pointerStart.current)) }
 
-  return <div className="screen-switch" data-swapped={swapped} data-touched={touched}>
+  return <div className="screen-switch" ref={root} data-swapped={swapped} data-touched={touched}>
     <div className="switch-displays" aria-hidden="true">
       {['left', 'right'].map((side) => <div className="switch-monitor" key={side}>
         <div className="switch-bezel"><div className="switch-menu"><span className="switch-menu-icon" /><span className="switch-menu-lines" /></div></div>
@@ -63,34 +79,27 @@ export function ScreenSwitch() {
   </div>
 }
 
-function GoalLoopVisual() {
-  return <div className="goal-pipeline" data-returned="true" data-verdict="true" role="img" aria-label="Plan, Critique, Build, Check, Review, then PASS. Failed checks return to Build for repair.">
-    <div className="goal-rail" />
-    {['Plan', 'Critique', 'Build', 'Check', 'Review', 'Verdict'].map((name, index) =>
-      <div className={`goal-stage${index === 5 ? ' goal-verdict' : ''}`} data-state="passed" style={{ '--stage-x': `${10 + index * 16}%`, '--stage-y': `${12 + index * 12}%` } as CSSProperties} key={name}>
-        <span className="goal-index">{index < 5 ? String(index + 1).padStart(2, '0') : '→'}</span>
-        <span className="goal-node">{index < 5 ? '✓' : <span className="goal-stamp">PASS</span>}</span>
-        <span className="goal-label"><span>{name}</span>{index === 3 && <span className="goal-failure">✕ Check failed</span>}</span>
-      </div>)}
-    <div className="goal-return"><span>Repair</span></div>
-    <span className="goal-token"><span className="goal-token-jagged" /><span className="goal-token-clean" /></span>
-    <p className="goal-caption">Every change passes each check, or it goes back for repair.</p>
+export function HomePage({ onNavigate }: { readonly onNavigate: (event: MouseEvent<HTMLAnchorElement>) => void }) {
+  return <div className="home-supporting">
+    {POSTERS.map((poster, index) => {
+      const section = <section id={poster.id === 'hero' ? 'introduction' : poster.id === 'contact' ? 'contact' : undefined} data-poster={poster.id} key={poster.id}>
+        {poster.id === 'contact'
+          ? <p className="eyebrow contact-card-top"><span aria-hidden="true">Hoang Viet To</span><span>{poster.label}</span><i aria-hidden="true">+</i></p>
+          : <p className="eyebrow">{poster.label}</p>}
+        {poster.id === 'hero' ? <IntroHeading heading={poster.heading} /> : <h2>{poster.heading}</h2>}
+        <p>{poster.body}</p>
+        {index === 0 ? <p>{HOME_COPY.positioning}</p> : null}
+        {LIVING[poster.id]}
+        {poster.facts ? <dl className="poster-facts">{poster.facts.map(fact => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.text}</dd></div>)}</dl> : null}
+        {poster.href ? <a className="target-link" href={poster.href} onClick={onNavigate}>{poster.cta ?? HOME_COPY.cta}<ArrowUpRight /></a> : null}
+        {poster.id === 'contact' ? <ContactPoster /> : null}
+      </section>
+      return poster.id === 'contact' ? <ContactEnvelope key={poster.id}>{section}</ContactEnvelope> : section
+    })}
   </div>
 }
 
-export function HomePage({ onNavigate }: { readonly onNavigate: (event: MouseEvent<HTMLAnchorElement>) => void }) {
-  return <div className="home-supporting">
-    {POSTERS.map((poster, index) => <section id={poster.id === 'hero' ? 'introduction' : poster.id === 'contact' ? 'contact' : undefined} data-poster={poster.id} key={poster.id}>
-      {poster.id === 'contact'
-        ? <p className="eyebrow contact-card-top"><span aria-hidden="true">Hoang Viet To</span><span>{poster.label}</span><i aria-hidden="true">+</i></p>
-        : <p className="eyebrow">{poster.label}</p>}
-      <h2>{poster.heading}</h2>
-      <p>{poster.body}</p>
-      {poster.facts ? <dl className="poster-facts">{poster.facts.map(fact => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.text}</dd></div>)}</dl> : null}
-      {index === 0 ? <p>{HOME_COPY.positioning}</p> : null}
-      {poster.id === 'goal-loop' ? <GoalLoopVisual /> : poster.id === 'tools' ? <ScreenSwitch /> : null}
-      {poster.href ? <a className="target-link" href={poster.href} onClick={onNavigate}>{poster.cta ?? HOME_COPY.cta}<ArrowUpRight /></a> : null}
-      {poster.id === 'contact' ? <ContactPoster /> : null}
-    </section>)}
-  </div>
+// Each section's one motion (study 036); contact's envelope wraps the real form above.
+const LIVING: Partial<Record<Poster['id'], ReactNode>> = {
+  gameonvb: <BallRun />, solidpixels: <SharedPage />, 'goal-loop': <TicketRun />, playground: <WireTeaser />, tools: <ScreenSwitch autoSwap />,
 }

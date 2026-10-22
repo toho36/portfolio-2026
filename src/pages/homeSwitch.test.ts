@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const hooks = vi.hoisted(() => ({ states: [] as unknown[], refs: [] as { current: number }[], stateIndex: 0, refIndex: 0 }))
+const hooks = vi.hoisted(() => ({ states: [] as unknown[], refs: [] as { current: unknown }[], effects: [] as (() => void | (() => void))[], stateIndex: 0, refIndex: 0 }))
 vi.mock('react', async (importOriginal) => ({
   ...await importOriginal<typeof import('react')>(),
   useState(initial: unknown) {
@@ -8,7 +8,8 @@ vi.mock('react', async (importOriginal) => ({
     if (!(index in hooks.states)) hooks.states[index] = initial
     return [hooks.states[index], (next: unknown) => { hooks.states[index] = typeof next === 'function' ? (next as (value: unknown) => unknown)(hooks.states[index]) : next }]
   },
-  useRef(initial: number) {
+  useEffect(effect: () => void | (() => void)) { hooks.effects.push(effect) },
+  useRef(initial: unknown) {
     const index = hooks.refIndex++
     return hooks.refs[index] ??= { current: initial }
   },
@@ -17,14 +18,15 @@ vi.mock('react', async (importOriginal) => ({
 import { ScreenSwitch } from './Home'
 
 type Element = { type: string; props: Record<string, any> }
-function renderSwitch() {
+function renderSwitch(props: { autoSwap?: boolean } = {}) {
   hooks.stateIndex = 0
   hooks.refIndex = 0
-  const children = (ScreenSwitch() as Element).props.children as Element[]
-  return { button: children[1], announcement: children[2] }
+  hooks.effects = []
+  const root = ScreenSwitch(props) as Element, children = root.props.children as Element[]
+  return { root, button: children[1], announcement: children[2] }
 }
 
-beforeEach(() => { hooks.states = []; hooks.refs = [] })
+beforeEach(() => { hooks.states = []; hooks.refs = []; hooks.effects = [] })
 
 describe('Screen Switch interaction', () => {
   it('toggles window placement and announcement on repeated clicks', () => {
@@ -55,5 +57,23 @@ describe('Screen Switch interaction', () => {
     button.props.onClick({ detail: 1, preventDefault })
     expect(preventDefault).toHaveBeenCalledOnce()
     expect(renderSwitch().button.props['aria-pressed']).toBe(true)
+  })
+
+  it.each([false, true])('on the homepage it demonstrates itself once in view (reduced motion: %s)', (reducedMotion) => {
+    vi.useFakeTimers()
+    let seen: (entries: { isIntersecting: boolean }[]) => void = () => {}
+    vi.stubGlobal('IntersectionObserver', class { constructor(cb: typeof seen) { seen = cb } observe() {} disconnect() {} })
+    vi.stubGlobal('matchMedia', () => ({ matches: reducedMotion }))
+    try {
+      renderSwitch({ autoSwap: true })
+      hooks.refs[2].current = {} // the mounted root element
+      hooks.effects.forEach(effect => effect())
+      seen([{ isIntersecting: true }])
+      vi.advanceTimersByTime(400)
+      const { root, button } = renderSwitch({ autoSwap: true })
+      expect(button.props['aria-pressed']).toBe(true)
+      // Motion: data-touched turns the swap animation on. Reduced motion: settled, no animation.
+      expect(root.props['data-touched']).toBe(!reducedMotion)
+    } finally { vi.useRealTimers(); vi.unstubAllGlobals() }
   })
 })
