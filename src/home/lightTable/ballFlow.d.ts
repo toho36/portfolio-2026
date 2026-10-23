@@ -2,7 +2,6 @@ import type { BallSpin } from './ballMotion.js'
 export { ballQuaternionMultiply } from './ballMotion.js'
 
 export const BALL_DURATION: number
-export const BALL_BEATS: { pop: number; settle: number; roll: number; corner: number; flight: number }
 export interface BallPose { x: number; y: number; time: number; spin?: BallSpin; radius?: number }
 export interface BallAffine { a: number; b: number; c: number; d: number; x: number; y: number }
 export interface BallCard {

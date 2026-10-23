@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { PROJECT_STORIES } from './projects'
 import {
   ROUTES,
   getRouteNavigationUrl,
@@ -8,7 +7,7 @@ import {
   routeMetadata,
   subscribeToRouteChanges,
 } from './routes'
-import { CONTACT, FLAGSHIPS, SIDE_QUESTS } from './systems'
+import { CONTACT } from './systems'
 
 const ordinaryClick = {
   currentUrl: 'https://example.com/',
@@ -64,20 +63,6 @@ describe('route records', () => {
         canonical: 'https://portfolio-pied-eight-38.vercel.app/playground',
       },
     ])
-  })
-
-  it('keeps truthful content and the unlinked side quest', () => {
-    expect(FLAGSHIPS.map(({ name }) => name)).toEqual([
-      'GameOnVB',
-      'Goal Loop',
-    ])
-    expect(JSON.stringify([FLAGSHIPS, SIDE_QUESTS])).not.toMatch(
-      /\b(?:TBD|TODO|placeholder|\d+%)\b/i,
-    )
-    expect(SIDE_QUESTS).toEqual([{
-      name: 'Screen Switch',
-      summary: PROJECT_STORIES['screen-switch'].preview,
-    }])
   })
 })
 

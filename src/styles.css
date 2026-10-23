@@ -224,25 +224,6 @@ h1 {
   scroll-margin-top: 1rem;
 }
 
-.route-entry {
-  display: grid;
-  min-height: calc(100svh - 5.5rem);
-  align-content: center;
-  padding-block: clamp(5rem, 12vw, 11rem);
-}
-
-.route-entry h1 {
-  max-width: none;
-}
-
-.route-summary {
-  max-width: 45rem;
-  margin-bottom: 2.5rem;
-  color: var(--muted);
-  font-size: clamp(1.2rem, 2.2vw, 1.8rem);
-  line-height: 1.5;
-}
-
 .voleyevents {
   --court-chalk: #f7f3e8;
   --court-ink: #102044;

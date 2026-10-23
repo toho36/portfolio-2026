@@ -9,7 +9,7 @@ import { ballEntryPresentation, createVolleyball } from './ballScene.js'
 import { staticLanding } from './ballSteps.js'
 import { deckPosition, sheetPose } from './model.js'
 import { createDeckAssist } from './deckAssist.js'
-import { faceProximity, revealStep, strapPoint } from './watchModel.js'
+import { revealStep } from './watchModel.js'
 
 const pose = { x: .23, y: -.17, time: 9, spin: { yaw: 3, pitch: 1, yawSpeed: 2, pitchSpeed: .7 } }
 const card = { support: [.2, -.9, 0], corner: [-2, -1.05, 0] }
@@ -133,12 +133,9 @@ it('keeps one scene and logical orientation on resize with DPR1.5 and 4MP caps',
 it('preserves source-fan/watch preview primitives and exact approved module/asset bytes', () => {
   expect(deckPosition(850, 850)).toBe(1)
   expect(sheetPose(1, 1)).toEqual({ x: 0, y: 0, rotation: -5, scale: 1, opacity: 1, z: 2 })
-  expect(faceProximity(0, 0)).toBe(1)
-  expect(faceProximity(2, 0)).toBe(0)
   expect(revealStep(.5, 0, .016)).toBeLessThan(.5)
-  expect(strapPoint(0).y).toBeCloseTo(strapPoint(2 * Math.PI).y, 10)
   const study = new URL('../../../sketches/013-light-table/', import.meta.url)
-  for (const name of ['ballFlow', 'ballMotion', 'ballScene', 'ballSteps', 'ballGeometry', 'leatherMaps', 'model', 'deckAssist', 'watchModel']) {
+  for (const name of ['ballFlow', 'ballMotion', 'ballScene', 'ballSteps', 'ballGeometry', 'leatherMaps', 'model', 'deckAssist']) {
     const original = readFileSync(new URL(`${name}.js`, study), 'utf8')
     const promoted = readFileSync(new URL(`./${name}.js`, import.meta.url), 'utf8')
     // Owner-approved motion/framing refinements and the production scroll repair

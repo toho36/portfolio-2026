@@ -2,7 +2,6 @@ import {ballMotion,stepSpin,ballQuaternionMultiply} from './ballMotion.js'
 export {ballQuaternionMultiply} from './ballMotion.js'
 
 export const BALL_DURATION=3.55
-export const BALL_BEATS={pop:.30,settle:.62,roll:1.70,corner:1.85,flight:3.10}
 const gravity=12,air=1.25,roll=1.08,arc=.15
 export const ballEase=p=>{p=Math.max(0,Math.min(1,p));return p*p*(3-2*p)}
 const add=(a,b,s=1)=>a.map((v,i)=>v+b[i]*s)
