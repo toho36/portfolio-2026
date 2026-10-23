@@ -7,7 +7,6 @@
 .home-supporting > [data-poster='playground'] { --accent: #ff4fd8; }
 .home-supporting > [data-poster='tools'] { --accent: #63e6ff; }
 .home-supporting > section > .eyebrow { color: var(--accent); }
-.living-stat { font-weight: 300; font-family: 'Helvetica Neue', Arial, sans-serif; letter-spacing: -.03em; font-variant-numeric: lining-nums tabular-nums; }
 
 /* Introduction */
 .intro-heading { display: grid; gap: 4px; }

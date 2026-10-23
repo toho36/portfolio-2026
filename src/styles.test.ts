@@ -114,46 +114,15 @@ describe('retired Home presentation', () => {
   })
 })
 
-describe('poster home styles', () => {
-  it('lets visuals receive clicks through copy while keeping copy controls interactive', () => {
-    const copy = [...styles.matchAll(/\.poster-copy\s*\{([^}]+)\}/g)].find((match) => match[1].includes('grid-column: 1 / 10'))?.[1]
-    expect(copy).toMatch(/pointer-events:\s*none/)
-    expect(styles).toMatch(/\.poster-copy\s+:is\(a, button, input, textarea, select, label, form\)\s*\{\s*pointer-events:\s*auto/)
-    expect(styles).not.toMatch(/\.poster\[data-poster='tools'\] \.poster-copy\s*\{[^}]*grid-column:\s*1\s*\/\s*-1/)
+describe('retired poster slider styles', () => {
+  it('drops the old slider, pipeline, landing, and world selectors that nothing renders', () => {
+    expect(styles + worlds).not.toMatch(
+      /\.(?:poster|poster-(?:track|copy|top|title-mask|static-mark|visual|hint|cta|body|positioning|canvas-host)|home-(?:slider|cursor|loader|counter)|goal-(?:pipeline|stage|token|rail)|landing-page|stage-(?:state|heading)|world-(?:hero|section|portal))(?![\w-])/,
+    )
   })
-  it('keeps poster content inset at desktop and mobile widths', () => {
-    const desktop = styles.match(/\.poster\s*\{([^}]+)\}/)?.[1]
-    const mobile = styles.slice(styles.lastIndexOf('@media (max-width: 760px)')).match(/\.poster\s*\{([^}]+)\}/)?.[1]
-    const copy = [...styles.matchAll(/\.poster-copy\s*\{([^}]+)\}/g)].find((match) => match[1].includes('padding-inline: var(--poster-gutter)'))?.[1]
-    expect(desktop).toMatch(/--poster-gutter:\s*clamp\(1\.25rem,\s*4vw,\s*4rem\)/)
-    expect(mobile).toMatch(/--poster-gutter:\s*1\.25rem/)
-    expect(copy).toMatch(/padding-inline:\s*var\(--poster-gutter\)/)
-    expect(styles).toMatch(/\.poster-top\s*\{[^}]*margin-inline:\s*var\(--poster-gutter\)/)
-  })
-  it('gives every masked heading room for descenders without changing copy spacing', () => {
-    const mask = [...styles.matchAll(/\.poster-title-mask\s*\{([^}]+)\}/g)].at(-1)?.[1]
-    expect(mask).toMatch(/overflow:\s*hidden/)
-    expect(mask).toMatch(/padding-bottom:\s*var\(--title-descent\)/)
-    expect(mask).toMatch(/margin-bottom:\s*calc\(-1 \* var\(--title-descent\)\)/)
-  })
-  it('puts mobile poster copy before a growing visual slot', () => {
-    const mobile = styles.slice(styles.lastIndexOf('@media (max-width: 760px)'), styles.lastIndexOf('@media (pointer: coarse)'))
-    expect(mobile).toMatch(/\.poster-copy\s*\{[^}]*order:\s*2[^}]*margin-top:\s*0/)
-    expect(mobile).toMatch(/\.poster-visual\s*\{[^}]*order:\s*3[^}]*min-height:\s*38svh/)
-  })
-  it('keeps a native snap track, static grain, selection, and focus', () => {
-    expect(styles).toMatch(/\.poster-track\s*\{[^}]*scroll-snap-type:\s*x mandatory/)
-    expect(styles).toMatch(/\.poster-track\.is-controlled\s*\{[^}]*scroll-snap-type:\s*none/)
-    expect(styles).toMatch(/\.poster-track\.is-dragging\s*\{[^}]*user-select:\s*none/)
-    expect(styles).toMatch(/\.home-slider::after\s*\{[^}]*pointer-events:\s*none/)
+  it('keeps the home selection colour and focus ring', () => {
     expect(styles).toMatch(/\.route-home ::selection\s*\{[^}]*background:\s*#d9ff43/)
     expect(styles).toMatch(/\.route-home :is\(a, button, input, textarea, \[tabindex\]\):focus-visible\s*\{[^}]*outline:\s*2px solid/)
-  })
-  it('settles poster motion for reduced preference', () => {
-    const reduced = styles.slice(styles.lastIndexOf('@media (prefers-reduced-motion: reduce)'))
-    expect(reduced).toContain('.poster-track')
-    expect(reduced).toContain('animation: none')
-    expect(reduced).toContain('transform: none')
   })
 })
 
@@ -162,12 +131,5 @@ describe('Goal Loop reference and history styles', () => {
     expect(styles).not.toMatch(
       /run-trace|run-marker|run-block-mark|--run-progress/,
     )
-  })
-
-  it('renders status labels as text, not fake buttons', () => {
-    const stageState = styles.match(/\.stage-state\s*\{([^}]+)\}/)?.[1]
-
-    expect(stageState).toBeDefined()
-    expect(stageState).not.toMatch(/border:|background:/)
   })
 })

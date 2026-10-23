@@ -34,8 +34,6 @@
 .staircase-feedback > p:last-child { color: #a09b8f; font-size: 11px; line-height: 1.6; margin: 0; }
 .staircase-note { font: 10px/1.6 monospace; color: #a09b8f; padding: 0 clamp(20px, 4vw, 64px) 16px; margin: 0; }
 .staircase-capability { position: absolute; z-index: 2; bottom: 54px; left: 20px; right: 20px; text-align: center; font: 11px/1.6 monospace; color: #c8c0af; }
-.staircase-case .lifecycle-stage[data-highlighted='true'] { border-top: 1px solid var(--signal); }
-.staircase-case .lifecycle-stage:target { outline: 1px solid var(--signal); outline-offset: 8px; }
 @media (min-width: 601px) and (max-width: 1100px) {
   .staircase-controls { flex-wrap: wrap; }
   .staircase-feedback { width: 100%; max-width: none; text-align: left; }

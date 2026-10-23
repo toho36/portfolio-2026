@@ -106,8 +106,6 @@
 .ball-entry .entry-header { position: absolute; top: 0; left: 0; right: 0; }
 .ball-entry .voleyevents { background: transparent; }
 .ball-entry .case-navigation { position: relative; }
-.ball-story-links { display: flex; flex-wrap: wrap; gap: 16px; font: 10px/1.5 monospace; }
-.ball-story-links a { min-height: 44px; display: inline-flex; align-items: center; }
 .ball-entry[data-phase='open'] { --progress: 1; --reveal-edge: -200px; }
 .ball-entry[data-ball-ready='true'] .cold-ball-fallback { visibility: hidden; }
 .cold-ball-static { position: absolute; width: 29.2dvh; height: 29.2dvh; left: 40vw; top: 55dvh; transform: translate(-50%,-50%); object-fit: contain; }
@@ -118,10 +116,10 @@
 .home-supporting .poster-facts { display: grid; gap: 16px; max-width: 65ch; margin: 24px 0; }
 .home-supporting .poster-facts dt { font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: #b9b6ac; }
 .home-supporting .poster-facts dd { margin: 4px 0 0; }
-.home-supporting .goal-pipeline,.home-supporting .screen-switch { position: relative; height: 440px; }
+.home-supporting .screen-switch { position: relative; height: 440px; }
 .home-supporting .screen-switch { max-width: 700px; }
 .home-supporting .poster-contact { max-width: 750px; }
-.ball-entry .case-section,.ball-entry .case-pair,.ball-entry .lifecycle,.ball-entry .case-navigation { margin-inline: auto; padding-inline: max(24px,6vw); }
+.ball-entry .lifecycle,.ball-entry .case-navigation { margin-inline: auto; padding-inline: max(24px,6vw); }
 
 .site-shell:has([data-light-table-shell]) { --ink: #171816; --paper: #e9e7df; --muted: #b7afa0; --line: #454137; --signal: #d6b652; --focus: #e6d296; background: #171816; color: var(--paper); color-scheme: dark; }
 .site-shell:has([data-light-table-shell]) > main { width: 100%; margin: 0; }
@@ -135,7 +133,7 @@
 /* Returning home: the site header is back at once and the case header fades out with the page. */
 .ball-entry[data-phase='leaving'] .entry-header { opacity: var(--progress); }
 .ball-entry > .voleyevents { padding: 0; }
-.ball-entry .case-section,.ball-entry .case-pair,.ball-entry .lifecycle,.ball-entry .case-navigation { background: #171916; }
+.ball-entry .lifecycle,.ball-entry .case-navigation { background: #171916; }
 .home-supporting .poster-contact { grid-column: auto; grid-row: auto; }
 /* Contact is a paper sheet on the table, like the cards in the deck above. The
    ink/paper variables flip, so the shared form rules render dark ink on paper. */
@@ -182,18 +180,7 @@
 /* The original warm watch zoom shares the native full-case scroll platform. */
 .goal-entry { --progress: 0; --text: 0; position: fixed; inset: 0; margin: 0; padding: 0; width: 100%; height: 100dvh; max-width: none; max-height: none; border: 0; color: #343c34; background: transparent; overflow-y: auto; overflow-x: clip; scroll-padding-top: var(--shell-header-height,0px); z-index: 20; scrollbar-gutter: stable; --ink: #e7e5de; --paper: #343c34; --muted: #58604f; --line: #83897755; --signal: #756128; --focus: #756128; color-scheme: light; }
 .goal-entry::backdrop { background: transparent; }
-.entry-watch-slot { position: absolute; inset: 0; transform: translateZ(0); pointer-events: none; }
-.entry-wash { position: absolute; inset: 0; background: #e7e5de; opacity: var(--progress); pointer-events: none; }
 .goal-entry .entry-header { position: absolute; top: var(--shell-header-height,0px); left: 0; right: 0; }
-.entry-caption { position: absolute; left: 6vw; top: 32%; width: 26vw; opacity: var(--text); }
-.entry-caption h1 { max-width: none; margin: 0 0 24px; font: 400 clamp(30px,4vw,58px)/1.02 Georgia,serif; letter-spacing: -.04em; }
-.entry-caption p { max-width: 34ch; font: 11px/1.7 monospace; color: #58604f; }
-.entry-caption a { display: inline-flex; align-items: center; min-height: 44px; font: 11px/1.7 monospace; }
 .goal-entry > .goal-loop { --run-field: var(--ink); --run-ink: var(--paper); --run-muted: var(--muted); --run-line: var(--line); --run-evidence: var(--signal); padding: 0; background: transparent; }
 .goal-entry .goal-loop > :not(.light-table-hero) { position: relative; background: #e7e5de; padding-inline: max(24px,6vw); }
 .goal-entry[data-phase='open'] { --progress: 1; --text: 1; }
-@media (max-width:760px) {
-  .entry-caption { left: 18px; right: 18px; top: auto; bottom: 18px; width: auto; }
-  .entry-caption h1 { font-size: 28px; margin-bottom: 8px; }
-  .entry-caption p { font-size: 10px; margin: 6px 0; max-width: 45ch; }
-}
