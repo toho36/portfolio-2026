@@ -560,11 +560,6 @@ html[data-project-switch]::view-transition-old(root) { animation: project-out .2
 html[data-project-switch]::view-transition-new(root) { animation: project-in .26s cubic-bezier(0,0,.2,1) .14s both; }
 @keyframes project-out { to { opacity: 0; transform: translateY(-12px); } }
 @keyframes project-in { from { opacity: 0; transform: translateY(12px); } }
-html[data-curtain]::after { content: ''; position: fixed; z-index: 1000; inset: 0; pointer-events: none; background: #0b0b0b; }
-html[data-curtain='cover']::after { animation: curtain-cover .2s cubic-bezier(.76,0,.24,1) both; }
-html[data-curtain='reveal']::after { animation: curtain-reveal .2s cubic-bezier(.76,0,.24,1) both; }
-@keyframes curtain-cover { from { transform: translateX(-100%); } to { transform: translateX(0); } }
-@keyframes curtain-reveal { from { transform: translateX(0); } to { transform: translateX(100%); } }
 .not-found { display: grid; align-content: center; min-height: 70svh; }
 .not-found h1 { max-width: 12ch; }
 .not-found .target-link { width: fit-content; }

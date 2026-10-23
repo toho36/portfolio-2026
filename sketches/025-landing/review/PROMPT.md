@@ -1,4 +1,0 @@
-Read-only focused re-review. Answer in Czech. Do not edit files.
-Your previous review of T1 (static homepage composition) is in sketches/025-landing/review/round1/REVIEW.md (CHANGES_REQUIRED, blockers B1–B3). The coding agent fixed them; its notes: ~/Documents/agent-runs/portfolio-2026/2026-10-10-landing-t1/RESULT.md. Code: src/home/landing/.
-Parent measurements on the new production preview build: horizontal overflow 0 px at 1440x900, 1280x720, 768x1024, 390x844, 320x640. New screenshots attached (1440 fold, 1440 full, 390 fold, 390 full, 320 fold).
-Task: for each of B1, B2, B3 say RESOLVED / NOT RESOLVED with one-line evidence. List any NEW blocking regression (max 3). Final verdict APPROVE or CHANGES_REQUIRED. Under 300 words. End with JSON {"verdict":"...","B1":"...","B2":"...","B3":"...","new_blocking":[...]}.

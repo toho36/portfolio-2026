@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Lunar impact remake, prototype 023</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<header class="copy"><h1>Hoang Viet To</h1><p>New tools. Old standards.</p></header>
+<main id="stage" aria-label="Stylized Theia impact and Moon formation">
+<svg id="fallback" hidden viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Static illustration of the final state: blue Earth lower right, separate Moon in orbit">
+<rect width="1600" height="900" fill="#0b0705"/>
+<circle cx="1092" cy="529" r="259" fill="#1f4f86"/>
+<path d="M900 470c60-40 120-20 170 10s120 10 160-30M960 600c80 30 160 0 230-40" stroke="#e9eef2" stroke-opacity=".55" stroke-width="18" fill="none" stroke-linecap="round"/>
+<circle cx="753" cy="321" r="45" fill="#9a948c"/>
+<text x="24" y="880" fill="#8a7a6c" font-size="18" font-family="sans-serif">Static illustration (unavailable WebGL)</text>
+</svg>
+</main>
+<div class="ctl" id="ctl" hidden><button id="pause" type="button">Pause</button><button id="replay" type="button">Replay</button></div>
+<footer class="note">Author-driven stylization: Moon capture, mass formation and time compression are artistic choices, not validated scientific physics. Rock texture CC0; Earth, Moon and cloud maps © Solar System Scope, CC BY 4.0.</footer>
+<script type="module" src="./main.js"></script>
+<noscript><style>#fallback[hidden]{display:block}</style></noscript>
+<script>setTimeout(()=>{if(!globalThis.stage?.impact?.metrics.calls)document.querySelector('#fallback').removeAttribute('hidden')},4000)</script>
+</body>
+</html>

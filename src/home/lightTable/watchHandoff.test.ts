@@ -7,7 +7,7 @@ import { stepSpin, followPosition } from './ballMotion.js'
 import { ballEntryPresentation, ballContactLayout } from './ballScene.js'
 import { staticLanding, staticStepImage } from './ballSteps.js'
 import { deckPosition } from './model.js'
-import { beginNavigation, crossFadeProjects, isLightTablePair, isProjectSwitch, selectHomeTransition } from '../../App'
+import { beginNavigation, crossFadeProjects, isLightTablePair, isProjectSwitch } from '../../App'
 import { getRouteNavigationUrl, normalizePathname, pushRouteNavigation } from '../../content/routes'
 
 const source = readFileSync(new URL('./LightTable.jsx', import.meta.url), 'utf8')
@@ -165,7 +165,7 @@ function navigation(h: ReturnType<typeof harness>) {
     replaceState(state: unknown, _unused: string, url: string) { entries[index] = { url, state }; c.location.href = url },
   }
   Object.assign(c.window, { location: c.location, history: c.history })
-  Object.assign(c, { navigationAnchor: undefined, normalizePathname, pushRouteNavigation, isLightTablePair, isProjectSwitch, crossFadeProjects, beginNavigation, selectHomeTransition,
+  Object.assign(c, { navigationAnchor: undefined, normalizePathname, pushRouteNavigation, isLightTablePair, isProjectSwitch, crossFadeProjects, beginNavigation,
     setUnknownPath() {}, setRoute(route: { path: string }) { h.path(route.path) },
   })
   const navigate = new Function('event', 'context', `with(context){${appNavigation}}`)

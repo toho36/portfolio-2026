@@ -1,6 +1,6 @@
 # Lunar giant impact — know-how
 
-Moon-forming collision animation for the portfolio, sketches 015–024 (2026-10). Parked as a side project on 2026-10-09: not the homepage hero. Source paths are relative to the repo root. The `sketches/` folders are not in Git; they exist only on the owner's Mac.
+Moon-forming collision animation for the portfolio, sketches 015–024 (2026-10). Parked as a side project on 2026-10-09: not the homepage hero. Source paths are relative to the repo root. The Lunar `sketches/` and `docs/direction/lunar-*` folders were never in Git and were moved to the macOS Trash on 2026-10-23; the paths below name where each lesson came from. The reusable code is kept in Git in [`lunar-giant-impact/`](lunar-giant-impact/).
 
 ## What was tried
 
@@ -50,7 +50,8 @@ Moon-forming collision animation for the portfolio, sketches 015–024 (2026-10)
 - Most of the ~9 GB on disk is evidence and simulation data, mainly 024 (5.0 GB) and 023 (3.9 GB).
 
 ## Worth reusing
-- Runtime: `src/playground/giantImpact/` + `src/playground/GiantImpact.tsx` (StrictMode-safe mount; not imported by any page now).
-- Static pipeline from 020: `crust.js`, `volume.js`, `geology.js`, `bake-heat.mjs`, licensed textures in `assets/manifest.json`.
-- Browser checks: `sketches/020-lunar-art-finish/verify-chrome.py`, `sketches/023-lunar-impact/verify-runtime.py`, `sketches/023-lunar-impact/capture.py`.
-- Blender: `sketches/024-lunar-blender/flow_scene.py`, `build_scene.py`.
+All in [`lunar-giant-impact/`](lunar-giant-impact/) (code only, no textures or simulation data):
+- `020-static/`: best static scene: `crust.js`, `volume.js`, `geology.js`, `cold-geology.js`, `scene.js`, `bake-heat.mjs`, texture licences in `assets-manifest.json`, browser check `verify-chrome.py`.
+- `023-runtime/`: last realtime runtime (`main.js`, `motion.js`, `terrain.js`) with `capture.py` and `verify-runtime.py`. The same runtime was in `src/playground/giantImpact/` until commit `ce89567`; restore it from Git history with `git show ce89567:src/playground/GiantImpact.tsx`.
+- `024-blender/`: `build_scene.py`, `flow_scene.py`, `test_flow.py`, `sph-replay.py` (particles to Blender volume), `pkdgrav3-local-fixes.patch` (macOS build fixes).
+Scripts still contain the original absolute paths (Blender app, scratch build folder); change them before use.

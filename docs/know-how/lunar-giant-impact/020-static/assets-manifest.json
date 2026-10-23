@@ -1,0 +1,22 @@
+{
+  "scope":"020 autonomous static A1 repair; no animation/integration/commit/deploy",
+  "baseline":"Exact current 019 including untracked bytes; admission-020.json verifies the original copy and protected files",
+  "active_texture_bytes":3780654,
+  "assets":[
+    {"file":"cliff-diffuse.jpg","width":1024,"height":1024,"bytes":732721,"sha256":"cce4b50517161264bdef196f5e247e328ca3739083cd6044ad3cc54d88cb82e2","provider_md5":"220c637db6056b45e7c0a17e6ed8514e","url":"https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_face/rock_face_diff_1k.jpg","asset_page":"https://polyhaven.com/a/rock_face","provider":"Poly Haven","license":"CC0","license_page":"https://polyhaven.com/license"},
+    {"file":"cliff-normal-512.jpg","width":512,"height":512,"bytes":161462,"sha256":"6eb70f46761df98a0c3623a6569f96c5db91ab09d89b5e4cb849ea87cf52c4d7","source_file":"cliff-normal.jpg","source_sha256":"e2682e1286c8b6aca7e01ba7b8fe1726cb6606042b9ee70d097aa67470d410ef","url":"https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_face/rock_face_nor_gl_1k.jpg","provider":"Poly Haven","license":"CC0","recipe":"sips --resampleHeightWidth 512 512 --setProperty formatOptions 88 cliff-normal.jpg --out cliff-normal-512.jpg","use":"Cold geometry tangent normal only, NoColorSpace; formation uses triplanar albedo-derived bump"},
+    {"file":"cliff-roughness.jpg","width":1024,"height":1024,"bytes":224371,"sha256":"70ddfc5d7f292909d18ad56dbb1ff7c3a65809dc031854356c7a6978cb446219","provider_md5":"9c0ebb95db6ce5ec16abca0899e506a2","url":"https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_face/rock_face_rough_1k.jpg","provider":"Poly Haven","license":"CC0","use":"Physical material appearance map, NoColorSpace"},
+    {"file":"earth.jpg","width":2048,"height":1024,"bytes":463087,"sha256":"767ee1dc6eb3802699bfccf6f264880f8acd0b80de3191cd24984fe279b07b7c","source":"https://www.solarsystemscope.com/textures/download/2k_earth_daymap.jpg","provider":"Solar System Scope / INOVE","license":"CC BY 4.0","license_page":"https://www.solarsystemscope.com/textures/"},
+    {"file":"clouds.jpg","width":1024,"height":512,"bytes":284509,"sha256":"e649580c3e2f4202f878a4f22fac27854ea9de38984d8e105cede20f9234a773","source":"https://www.solarsystemscope.com/textures/download/2k_earth_clouds.jpg","provider":"Solar System Scope / INOVE","license":"CC BY 4.0","derivative":"sips proportional width1024, JPEG quality88; original016 source preserved"},
+    {"file":"moon.jpg","width":1024,"height":512,"bytes":276104,"sha256":"d5bf1bc95d0767356042d7876ba87f13f3546b902a15c9099801a7224a4ee648","source":"https://www.solarsystemscope.com/textures/download/2k_moon.jpg","provider":"Solar System Scope / INOVE","license":"CC BY 4.0","derivative":"sips proportional width1024, JPEG quality88; original016 source preserved"},
+    {"file":"crust-heat.bin","width":160,"height":160,"depth":64,"bytes":1638400,"sha256":"db530e44470d8738e8702f8649bb565ed021eb38cc5e397789dbd440dc3e891d","provider":"Project-authored procedural field, no external source","recipe":"node sketches/020-lunar-art-finish/bake-heat.mjs","source_field":"crust.js, shared with actual geometry relief","format":"R8 unsigned byte, x-fast order, NoColorSpace, trilinear 3D sampling","bounds_min":[-1.45,-4.55,0],"bounds_span":[8.85,7.6,3.5]}
+  ],
+  "macro_geology":"Variable openings, planar tilted crust shelves and a linked torn Moon/stream edge; actual profiles and floor heat from the same field, not scientific simulation",
+  "topology":"One opaque closed component, one-time 112-grid extraction with conforming local Moon/throat subdivision projected to the same field; no per-frame solver",
+  "discarded_inputs":"Old generated mud/basalt and DarkRock maps are preserved but not imported into final repaired renderer",
+  "corrective_moodframe":{"model":"gpt-image-2-high","imagegen_request_id":"f664d575-65f2-4ac7-86f2-aacc39c1e1ce","use":"Material intent only; original A1 camera remains authority"},
+  "art_gate":"See STATE.json and immutable blocks/NNN/ASTRA-REVIEW.md; this manifest makes no artistic PASS claim",
+  "earth_static_review":"Not blocked by latest senior-design review",
+  "owner_local_relief_approval":true,
+  "owner_motion_approval":false
+}

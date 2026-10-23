@@ -10,7 +10,7 @@ export interface WireLoadRequest<R> {
   createRuntime: (three: unknown) => R | Promise<R>
 }
 
-export const importThreeModule = (): Promise<unknown> => import('three')
+const importThreeModule = (): Promise<unknown> => import('three')
 
 export async function loadWireRuntime<R>(req: WireLoadRequest<R>): Promise<WireLoadResult<R>> {
   try {

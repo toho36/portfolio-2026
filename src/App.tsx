@@ -106,11 +106,6 @@ export function applyRouteMetadata(doc: Document, route: Route) {
     ?.setAttribute('content', metadata.canonical)
 }
 
-export function selectHomeTransition(hasVisual: boolean, reducedMotion: boolean, visible: boolean, hasViewTransitions: boolean) {
-  if (!hasVisual || reducedMotion || !visible) return 'plain'
-  return hasViewTransitions ? 'shared' : 'curtain'
-}
-
 export function isLightTablePair(from: string, to: string) {
   const source = normalizePathname(from), destination = normalizePathname(to)
   return source !== destination && ['/', '/gameonvb', '/goal-loop'].includes(source) && ['/', '/gameonvb', '/goal-loop'].includes(destination)
@@ -216,21 +211,7 @@ export default function App({ initialPath }: AppProps) {
       }
     }
     if (livePair) { if (contactExit || isProjectSwitch(window.location.pathname, destination)) crossFadeProjects(() => { if (current()) navigate() }, document); else navigate(); return }
-    const visual = anchor.closest('.poster')?.querySelector<HTMLElement>('.poster-visual')
-    const transition = selectHomeTransition(!!visual, window.matchMedia('(prefers-reduced-motion: reduce)').matches, document.visibilityState === 'visible', !!document.startViewTransition)
-    if (transition === 'shared' && visual) {
-      visual.dataset.transitioning = 'true'
-      visual.style.viewTransitionName = 'poster-visual'
-      const clearName = () => { visual.style.viewTransitionName = ''; delete visual.dataset.transitioning }
-      void document.startViewTransition(() => flushSync(() => { if (current()) navigate() })).finished.then(clearName, clearName)
-    } else if (transition === 'curtain') {
-      document.documentElement.dataset.curtain = 'cover'
-      window.setTimeout(() => {
-        if (current()) navigate()
-        document.documentElement.dataset.curtain = 'reveal'
-        window.setTimeout(() => { delete document.documentElement.dataset.curtain }, 200)
-      }, 200)
-    } else navigate()
+    navigate()
   }, [])
 
   useEffect(() => {

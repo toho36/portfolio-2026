@@ -1,7 +1,7 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
-import App, { applyRouteMetadata, beginNavigation, crossFadeProjects, focusHomeContact, installRevealMotion, isLightTablePair, isProjectSwitch, selectHomeTransition } from './App'
+import App, { applyRouteMetadata, beginNavigation, crossFadeProjects, focusHomeContact, installRevealMotion, isLightTablePair, isProjectSwitch } from './App'
 import { createWatchFlow } from './home/lightTable/watchFlow.js'
 import { createDeckAssist } from './home/lightTable/deckAssist.js'
 import { BALL_DURATION, createBallFlow } from './home/lightTable/ballFlow.js'
@@ -198,15 +198,6 @@ describe('light-table homepage and project shells', () => {
     )
   })
 
-  it('keeps shared-element navigation and a curtain fallback', () => {
-    const source = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8')
-    expect(source).toContain('document.startViewTransition')
-    expect(selectHomeTransition(true, false, true, false)).toBe('curtain')
-    expect(selectHomeTransition(true, false, true, true)).toBe('shared')
-    expect(selectHomeTransition(true, true, true, false)).toBe('plain')
-    expect(selectHomeTransition(true, false, false, false)).toBe('plain')
-    expect(source).toContain("dataset.curtain = 'reveal'")
-  })
 })
 
 describe('reveal enhancement', () => {
@@ -283,7 +274,7 @@ function provenanceNavigation(path = '/', state: Record<string, unknown> | null 
   const anchorForDelegation = { getAttribute: () => '/gameonvb', target: '', hasAttribute: () => false, closest: () => null }
   const context = { navigationAnchor: undefined as typeof anchorForDelegation | undefined, window: { location, history, matchMedia: () => ({ matches: false }), scrollTo() {} },
     document: { visibilityState: 'visible', getElementById: () => null },
-    getRouteNavigationUrl, normalizePathname, pushRouteNavigation, isLightTablePair, isProjectSwitch, crossFadeProjects, beginNavigation, selectHomeTransition,
+    getRouteNavigationUrl, normalizePathname, pushRouteNavigation, isLightTablePair, isProjectSwitch, crossFadeProjects, beginNavigation,
     setUnknownPath() {}, setRoute: vi.fn(),
   }
   const navigate = new Function('event', 'context', `with(context){${code}}`)

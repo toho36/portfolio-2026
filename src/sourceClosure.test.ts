@@ -42,25 +42,21 @@ const GLOBALLY_FORBIDDEN_DEPENDENCIES = [
 ] as const
 
 const ROUTE_SCOPED_DEPENDENCIES = [
-  'gsap',
   'three',
 ] as const
 
-const ROUTE_SCOPED_ROOTS = ['./playground/', './home/', './gameonvb/', './goal-loop/calibre/'] as const
+const ROUTE_SCOPED_ROOTS = ['./playground/', './home/', './gameonvb/'] as const
 
 const ABSENT_DEPENDENCIES = [
   ...GLOBALLY_FORBIDDEN_DEPENDENCIES,
   ...ROUTE_SCOPED_DEPENDENCIES,
+  'gsap',
 ] as const
 
 const PACKAGE_ABSENT_DEPENDENCIES = [
   ...GLOBALLY_FORBIDDEN_DEPENDENCIES,
 ] as const
 
-const GSAP_VERSION = '3.15.0'
-const GSAP_RESOLVED = 'https://registry.npmjs.org/gsap/-/gsap-3.15.0.tgz'
-const GSAP_INTEGRITY =
-  'sha512-dMW4CWBTUK1AEEDeZc1g4xpPGIrSf9fJF960qbTZmN/QwZIWY5wgliS6JWl9/25fpTGJrMRtSjGtOmPnfjZB+A=='
 const THREE_VERSION = '0.185.1'
 const THREE_RESOLVED =
   'https://registry.npmjs.org/three/-/three-0.185.1.tgz'
@@ -153,31 +149,12 @@ describe('retired source closure', () => {
     }
   })
 
-  it('exposes gsap through exactly one route-local production module', () => {
-    const importingModules = Object.entries(sourceModules)
-      .filter(
-        ([path]) =>
-          path !== './sourceClosure.test.ts' && !path.endsWith('.test.ts'),
-      )
-      .filter(([, source]) => importsRetiredDependency(source, 'gsap'))
-      .map(([path]) => path)
-      .sort()
-
-    expect(importingModules).toEqual([
-      './home/loadPosterRuntime.ts',
-      './playground/loadRelayRuntime.ts',
-    ])
-    expect(sourceModules['./home/loadPosterRuntime.ts'].match(/import\(['"]gsap['"]\)/g)).toHaveLength(1)
-  })
-
   it('loads Three only through explicit route-local seams and lazy runtimes; no source imports Rapier', () => {
     const importingModules = Object.entries(sourceModules)
       .filter(([path]) => path !== './sourceClosure.test.ts' && !path.endsWith('.test.ts'))
       .filter(([, source]) => importsRetiredDependency(source, 'three'))
       .map(([path]) => path)
-    expect(importingModules.sort()).toEqual(['./gameonvb/loadStaircaseView.ts', './home/lightTable/Volleyball.jsx', './home/lightTable/Watch.jsx', './home/loadPosterRuntime.ts', './playground/giantImpact/main.js', './playground/giantImpact/motion.js', './playground/giantImpact/terrain.js', './playground/loadWireRuntime.ts'])
-    expect(sourceModules['./playground/GiantImpact.tsx'].match(/import\(['"]\.\/giantImpact\/main\.js['"]\)/g)).toHaveLength(1)
-    expect(sourceModules['./playground/GiantImpact.tsx']).not.toMatch(/import\s+(?!type\b)[^\n]*\bfrom\s*['"]\.\/giantImpact\/main\.js['"]|\brequire\s*\(/)
+    expect(importingModules.sort()).toEqual(['./gameonvb/loadStaircaseView.ts', './home/lightTable/Volleyball.jsx', './home/lightTable/Watch.jsx', './playground/loadWireRuntime.ts'])
     for (const [path, source] of Object.entries(sourceModules)) {
       if (path.endsWith('.test.ts')) continue
       expect(source, `${path} imports a sketch`).not.toMatch(/\b(?:from\s*|import\s*\(\s*)['"][^'"]*sketches\//)
@@ -187,13 +164,12 @@ describe('retired source closure', () => {
       expect(sourceModules[wrapper]).not.toMatch(/\bfrom\s*['"]three|\brequire\s*\(['"]three/)
     }
     expect(sourceModules['./gameonvb/loadStaircaseView.ts'].match(/import\(['"]three['"]\)/g)).toHaveLength(1)
-    expect(sourceModules['./home/loadPosterRuntime.ts'].match(/import\(['"]three['"]\)/g)).toHaveLength(1)
     expect(sourceModules['./playground/loadWireRuntime.ts'].match(/import\(['"]three['"]\)/g)).toHaveLength(1)
     for (const [path, source] of Object.entries(sourceModules))
       if (path !== './sourceClosure.test.ts') expect(importsRetiredDependency(source, '@dimforge/rapier3d-compat')).toBe(false)
   })
 
-  it('permits gsap and three only below the route-local runtime root', () => {
+  it('permits three only below the route-local runtime root', () => {
     for (const dependency of ROUTE_SCOPED_DEPENDENCIES) {
       const source = `import value from '${dependency}/subpath'`
 
@@ -265,14 +241,7 @@ describe('retired source closure', () => {
       build: 'tsc --noEmit && vite build',
     })
 
-    expect(packageJson.dependencies?.gsap).toBe(GSAP_VERSION)
-    expect(packageJson.devDependencies?.gsap).toBeUndefined()
-    expect(packageLock.packages[''].dependencies?.gsap).toBe(GSAP_VERSION)
-    expect(packageLock.packages['node_modules/gsap']).toMatchObject({
-      version: GSAP_VERSION,
-      resolved: GSAP_RESOLVED,
-      integrity: GSAP_INTEGRITY,
-    })
+    expect(declaredDependencies).not.toHaveProperty('gsap')
     expect(packageJson.dependencies?.three).toBe(THREE_VERSION)
     expect(packageJson.devDependencies?.three).toBeUndefined()
     expect(packageLock.packages[''].dependencies?.three).toBe(THREE_VERSION)

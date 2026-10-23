@@ -1,0 +1,21 @@
+--- a/mdl2/mpi/mdl.cxx
++++ b/mdl2/mpi/mdl.cxx
+@@ -58,6 +58,8 @@
+ #endif
+ #ifdef __linux__
+     #include <sys/resource.h>
++#endif
++#if defined(__linux__) || defined(__APPLE__)
+     #include <sys/mman.h>
+ #endif
+ #include "mpi.h"
+--- a/master.cxx
++++ b/master.cxx
+@@ -1101,6 +1101,7 @@
+ 
+ MSR::~MSR() {
+     csmFinish(csm);
++    analysis_callbacks.clear();
+     if (Py_IsInitialized()) Py_Finalize();
+ }
+ 
