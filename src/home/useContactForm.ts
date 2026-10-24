@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { sendContact, validateContact, type ContactErrors, type ContactValues } from './contactForm'
 
 interface ContactState {
@@ -19,7 +19,6 @@ export function createContactFormController(onChange: (state: ContactState) => v
   const nameRef = { current: null as HTMLInputElement | null }
   const emailRef = { current: null as HTMLInputElement | null }
   const messageRef = { current: null as HTMLTextAreaElement | null }
-  const successRef = { current: null as HTMLParagraphElement | null }
 
   function change(patch: Partial<ContactState>) {
     state = { ...state, ...patch }
@@ -58,14 +57,13 @@ export function createContactFormController(onChange: (state: ContactState) => v
     change({ sending: false })
   }
 
-  return { get state() { return state }, update, submit, nameRef, emailRef, messageRef, successRef }
+  return { get state() { return state }, update, submit, nameRef, emailRef, messageRef }
 }
 
 export function useContactForm() {
   const [state, setState] = useState(initialState)
   const controllerRef = useRef<ReturnType<typeof createContactFormController> | null>(null)
   if (!controllerRef.current) controllerRef.current = createContactFormController(setState)
-  const { update, submit, nameRef, emailRef, messageRef, successRef } = controllerRef.current
-  useEffect(() => { if (state.sent) successRef.current?.focus() }, [state.sent, successRef])
-  return { ...state, update, submit, nameRef, emailRef, messageRef, successRef }
+  const { update, submit, nameRef, emailRef, messageRef } = controllerRef.current
+  return { ...state, update, submit, nameRef, emailRef, messageRef }
 }

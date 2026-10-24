@@ -14,12 +14,15 @@ export function ArrowUpRight() {
   return <Arrow />
 }
 
-function ContactPoster() {
-  const { values, errors, sending, sent, submitError, nameRef, emailRef, messageRef, successRef, update, submit } = useContactForm()
+function ContactLinks() {
+  return <div className="poster-contact-links"><nav aria-label="Contact and CV">{CONTACT.slice(1).map((link) => <a className="target-link" key={link.label} href={link.href} download={link.download}>{link.label}</a>)}</nav></div>
+}
+
+function ContactPoster({ form }: { form: ReturnType<typeof useContactForm> }) {
+  const { values, errors, sending, submitError, nameRef, emailRef, messageRef, update, submit } = form
 
   return <div className="poster-contact">
-    {sent ? <p className="poster-contact-success" ref={successRef} tabIndex={-1} aria-live="polite">Thanks — message sent. I'll reply within a few days.</p> :
-      <form className="poster-contact-form" noValidate onSubmit={submit}>
+    <form className="poster-contact-form" noValidate onSubmit={submit}>
         <div className="poster-form-field"><label htmlFor="contact-name">Name</label><input id="contact-name" name="name" ref={nameRef} required autoComplete="name" value={values.name} onChange={(event) => update('name', event.target.value)} aria-invalid={!!errors.name} aria-describedby={errors.name ? 'contact-name-error' : undefined} />{errors.name && <span id="contact-name-error" className="poster-form-error">{errors.name}</span>}</div>
         <div className="poster-form-field"><label htmlFor="contact-email">Email</label><input id="contact-email" name="email" ref={emailRef} type="email" required autoComplete="email" value={values.email} onChange={(event) => update('email', event.target.value)} aria-invalid={!!errors.email} aria-describedby={errors.email ? 'contact-email-error' : undefined} />{errors.email && <span id="contact-email-error" className="poster-form-error">{errors.email}</span>}</div>
         <fieldset className="poster-form-topic"><legend>Topic (optional)</legend><div>{(['Role', 'Project', 'Other'] as const).map((topic: ContactTopic) => <label key={topic}><input type="radio" name="topic" value={topic} checked={values.topic === topic} onChange={() => update('topic', topic)} /><span>{topic}</span></label>)}</div></fieldset>
@@ -28,8 +31,8 @@ function ContactPoster() {
         <button className="magnetic-cta" type="submit" disabled={sending}>{sending ? 'Sending…' : HOME_COPY.contactCta} <ArrowUpRight /></button>
         {submitError === 'send' && <p className="poster-form-error" role="alert">Couldn't send. Email me directly at <a className="target-link" href={CONTACT[0].href}>{email}</a></p>}
         {submitError === 'rate' && <p className="poster-form-error" role="alert">Please wait a minute before sending another message.</p>}
-      </form>}
-    <div className="poster-contact-links"><nav aria-label="Contact and CV">{CONTACT.slice(1).map((link) => <a className="target-link" key={link.label} href={link.href} download={link.download}>{link.label}</a>)}</nav></div>
+      </form>
+    <ContactLinks />
   </div>
 }
 
@@ -79,20 +82,21 @@ export function ScreenSwitch({ autoSwap = false }: { autoSwap?: boolean } = {}) 
 }
 
 export function HomePage({ onNavigate }: { readonly onNavigate: (event: MouseEvent<HTMLAnchorElement>) => void }) {
+  const contactForm = useContactForm()
   return <div className="home-supporting">
     {POSTERS.map((poster) => {
-      const section = <section id={poster.id === 'hero' ? 'introduction' : poster.id === 'contact' ? 'contact' : undefined} data-poster={poster.id} key={poster.id}>
+      const section = <section id={poster.id === 'hero' ? 'introduction' : undefined} data-poster={poster.id} key={poster.id}>
         {poster.id === 'contact'
           ? <p className="eyebrow contact-card-top"><span aria-hidden="true">Hoang Viet To</span><span>{poster.label}</span><i aria-hidden="true">+</i></p>
           : <p className="eyebrow">{poster.label}</p>}
         {poster.id === 'hero' ? <IntroHeading heading={poster.heading} /> : <h2>{poster.heading}</h2>}
-        <p>{poster.body}</p>
+        {poster.body && <p>{poster.body}</p>}
         {LIVING[poster.id]}
         {poster.facts ? <dl className="poster-facts">{poster.facts.map(fact => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.text}</dd></div>)}</dl> : null}
         {poster.href ? <a className="target-link arrow-link" href={poster.href} onClick={onNavigate}><span className="link-label">{poster.cta ?? HOME_COPY.cta}</span><ArrowUpRight /></a> : null}
-        {poster.id === 'contact' ? <ContactPoster /> : null}
+        {poster.id === 'contact' ? <ContactPoster form={contactForm} /> : null}
       </section>
-      return poster.id === 'contact' ? <ContactEnvelope key={poster.id}>{section}</ContactEnvelope> : section
+      return poster.id === 'contact' ? <ContactEnvelope key={poster.id} sent={contactForm.sent} animateSend={!contactForm.values._honey.trim()} receiptLinks={<ContactLinks />}>{section}</ContactEnvelope> : section
     })}
   </div>
 }

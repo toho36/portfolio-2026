@@ -5,6 +5,35 @@ import { parse } from 'postcss'
 const styles = readFileSync(new URL('./styles.css', import.meta.url), 'utf8')
 const worlds = readFileSync(new URL('./worlds.css', import.meta.url), 'utf8')
 
+it('contains envelope paint and scroll overflow before the actual homepage footer without clipping the paper shadow', () => {
+  const table = parse(readFileSync(new URL('./home/lightTable/lightTable.css', import.meta.url), 'utf8'))
+  const supporting: Record<string, string> = {}
+  table.walkRules('.home-supporting', rule => { rule.walkDecls(d => { supporting[d.prop] = d.value }) })
+  expect(supporting.isolation).toBe('isolate')
+  expect(supporting.overflow).toBe('clip')
+  expect(supporting['padding-bottom']).toBe('clamp(48px,10vw,72px)')
+  const app = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8')
+  expect(app).toContain('<footer')
+  expect(supporting['z-index']).toBeUndefined()
+})
+
+it('inserts the entire sent paper inside the envelope pocket before the flap closes', () => {
+  const living = parse(readFileSync(new URL('./home/living/living.css', import.meta.url), 'utf8'))
+  let transform = '', pocketTop = 0
+  living.walkAtRules('keyframes', rule => {
+    if (rule.params === 'contact-insert') rule.walkRules('to', end => end.walkDecls('transform', d => { transform = d.value }))
+  })
+  living.walkRules(".contact-envelope[data-send='wrapping'] .contact-envelope-front", rule => {
+    rule.walkDecls('top', d => { pocketTop = parseFloat(d.value) / 100 })
+  })
+  const values = transform.match(/translateY\(([\d.]+)%\) scale\(([\d.]+)\)/)
+  expect(values).not.toBeNull()
+  expect(pocketTop).toBeGreaterThan(0)
+  const scale = Number(values![2]), top = (1 - scale) / 2 + Number(values![1]) / 100
+  expect(top).toBeGreaterThanOrEqual(pocketTop)
+  expect(top + scale).toBeLessThanOrEqual(.99)
+})
+
 describe('accessible typography-led styles', () => {
   it('lets the body fit a narrow viewport after scrollbar allocation', () => {
     expect(styles).toMatch(/body\s*\{[^}]*min-width:\s*0\s*;/)

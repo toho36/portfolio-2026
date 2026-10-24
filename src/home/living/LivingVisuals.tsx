@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties, type Reac
 import { VOLEYEVENTS } from '../../content/voleyevents'
 import { GOAL_LOOP_KITCHEN } from '../../content/goalLoop'
 import ball from '../lightTable/assets/ball-preview.png'
+import { startContactDeparture } from './contactEnvelope'
 import './living.css'
 
 // One focused motion per homepage section (owner-approved study 036). Every visual
@@ -197,7 +198,7 @@ export function WireTeaser() {
 
 /* Contact: the real form's paper sheet slides out of an envelope once. Decoration
    layers never take pointer events, so the live form is always usable. */
-export function ContactEnvelope({ children }: { children: ReactNode }) {
+export function ContactEnvelope({ children, sent = false, animateSend = true, receiptLinks }: { children: ReactNode; sent?: boolean; animateSend?: boolean; receiptLinks?: ReactNode }) {
   const [ref, live] = useLive<HTMLDivElement>(.25), motion = useArmed(), [skip, setSkip] = useState(false)
   // A jump to #contact (Get in touch, header Contact) must land on the settled sheet:
   // drop the starting pose synchronously, before App's handler measures and scrolls.
@@ -209,10 +210,17 @@ export function ContactEnvelope({ children }: { children: ReactNode }) {
   }, [ref])
   const armed = motion && !skip, [done, setDone] = useState(false)
   // Once the slide and fade end (1.8 s), drop the envelope so it adds no scroll space.
-  useEffect(() => { if (!armed || !live) return; const t = setTimeout(() => setDone(true), 1900); return () => clearTimeout(t) }, [armed, live])
-  return <div className="contact-envelope" ref={ref} data-armed={armed || undefined} data-live={live || undefined} data-done={done || undefined}>
-    <div className="contact-envelope-back" aria-hidden="true" />
-    {children}
-    <div className="contact-envelope-front" aria-hidden="true"><span /></div>
+  useEffect(() => { if (!armed || !live || sent) return; const t = setTimeout(() => setDone(true), 1900); return () => clearTimeout(t) }, [armed, live, sent])
+  useEffect(() => { if (sent && ref.current) return startContactDeparture(ref.current, animateSend) }, [sent, animateSend, ref])
+  return <div id="contact" className="contact-envelope" ref={ref} data-armed={armed && !sent || undefined} data-live={live || undefined} data-done={done || undefined} data-sent={sent || undefined}>
+    <div className="contact-envelope-motion" inert={sent || undefined} aria-hidden={sent || undefined}>
+      <div className="contact-envelope-back" aria-hidden="true" />
+      {children}
+      <div className="contact-envelope-front" aria-hidden="true"><span /></div>
+    </div>
+    <div className="contact-envelope-receipt" hidden={!sent}>
+      {sent && <p className="poster-contact-success" role="status" aria-live="polite" aria-atomic="true" tabIndex={-1}>Thanks, message sent.</p>}
+      {sent && receiptLinks}
+    </div>
   </div>
 }

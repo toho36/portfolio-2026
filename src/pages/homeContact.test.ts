@@ -10,7 +10,8 @@ describe('contact poster', () => {
     expect(contact).toContain('Let&#x27;s talk about roles and collaborations.')
     // The sheet header keeps the visible Contact label; the name and + are decoration.
     expect(contact).toContain('<p class="eyebrow contact-card-top"><span aria-hidden="true">Hoang Viet To</span><span>Contact</span><i aria-hidden="true">+</i></p>')
-    expect(contact).toContain('I usually reply within a few days.')
+    expect(contact).not.toContain('reply within a few days')
+    expect(contact).not.toMatch(/<p\b[^>]*>\s*<\/p>/)
     expect(contact).toContain('<form')
     for (const field of ['Name', 'Email', 'Topic', 'Message']) expect(contact).toContain(field)
     expect(contact).toContain('type="email"')
