@@ -96,7 +96,7 @@ export function HomePage({ onNavigate }: { readonly onNavigate: (event: MouseEve
         {poster.href ? <a className="target-link arrow-link" href={poster.href} onClick={onNavigate}><span className="link-label">{poster.cta ?? HOME_COPY.cta}</span><ArrowUpRight /></a> : null}
         {poster.id === 'contact' ? <ContactPoster form={contactForm} /> : null}
       </section>
-      return poster.id === 'contact' ? <ContactEnvelope key={poster.id} sent={contactForm.sent} animateSend={!contactForm.values._honey.trim()} receiptLinks={<ContactLinks />}>{section}</ContactEnvelope> : section
+      return poster.id === 'contact' ? <ContactEnvelope key={poster.id} sent={contactForm.sent} animateSend={!contactForm.values._honey.trim()}>{section}</ContactEnvelope> : section
     })}
   </div>
 }

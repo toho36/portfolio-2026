@@ -108,9 +108,7 @@
 .contact-envelope-motion { position: relative; grid-area: 1 / 1; min-width: 0; z-index: 1; transform-origin: 50% 50%; }
 .contact-envelope-receipt { grid-area: 1 / 1; align-self: start; position: sticky; top: calc(var(--site-header-height, 80px) + 16px); min-width: 0; padding: clamp(28px,5vw,64px); }
 .contact-envelope-receipt[hidden] { display: none; }
-.contact-envelope-receipt .poster-contact-success { margin: 0 0 24px; color: #d6b652; }
-.contact-envelope-receipt nav { display: flex; flex-wrap: wrap; gap: 8px; }
-.contact-envelope-receipt a { color: inherit; }
+.contact-envelope-receipt .poster-contact-success { margin: 0; color: #d6b652; }
 /* The envelope is wider than the tilted sheet and reaches below its lowered start pose
    (translateY 38%), so no corner or edge of the paper sticks out while it waits or slides. */
 .contact-envelope-back, .contact-envelope-front { position: absolute; left: -28px; right: -28px; display: none; pointer-events: none; }
@@ -124,9 +122,10 @@
 .contact-envelope[data-armed][data-live] .contact-envelope-front { transform: translateY(40%); opacity: 0; visibility: hidden; transition: transform .9s cubic-bezier(.5,0,.2,1) .9s, opacity .5s ease 1.3s, visibility 0s 1.8s; }
 .contact-envelope[data-armed][data-live] .contact-envelope-back { opacity: 0; visibility: hidden; transition: opacity .5s ease 1.3s, visibility 0s 1.8s; }
 
-/* Keep the original letter's layout space. Only this composition travels; the
-   #contact anchor, live receipt and its links stay still and usable underneath. */
+/* Keep the letter's layout space during departure, then leave only the receipt. */
 .contact-envelope[data-sent] .contact-envelope-motion { visibility: hidden; pointer-events: none; }
+.contact-envelope[data-send='settled'] .contact-envelope-motion { display: none; }
+.contact-envelope[data-send='settled'] .contact-envelope-receipt { position: static; }
 .contact-envelope[data-send='wrapping'] .contact-envelope-motion { visibility: visible; animation: contact-dispatch 2.1s cubic-bezier(.45,0,.3,1) both; }
 .contact-envelope[data-send='wrapping'] .contact-envelope-motion > [data-poster='contact'] { animation: contact-insert .75s cubic-bezier(.4,0,.2,1) both; }
 .contact-envelope[data-send='wrapping'] :is(.contact-envelope-back, .contact-envelope-front) { display: block; visibility: visible; animation: contact-return .45s ease-out both; }

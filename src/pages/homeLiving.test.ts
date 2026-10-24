@@ -1,8 +1,8 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { HomePage } from './Home'
-import { ContactEnvelope } from '../home/living/LivingVisuals'
+import * as contactForm from '../home/useContactForm'
 
 const markup = renderToStaticMarkup(createElement(HomePage, { onNavigate: () => {} }))
 const section = (id: string, next: string) => markup.slice(markup.indexOf(`data-poster="${id}"`), markup.indexOf(next))
@@ -32,16 +32,17 @@ describe('homepage living sections', () => {
     expect(contact.match(/id="contact"/g)).toHaveLength(1)
     expect(contact.match(/<form /g)).toHaveLength(1)
   })
-  it('keeps the success status and links outside the inert moving letter and preserves the contact anchor', () => {
-    const html = renderToStaticMarkup(createElement(ContactEnvelope, {
-      sent: true, receiptLinks: createElement('a', { href: '/hoang-viet-to-cv-en.docx', download: true }, 'CV EN'),
-      children: createElement('section', { 'data-poster': 'contact' }, createElement('form')),
-    }))
+  it('keeps only the success status outside the inert moving letter without repeating footer links', () => {
+    const original = contactForm.useContactForm
+    const mock = vi.spyOn(contactForm, 'useContactForm').mockImplementation(() => ({ ...original(), sent: true }))
+    let html: string
+    try { html = renderToStaticMarkup(createElement(HomePage, { onNavigate: () => {} })) }
+    finally { mock.mockRestore() }
     expect(html).toContain('<div id="contact" class="contact-envelope" data-sent="true">')
     expect(html).toContain('<div class="contact-envelope-motion" inert="" aria-hidden="true">')
     const receipt = html.slice(html.indexOf('<div class="contact-envelope-receipt"'))
     expect(receipt).toContain('role="status" aria-live="polite" aria-atomic="true" tabindex="-1">Thanks, message sent.</p>')
-    expect(receipt).toContain('>CV EN</a>')
+    expect(receipt).not.toMatch(/<nav|<a(?:\s|>)/)
     expect(receipt).not.toMatch(/hidden=|inert=|<form|reply within/)
     expect(html.match(/<form/g)).toHaveLength(1)
   })

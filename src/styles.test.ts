@@ -17,6 +17,24 @@ it('contains envelope paint and scroll overflow before the actual homepage foote
   expect(supporting['z-index']).toBeUndefined()
 })
 
+it('releases the letter layout only after its departure settles', () => {
+  const living = parse(readFileSync(new URL('./home/living/living.css', import.meta.url), 'utf8'))
+  const settled: Record<string, string> = {}, receipt: Record<string, string> = {}
+  living.walkRules(".contact-envelope[data-send='settled'] .contact-envelope-motion", rule => {
+    rule.walkDecls(d => { settled[d.prop] = d.value })
+  })
+  living.walkRules(".contact-envelope[data-send='settled'] .contact-envelope-receipt", rule => {
+    rule.walkDecls(d => { receipt[d.prop] = d.value })
+  })
+  expect(settled.display).toBe('none')
+  expect(receipt.position).toBe('static')
+  living.walkRules(rule => {
+    if (['.contact-envelope-motion', '.contact-envelope[data-sent] .contact-envelope-motion', ".contact-envelope[data-send='wrapping'] .contact-envelope-motion"].includes(rule.selector)) {
+      rule.walkDecls('display', d => { expect(d.value).not.toBe('none') })
+    }
+  })
+})
+
 it('inserts the entire sent paper inside the envelope pocket before the flap closes', () => {
   const living = parse(readFileSync(new URL('./home/living/living.css', import.meta.url), 'utf8'))
   let transform = '', pocketTop = 0

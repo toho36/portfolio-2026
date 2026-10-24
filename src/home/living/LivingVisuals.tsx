@@ -198,7 +198,7 @@ export function WireTeaser() {
 
 /* Contact: the real form's paper sheet slides out of an envelope once. Decoration
    layers never take pointer events, so the live form is always usable. */
-export function ContactEnvelope({ children, sent = false, animateSend = true, receiptLinks }: { children: ReactNode; sent?: boolean; animateSend?: boolean; receiptLinks?: ReactNode }) {
+export function ContactEnvelope({ children, sent = false, animateSend = true }: { children: ReactNode; sent?: boolean; animateSend?: boolean }) {
   const [ref, live] = useLive<HTMLDivElement>(.25), motion = useArmed(), [skip, setSkip] = useState(false)
   // A jump to #contact (Get in touch, header Contact) must land on the settled sheet:
   // drop the starting pose synchronously, before App's handler measures and scrolls.
@@ -220,7 +220,6 @@ export function ContactEnvelope({ children, sent = false, animateSend = true, re
     </div>
     <div className="contact-envelope-receipt" hidden={!sent}>
       {sent && <p className="poster-contact-success" role="status" aria-live="polite" aria-atomic="true" tabIndex={-1}>Thanks, message sent.</p>}
-      {sent && receiptLinks}
     </div>
   </div>
 }
