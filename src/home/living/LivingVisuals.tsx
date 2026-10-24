@@ -204,8 +204,8 @@ export function ContactEnvelope({ children }: { children: ReactNode }) {
   useEffect(() => {
     const settle = () => { if (location.hash !== '#contact') return; ref.current?.removeAttribute('data-armed'); setSkip(true) }
     if (location.hash === '#contact') setSkip(true)
-    document.addEventListener('homecontactready', settle); addEventListener('hashchange', settle)
-    return () => { document.removeEventListener('homecontactready', settle); removeEventListener('hashchange', settle) }
+    document.addEventListener('homecontactready', settle); document.addEventListener('homefragmentfocus', settle); addEventListener('hashchange', settle)
+    return () => { document.removeEventListener('homecontactready', settle); document.removeEventListener('homefragmentfocus', settle); removeEventListener('hashchange', settle) }
   }, [ref])
   const armed = motion && !skip, [done, setDone] = useState(false)
   // Once the slide and fade end (1.8 s), drop the envelope so it adds no scroll space.

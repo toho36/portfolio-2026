@@ -1,3 +1,4 @@
+import { Arrow } from '../components/Arrow'
 import type { MouseEvent } from 'react'
 import { HotWire } from './HotWire'
 import '../playground/playground.css'
@@ -9,7 +10,7 @@ export function PlaygroundPage({ onNavigate }: PlaygroundPageProps) {
   return (
     <section className="playground-page" aria-labelledby="playground-title">
       <header className="playground-heading">
-        <div><h1 id="playground-title">Playground</h1><p className="playground-intro">Small experiments in interaction and 3D.</p><h2>Hot Wire</h2><p className="playground-howto">Drag the handle along the wire to the end without touching it.</p></div>
+        <div><h1 id="playground-title">Playground</h1><p className="playground-intro">Small experiments in interaction and 3D.</p><h2>Hot Wire</h2><p className="playground-howto">Drag the handle along the wire to the end without touching it.</p><p className="playground-howto" id="wire-instructions">Keyboard: Tab to the game. Space or Enter starts or pauses. Arrow keys move the loop. R resets. Tab leaves the game. Easy pauses on release or blur; Hard resets.</p></div>
       </header>
       <HotWire onNavigate={onNavigate} />
       <section className="playground-studies" aria-labelledby="playground-studies-title">
@@ -21,7 +22,7 @@ export function PlaygroundPage({ onNavigate }: PlaygroundPageProps) {
             <p className="playground-study-kind">3D scroll animation</p>
             <p>A cliffside villa assembles as you scroll: the site is cleared at sunset, 258 modular pieces drop and snap into place, and the lights come on at blue hour.</p>
             <p className="playground-study-tools">Built with Blender 5.2 (Cycles, Python-generated scene), Image Gen 2 background plates and a 192-frame WebP sequence on canvas.</p>
-            <a className="target-link playground-study-link" href="/playground/lego-villa/index.html">Explore the Villa <span aria-hidden="true">↗</span></a>
+            <a className="target-link playground-study-link" href="/playground/lego-villa/index.html"><span className="link-label">Explore the Villa</span><Arrow/></a>
           </div>
         </article>
       </section>

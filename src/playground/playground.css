@@ -43,3 +43,8 @@
 .playground-page .playground-heading .playground-howto { margin: .35rem 0 0; font-size: 16px; line-height: 1.5; }
 .playground-page .playground-study .playground-study-tools { font-size: 14px; line-height: 1.5; opacity: .75; }
 .playground-page .playground-study .playground-study-link { display: inline-flex; align-items: center; gap: .35em; min-height: 44px; margin-top: .5rem; font-weight: 700; }
+
+/* The renderer uses this warm background; text must not inherit the pale theme. */
+.playground-page .playground { --ink: #242015; --paper: #f2efe6; color: var(--ink); background: var(--paper); }
+.playground-page .wire-hint { color: #242015; }
+.playground-page .wire-stage canvas:focus-visible { outline: 3px solid #242015; outline-offset: -6px; }

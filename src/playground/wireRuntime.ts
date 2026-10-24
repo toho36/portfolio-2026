@@ -42,6 +42,9 @@ export function createWireRuntime(three: any, opts: { host: HTMLElement; reduced
   renderer.shadowMap.type = three.PCFShadowMap
   const canvas = renderer.domElement as HTMLCanvasElement
   canvas.setAttribute('aria-label', 'VITEK hot wire game')
+  canvas.setAttribute('tabindex', '0')
+  canvas.setAttribute('role', 'application')
+  canvas.setAttribute('aria-describedby', 'wire-instructions')
   host.appendChild(canvas)
   const flash = document.createElement('div')
   flash.className = 'wire-flash'
@@ -114,6 +117,8 @@ export function createWireRuntime(three: any, opts: { host: HTMLElement; reduced
   let theta = Math.atan2(pointAt(path, 0).tangent.y, pointAt(path, 0).tangent.x)
   let wandTilt = wandTiltFor(theta)
   let primary: number | null = null
+  let owner: 'pointer' | 'keyboard' | null = null
+  const keys = new Set<string>()
   const pointers = new Map<number, Vec2>()
   let started = false, startedAt = 0, pauseAt = 0, pausedMs = 0
   let freezeUntil = 0, lastTick = -1, raf = 0, destroyed = false, firstFrame = false
@@ -187,7 +192,7 @@ export function createWireRuntime(three: any, opts: { host: HTMLElement; reduced
     theta = Math.atan2(pointAt(path, 0).tangent.y, pointAt(path, 0).tangent.x)
     wandTilt = wandTiltFor(theta)
     loop.scale.setScalar(mode === 'hard' ? 0.7 : 1)
-    started = false; startedAt = 0; pausedMs = 0; primary = null
+    started = false; startedAt = 0; pausedMs = 0; primary = null; owner = null; keys.clear()
     pointers.clear(); lastTick = -1
     frameCamera(); hud.onProgress(0); hud.onHold(false)
   }
@@ -204,7 +209,7 @@ export function createWireRuntime(three: any, opts: { host: HTMLElement; reduced
   }
   function fail() {
     status = 'frozen'; freezeUntil = performance.now() + 600
-    primary = null; pointers.clear()
+    primary = null; owner = null; pointers.clear(); keys.clear()
     hud.onHold(false); hud.onFail()
     flash.classList.remove('active'); void flash.offsetWidth; flash.classList.add('active')
     tone(220, 0.18, 'square', 0.13, 180)
@@ -212,8 +217,8 @@ export function createWireRuntime(three: any, opts: { host: HTMLElement; reduced
   function pause() {
     if (status !== 'holding') return
     if (mode === 'hard') { fail(); return }
-    status = 'paused'; pauseAt = performance.now(); primary = null
-    pointers.clear(); hud.onHold(false)
+    status = 'paused'; pauseAt = performance.now(); primary = null; owner = null
+    pointers.clear(); keys.clear(); hud.onHold(false)
   }
   function applyMove(previous: Vec2, next: Vec2) {
     if (status !== 'holding') return
@@ -233,6 +238,7 @@ export function createWireRuntime(three: any, opts: { host: HTMLElement; reduced
     const tick = Math.floor(percent / 10)
     if (tick > lastTick && tick > 0 && tick < 10) { lastTick = tick; tone(680, 0.055, 'sine', 0.018) }
     if (result.finished) {
+      owner = null; primary = null; pointers.clear(); keys.clear()
       status = 'finished'; hud.onHold(false); hud.onProgress(100)
       tone(523, 0.22, 'sine', 0.09); setTimeout(() => { if (!destroyed) tone(784, 0.32, 'sine', 0.1) }, 120)
       hud.onFinish(performance.now() - startedAt - pausedMs)
@@ -243,19 +249,20 @@ export function createWireRuntime(three: any, opts: { host: HTMLElement; reduced
     if (status !== 'idle' && status !== 'paused') return
     if (!canRegrab(worldToScreen(wandWorld().grip), { x: e.clientX, y: e.clientY })) return
     primary = e.pointerId; pointers.set(primary, { x: e.clientX, y: e.clientY })
+    owner = 'pointer'; keys.clear()
+    canvas.focus({ preventScroll: true })
     lastMoveAt = performance.now()
     const fromOverview = status === 'idle'
-    if (status === 'paused') pausedMs += performance.now() - pauseAt
+    if (status === 'paused' && started) pausedMs += performance.now() - pauseAt
     status = 'holding'; hud.onHold(true)
     // Leave the overview before the first move so finger precision matches today's game; a paused regrab keeps its spring.
     if (fromOverview) frameCamera(0, true)
-    if (!audio && typeof AudioContext !== 'undefined') audio = new AudioContext()
-    void audio?.resume()
+    enableAudio()
     try { canvas.setPointerCapture(e.pointerId) } catch { /* synthetic input */ }
   }
   function onMove(event: Event) {
     const e = event as PointerEvent
-    if (!pointers.has(e.pointerId)) return
+    if (owner !== 'pointer' || !pointers.has(e.pointerId)) return
     const next = { x: e.clientX, y: e.clientY }
     const previous = pointers.get(e.pointerId)!
     pointers.set(e.pointerId, next)
@@ -266,9 +273,47 @@ export function createWireRuntime(three: any, opts: { host: HTMLElement; reduced
     pointers.delete(e.pointerId)
     if (e.pointerId === primary) pause()
   }
+  function enableAudio() {
+    if (!sound) return
+    if (!audio && typeof AudioContext !== 'undefined') audio = new AudioContext()
+    void audio?.resume()
+  }
+  function onKey(event: Event) {
+    const e = event as KeyboardEvent
+    if (e.altKey || e.ctrlKey || e.metaKey) return
+    if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Enter', 'Escape', 'r', 'R'].includes(e.key)) return
+    e.preventDefault()
+    if (e.repeat) return
+    if (e.key === 'r' || e.key === 'R') { reset(); return }
+    if (owner === 'pointer') return
+    if (e.key === 'Escape') { pause(); return }
+    if (e.key === ' ' || e.key === 'Enter') {
+      if (status === 'holding') { pause(); return }
+      if (status !== 'idle' && status !== 'paused') return
+      const fromOverview = status === 'idle'
+      if (status === 'paused' && started) pausedMs += performance.now() - pauseAt
+      owner = 'keyboard'; keys.clear(); status = 'holding'; lastMoveAt = performance.now()
+      hud.onHold(true)
+      if (fromOverview) frameCamera(0, true)
+      enableAudio()
+      return
+    }
+    if (owner === 'keyboard' && status === 'holding') keys.add(e.key)
+  }
+  function keyboardMove(dt: number) {
+    if (owner !== 'keyboard' || status !== 'holding') return
+    const dx = Number(keys.has('ArrowRight')) - Number(keys.has('ArrowLeft'))
+    const dy = Number(keys.has('ArrowDown')) - Number(keys.has('ArrowUp'))
+    const length = Math.hypot(dx, dy)
+    if (!length) return
+    const previous = worldToScreen(pose), step = .7 * scale * dt / 1000 / length
+    applyMove(previous, { x: previous.x + dx * step, y: previous.y + dy * step })
+  }
   const detachCanvas = attachWireInput(canvas, {
     pointerdown: onDown, pointermove: onMove, pointerup: onUp, pointercancel: onUp,
     pointerleave: (e) => { if ((e as PointerEvent).pointerId === primary) pause() },
+    keydown: onKey, keyup: (e) => { keys.delete((e as KeyboardEvent).key) },
+    blur: () => { keys.clear(); pause() },
   })
   function drawWand(dt: number) {
     loop.position.set(pose.x, pose.y, 0)
@@ -300,6 +345,7 @@ export function createWireRuntime(three: any, opts: { host: HTMLElement; reduced
     if (destroyed || document.hidden) return
     const dt = Math.min(50, Math.max(0, now - lastFrame)); lastFrame = now
     if (status === 'frozen' && now >= freezeUntil) reset()
+    keyboardMove(dt)
     frameCamera(dt)
     drawWand(dt)
     if (status === 'frozen' && !reducedMotion) camera.position.x += Math.sin(now * 0.14) * 0.035
@@ -333,7 +379,7 @@ export function createWireRuntime(three: any, opts: { host: HTMLElement; reduced
     restart: reset,
     destroy() {
       if (destroyed) return
-      destroyed = true; cancelAnimationFrame(raf)
+      destroyed = true; keys.clear(); pointers.clear(); owner = null; cancelAnimationFrame(raf)
       detachCanvas(); observer.disconnect()
       document.removeEventListener('visibilitychange', visibility)
       for (const geometry of disposable) geometry.dispose()

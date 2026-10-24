@@ -19,7 +19,7 @@ describe('Goal Loop kitchen story', () => {
     expect(page).toContain('<h1 id="goal-loop-title">Quality first.<br/><em>Speed follows.</em></h1>')
     expect(page).toContain('Goal Loop · how I deliver software')
     expect(page).toContain(GOAL_LOOP_KITCHEN.hero.body)
-    expect(page).toMatch(/<a[^>]*href="\/"[^>]*><span aria-hidden="true">←<\/span> <span class="link-label">Back to homepage<\/span><\/a>/)
+    expect(page).toMatch(/<a[^>]*href="\/"[^>]*><svg class="link-arrow arrow-left"[\s\S]*?<\/svg> <span class="link-label">Back to homepage<\/span><\/a>/)
     expect(markup.match(/class="watch-view"/g)).toHaveLength(1)
     // The homepage card now carries the cloche and the kitchen line (owner 2026-10-22).
     expect(markup).toContain('<h2>Quality first.<br/>Speed follows.</h2>')
@@ -31,7 +31,7 @@ describe('Goal Loop kitchen story', () => {
 
   it('renders the four approved sections in order with all five semantic station panes', () => {
     const markup = render()
-    const sections = ['wrap k-hero', 'k-pass', 'wrap k-cmp', 'wrap k-wait reveal']
+    const sections = ['wrap k-hero', 'wrap k-wait', 'k-pass', 'wrap k-cmp']
     const positions = sections.map(section => markup.indexOf(`class="${section}"`))
     expect(positions.every(position => position >= 0)).toBe(true)
     expect(positions).toEqual([...positions].sort((a, b) => a - b))
@@ -90,7 +90,7 @@ describe('Goal Loop kitchen story', () => {
     expect((metric.after / 60).toFixed(1)).toBe(GOAL_LOOP_KITCHEN.measurement.final.split(' ')[0])
     expect(metric.proof).toBe('395 tests before; 403 tests after, all passing.')
     expect(markup).toContain('Less waiting for the final check.')
-    expect(markup).toContain('<span data-down="">39.4 min</span>')
+    expect(markup).toContain('<span data-result="">4.8 min</span>')
     expect(markup).toContain('In software: full test run, 395 → 403 tests, all passing.')
     expect(markup).toContain('Goal Loop audit · 9 Aug 2026 · one machine')
     expect(markup).toContain(GOAL_LOOP_KITCHEN.measurement.body)
@@ -128,7 +128,7 @@ describe('Goal Loop kitchen story', () => {
       expect(markup).toContain('href="mailto:tohoangviet1998@gmail.com"')
       expect(markup).toContain('href="/hoang-viet-to-cv-en.docx"')
       expect(markup).toContain('href="/hoang-viet-to-cv-cz.docx"')
-      expect(markup).toMatch(/aria-label="Case study navigation"><a[^>]*href="\/"[^>]*><span aria-hidden="true">←<\/span> <span class="link-label">Back to homepage<\/span><\/a><a[^>]*href="\/#contact"[^>]*><span class="link-label">Get in touch<\/span> <span aria-hidden="true">→<\/span><\/a><a[^>]*href="\/gameonvb"[^>]*><span class="link-label">Next: GameOnVB<\/span> <span aria-hidden="true">→<\/span><\/a>/)
+      expect(markup).toMatch(/aria-label="Case study navigation"><a[^>]*href="\/"[^>]*><svg class="link-arrow arrow-left"[\s\S]*?<\/svg> <span class="link-label">Back to homepage<\/span><\/a><a[^>]*href="\/#contact"[^>]*><span class="link-label">Get in touch<\/span> <svg class="link-arrow arrow-right"[\s\S]*?<\/svg><\/a><a[^>]*href="\/gameonvb"[^>]*><span class="link-label">Next: GameOnVB<\/span> <svg class="link-arrow arrow-right"[\s\S]*?<\/svg><\/a>/)
       const ids = [...markup.matchAll(/\bid="([^"]+)"/g)].map(match => match[1])
       expect(new Set(ids).size).toBe(ids.length)
     }
@@ -136,7 +136,7 @@ describe('Goal Loop kitchen story', () => {
 })
 
 // Execute the production mount against measured elements. This verifies dialog
-// scroll, countdown and disposal without pretending to verify browser rendering.
+// scroll, fixed results and disposal without pretending to verify browser rendering.
 function motionHarness(reduced = false) {
   const element = () => {
     const classes = new Set<string>(), attributes = new Map<string, string>()
@@ -158,7 +158,7 @@ function motionHarness(reduced = false) {
   const pass = { ...element(), getBoundingClientRect: () => ({ top, height: 4800 }), querySelectorAll: (selector: string) => selector === '.k-pane' ? panes : stations, querySelector: () => mover }
   const down = element(), wait = element(), race = element(), reveals = [element(), wait, race]
   const animation = { cancel: vi.fn() }
-  const root = { ...element(), ownerDocument: doc, closest: () => viewport, querySelector: (selector: string) => selector === '[data-pass]' ? pass : selector === '[data-down]' ? down : wait, querySelectorAll: (selector: string) => selector === '[data-plate]' ? plates : reveals, getAnimations: () => [animation] }
+  const root = { ...element(), ownerDocument: doc, closest: () => viewport, querySelector: (selector: string) => selector === '[data-pass]' ? pass : selector === '[data-result]' ? down : wait, querySelectorAll: (selector: string) => selector === '[data-plate]' ? plates : reveals, getAnimations: () => [animation] }
   const observers: { callback: (entries: { isIntersecting: boolean; target: unknown }[]) => void; options: unknown; observe: ReturnType<typeof vi.fn>; unobserve: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn> }[] = []
   vi.stubGlobal('IntersectionObserver', class {
     observe = vi.fn(); unobserve = vi.fn(); disconnect = vi.fn()
@@ -192,8 +192,8 @@ it('moves through five stations using captured dialog scroll, shares plates, and
     }
     h.observers[0].callback([{ isIntersecting: true, target: h.race }])
     expect(h.race.classList.contains('in')).toBe(true)
-    h.observers[1].callback([{ isIntersecting: true, target: h.wait }])
-    h.tick(300); expect(h.down.textContent).toBe('39.4 min')
+    expect(h.down.textContent).toBe('4.8 min')
+    h.tick(300); expect(h.down.textContent).toBe('4.8 min')
     h.tick(2500); expect(h.down.textContent).toBe('4.8 min')
     expect(h.wait.classList.contains('done')).toBe(true)
     h.scroll(-4000)
@@ -212,8 +212,6 @@ it.each([true, false])('reduced motion=%s lists every pane and finishes immediat
   const h = motionHarness(initiallyReduced)
   try {
     if (!initiallyReduced) {
-      h.observers[1].callback([{ isIntersecting: true, target: h.wait }])
-      expect(h.queue.size).toBeGreaterThan(0)
       h.media.matches = true; h.events.get('preference')!(); h.tick(100)
     }
     expect(h.pass.dataset.stage).toBe('4')
@@ -226,7 +224,7 @@ it.each([true, false])('reduced motion=%s lists every pane and finishes immediat
 
 it('keeps the Goal Loop header back link text unchanged', () => {
   const page = renderToStaticMarkup(createElement(App, { initialPath: '/goal-loop' }))
-  expect(page).toMatch(/aria-label="Goal Loop presentation"><a class="target-link" href="\/">← Back to homepage<\/a><\/nav>/)
+  expect(page).toMatch(/aria-label="Goal Loop presentation"><a class="target-link" href="\/"><svg class="link-arrow arrow-left"[^]*?<span class="link-label">Back to homepage<\/span><\/a><\/nav>/)
 })
 
 it('keeps the desktop kitchen pin short and the phone pin at 300svh', () => {

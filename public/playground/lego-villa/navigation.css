@@ -1,0 +1,28 @@
+/* Standalone navigation; the original frame sequence and stage remain intact. */
+.villa-nav { position: fixed; z-index: 30; top: 0; left: 0; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; width: 100%; min-height: 80px; padding: 0 clamp(1.25rem, 3vw, 3rem); border-bottom: 1px solid #454137; color: #e9e7df; background: #171816; font: 13px/1.4 Arial, sans-serif; }
+.villa-nav a { display: inline-flex; align-items: center; min-width: 44px; min-height: 44px; padding-inline: .75rem; text-decoration: none; }
+.villa-nav .villa-brand { margin-left: -.75rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.villa-nav .villa-contact { text-decoration: underline; text-underline-offset: .3em; order: 1; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.villa-nav .villa-contact, .villa-nav nav a { color: #b7afa0; }
+.villa-nav nav { display: flex; align-items: center; gap: .15rem; }
+.villa-nav nav a { font-weight: 700; letter-spacing: .06em; text-transform: uppercase; text-decoration: underline; text-underline-offset: .3em; }
+.villa-nav a:hover { color: #d6b652; }
+.villa-nav a:focus-visible { outline: 3px solid #e6d296; outline-offset: 4px; }
+.story .stage { padding-top: 104px; }
+.story .identity h1 { font-size: 28px; }
+.story .skip { font-size: 16px; }
+.story .caption { font-size: 18px; }
+.work#work { padding: 48px max(24px, calc(50vw - 640px)); scroll-margin-top: 140px; }
+.work#work .skip { font-size: 16px; }
+@media (max-width: 820px) {
+  .villa-nav { align-items: flex-start; flex-wrap: wrap; gap: .5rem; padding-block: .85rem; }
+  .villa-nav .villa-contact { order: 0; margin-left: auto; }
+  .villa-nav nav { display: grid; width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
+  .villa-nav nav a { justify-content: center; min-width: 0; padding-inline: .25rem; white-space: nowrap; }
+  .villa-nav nav a[href='/'] { display: none; }
+  .story .stage { padding-top: 148px; }
+}
+@media (max-width: 480px) {
+  .story .identity { flex-wrap: wrap; }
+  .story .caption { font-size: 16px; }
+}

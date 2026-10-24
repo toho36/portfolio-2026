@@ -5,14 +5,13 @@ import { BallRun, ContactEnvelope, IntroHeading, SharedPage, TicketRun, WireTeas
 import { isClick } from '../home/sliderMath'
 import { type ContactTopic } from '../home/contactForm'
 import { useContactForm } from '../home/useContactForm'
+import { Arrow } from '../components/Arrow'
 
 const email = CONTACT[0].href.slice('mailto:'.length)
 
 /** Short, heavy "opens elsewhere" arrow; the font's ↗ is long and hairline next to bold labels. */
 export function ArrowUpRight() {
-  return <svg className="arrow-up-right" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
-    <path d="M3.5 12.5 12.5 3.5M5.5 3.5h7v7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
+  return <Arrow />
 }
 
 function ContactPoster() {
@@ -23,7 +22,7 @@ function ContactPoster() {
       <form className="poster-contact-form" noValidate onSubmit={submit}>
         <div className="poster-form-field"><label htmlFor="contact-name">Name</label><input id="contact-name" name="name" ref={nameRef} required autoComplete="name" value={values.name} onChange={(event) => update('name', event.target.value)} aria-invalid={!!errors.name} aria-describedby={errors.name ? 'contact-name-error' : undefined} />{errors.name && <span id="contact-name-error" className="poster-form-error">{errors.name}</span>}</div>
         <div className="poster-form-field"><label htmlFor="contact-email">Email</label><input id="contact-email" name="email" ref={emailRef} type="email" required autoComplete="email" value={values.email} onChange={(event) => update('email', event.target.value)} aria-invalid={!!errors.email} aria-describedby={errors.email ? 'contact-email-error' : undefined} />{errors.email && <span id="contact-email-error" className="poster-form-error">{errors.email}</span>}</div>
-        <fieldset className="poster-form-topic"><legend>Topic</legend><div>{(['Role', 'Project', 'Other'] as const).map((topic: ContactTopic) => <label key={topic}><input type="radio" name="topic" value={topic} checked={values.topic === topic} onChange={() => update('topic', topic)} /><span>{topic}</span></label>)}</div></fieldset>
+        <fieldset className="poster-form-topic"><legend>Topic (optional)</legend><div>{(['Role', 'Project', 'Other'] as const).map((topic: ContactTopic) => <label key={topic}><input type="radio" name="topic" value={topic} checked={values.topic === topic} onChange={() => update('topic', topic)} /><span>{topic}</span></label>)}</div></fieldset>
         <div className="poster-form-field"><label htmlFor="contact-message">Message</label><textarea id="contact-message" name="message" ref={messageRef} required minLength={20} maxLength={4000} rows={4} value={values.message} onChange={(event) => update('message', event.target.value)} aria-invalid={!!errors.message} aria-describedby={errors.message ? 'contact-message-error' : undefined} />{errors.message && <span id="contact-message-error" className="poster-form-error">{errors.message}</span>}</div>
         <div className="poster-honey"><label htmlFor="contact-honey">Leave this field empty</label><input id="contact-honey" name="_honey" tabIndex={-1} autoComplete="off" value={values._honey} onChange={(event) => update('_honey', event.target.value)} /></div>
         <button className="magnetic-cta" type="submit" disabled={sending}>{sending ? 'Sending…' : HOME_COPY.contactCta} <ArrowUpRight /></button>
@@ -81,17 +80,16 @@ export function ScreenSwitch({ autoSwap = false }: { autoSwap?: boolean } = {}) 
 
 export function HomePage({ onNavigate }: { readonly onNavigate: (event: MouseEvent<HTMLAnchorElement>) => void }) {
   return <div className="home-supporting">
-    {POSTERS.map((poster, index) => {
+    {POSTERS.map((poster) => {
       const section = <section id={poster.id === 'hero' ? 'introduction' : poster.id === 'contact' ? 'contact' : undefined} data-poster={poster.id} key={poster.id}>
         {poster.id === 'contact'
           ? <p className="eyebrow contact-card-top"><span aria-hidden="true">Hoang Viet To</span><span>{poster.label}</span><i aria-hidden="true">+</i></p>
           : <p className="eyebrow">{poster.label}</p>}
         {poster.id === 'hero' ? <IntroHeading heading={poster.heading} /> : <h2>{poster.heading}</h2>}
         <p>{poster.body}</p>
-        {index === 0 ? <p>{HOME_COPY.positioning}</p> : null}
         {LIVING[poster.id]}
         {poster.facts ? <dl className="poster-facts">{poster.facts.map(fact => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.text}</dd></div>)}</dl> : null}
-        {poster.href ? <a className="target-link" href={poster.href} onClick={onNavigate}>{poster.cta ?? HOME_COPY.cta}<ArrowUpRight /></a> : null}
+        {poster.href ? <a className="target-link arrow-link" href={poster.href} onClick={onNavigate}><span className="link-label">{poster.cta ?? HOME_COPY.cta}</span><ArrowUpRight /></a> : null}
         {poster.id === 'contact' ? <ContactPoster /> : null}
       </section>
       return poster.id === 'contact' ? <ContactEnvelope key={poster.id}>{section}</ContactEnvelope> : section

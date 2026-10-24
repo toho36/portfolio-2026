@@ -17,6 +17,12 @@ describe('homepage living sections', () => {
     expect(section('solidpixels', 'data-poster="goal-loop"')).toMatch(/<ul class="shared-legend"[^>]*><li data-role="Frontend"/)
     expect(section('playground', 'data-poster="tools"')).toContain('Keep your pointer near the wire and follow it.')
   })
+  it('uses one positioning paragraph and retains concrete facts', () => {
+    const intro = section('hero', 'data-poster="gameonvb"')
+    expect(intro.match(/<p>/g)).toHaveLength(1)
+    expect(markup).toContain('I own GameOnVB end to end')
+    expect(markup).toContain('395 → 403 tests')
+  })
   it('wraps the real contact form in the envelope, decoration hidden from assistive tech', () => {
     const contact = markup.slice(markup.indexOf('<div class="contact-envelope"'))
     expect(contact).toMatch(/^<div class="contact-envelope"><div class="contact-envelope-back" aria-hidden="true"><\/div><section id="contact" data-poster="contact">/)

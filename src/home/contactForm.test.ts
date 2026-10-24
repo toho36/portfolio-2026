@@ -12,6 +12,12 @@ describe('contact form', () => {
     expect(validateContact(valid)).toEqual({})
   })
 
+  it('allows an omitted topic and uses a neutral subject', () => {
+    const values = { ...valid, topic: '' as const }
+    expect(validateContact(values)).toEqual({})
+    expect(buildContactPayload(values)).toMatchObject({ topic: '', _subject: 'Portfolio: Message from Ada' })
+  })
+
   it('builds the exact FormSubmit JSON payload', () => {
     expect(buildContactPayload(valid)).toEqual({
       name: 'Ada', email: 'ada@example.com', message: 'A useful message about a project.', topic: 'Project',

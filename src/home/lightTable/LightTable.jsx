@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Arrow } from '../../components/Arrow'
 import { ArrowUpRight, HomePage } from '../../pages/Home'
 import { GoalLoopPage } from '../../pages/GoalLoop'
 import { createWatchFlow } from './watchFlow.js'
@@ -18,7 +19,6 @@ import './lightTable.css'
 const sheets = [
   { id: 'goal-loop', label: 'Goal Loop', title: <>Quality first.<br/>Speed follows.</>, href: '/goal-loop' },
   { id: 'gameonvb', label: 'GameOnVB', title: <>More time<br/>on court.</>, href: '/gameonvb' },
-  { id: 'intro', label: 'Hoang Viet To', title: <>New tools.<br/>Old standards.</>, href: '/#introduction' },
 ]
 
 const ballIndex=sheets.findIndex(sheet=>sheet.id==='gameonvb'),watchIndex=sheets.findIndex(sheet=>sheet.id==='goal-loop')
@@ -34,7 +34,7 @@ export function LightTable({pathname,onNavigate}) {
   const deckRef=useRef(null),assistRef=useRef(null),backRef=useRef(null),pendingFocusRef=useRef(null)
   useEffect(()=>{
     const media=matchMedia('(prefers-reduced-motion: reduce)')
-    const assist=createDeckAssist(deckRef.current,()=>media.matches);assistRef.current=assist
+    const assist=createDeckAssist(deckRef.current,()=>media.matches,sheets.length);assistRef.current=assist
     const update=()=>{if(!ballRestoreRef.current&&!restoreRef.current)setPosition(deckPosition(scrollY,innerHeight*.85))}
     const preference=()=>setReduced(media.matches)
     preference();if(!coldRef.current)update()
@@ -43,6 +43,10 @@ export function LightTable({pathname,onNavigate}) {
   },[])
   useLayoutEffect(()=>{
     const want=pathname==='/gameonvb'
+    // Calm route commits open directly; only card entries fly from the deck.
+    const calm=document.documentElement?.dataset.projectSwitch==='true'
+    if(calm&&want&&!ballDesiredRef.current)coldRef.current=true
+    if(calm&&pathname==='/goal-loop'&&!desiredRef.current)watchColdRef.current=true
     pendingFocusRef.current=null
     if(want&&!ballDesiredRef.current)assistRef.current?.cancel()
     ballDesiredRef.current=want;setBallDesired(want);if(want&&!restoreRef.current)setBallMounted(true);else if(!want&&!ballRestoreRef.current){setBallMounted(false);if(ballDialogRef.current?.open)ballDialogRef.current.close()}
@@ -58,7 +62,7 @@ export function LightTable({pathname,onNavigate}) {
   },[pathname])
   function scrollStoryAnchor(){
     if(!location.hash)return
-    try{const target=document.getElementById(decodeURIComponent(location.hash.slice(1)));if(ballDesiredRef.current&&ballDialogRef.current?.contains(target)||desiredRef.current&&dialogRef.current?.contains(target))target.scrollIntoView()}catch{/* An invalid fragment has no target. */}
+    try{const target=document.getElementById(decodeURIComponent(location.hash.slice(1)));if(ballDesiredRef.current&&ballDialogRef.current?.contains(target)||desiredRef.current&&dialogRef.current?.contains(target)){target.tabIndex=-1;target.focus({preventScroll:true});target.scrollIntoView({behavior:'instant',block:'start'})}}catch{/* An invalid fragment has no target. */}
   }
   useLayoutEffect(()=>{
     if(pathname!=='/gameonvb'){coldFragmentRef.current=false;return}
@@ -104,14 +108,15 @@ export function LightTable({pathname,onNavigate}) {
   },[pathname])
   useEffect(()=>{
     const escape=event=>{if(event.key==='Escape'&&!event.defaultPrevented&&ballDesiredRef.current){event.preventDefault();ballBack()}else if(event.key==='Escape'&&!event.defaultPrevented&&desiredRef.current){event.preventDefault();back()}}
-    const anchor=()=>{if(location.pathname==='/'&&location.hash==='#contact')assistRef.current?.cancel();if(ballDesiredRef.current||desiredRef.current)scrollStoryAnchor()}
+    const anchor=()=>{if(location.pathname==='/'&&['#contact','#introduction'].includes(location.hash))assistRef.current?.cancel();if((ballDesiredRef.current||desiredRef.current)&&document.documentElement?.dataset.projectSwitch!=='true')scrollStoryAnchor()}
+    const fragmentNavigate=()=>assistRef.current?.cancel()
     const contactClick=event=>{
       const link=event.target.closest?.('a[href="/#contact"]')
       if(!link||!getRouteNavigationUrl({href:'/',currentUrl:location.href,button:event.button,defaultPrevented:event.defaultPrevented,altKey:event.altKey,ctrlKey:event.ctrlKey,metaKey:event.metaKey,shiftKey:event.shiftKey,target:link.target,download:link.hasAttribute('download')}))return
       assistRef.current?.cancel();document.dispatchEvent(new Event('homecontactready'))
     }
-    document.addEventListener('keydown',escape);document.addEventListener('click',contactClick);addEventListener('hashchange',anchor)
-    return ()=>{document.removeEventListener('keydown',escape);document.removeEventListener('click',contactClick);removeEventListener('hashchange',anchor)}
+    document.addEventListener('keydown',escape);document.addEventListener('click',contactClick);document.addEventListener('homefragmentnavigate',fragmentNavigate);addEventListener('hashchange',anchor)
+    return ()=>{document.removeEventListener('keydown',escape);document.removeEventListener('click',contactClick);document.removeEventListener('homefragmentnavigate',fragmentNavigate);removeEventListener('hashchange',anchor)}
   },[])
   function select(index){if(assistRef.current)assistRef.current.move(index);else window.scrollTo({top:index*innerHeight*.85,behavior:'instant'})}
   function enter(event){
@@ -126,9 +131,9 @@ export function LightTable({pathname,onNavigate}) {
     const destination=getRouteNavigationUrl({href:'/',currentUrl:location.href,button:event.button,defaultPrevented:event.defaultPrevented,altKey:event.altKey,ctrlKey:event.ctrlKey,metaKey:event.metaKey,shiftKey:event.shiftKey,target:event.currentTarget.target,download:false})
     if(!destination)return
     if(!desiredRef.current){event.preventDefault();return}
-    // Contact leaves in the route commit, so the page can snap under the cross-fade.
-    if(!contact){desiredRef.current=false;setDesired(false)}
-    if(!contact&&!location.hash&&history.state?.lightTableFromHome===true){event.preventDefault();history.back()}
+    // Only an authored return starts before the route commit; calm exits retain their snapshot.
+    if(!contact)desiredRef.current=false
+    if(!contact&&!location.hash&&history.state?.lightTableFromHome===true){setDesired(false);event.preventDefault();history.back()}
     else onNavigate(event)
   }
   function ballBack(event){
@@ -137,8 +142,8 @@ export function LightTable({pathname,onNavigate}) {
     const destination=getRouteNavigationUrl({href:'/',currentUrl:location.href,button:event.button,defaultPrevented:event.defaultPrevented,altKey:event.altKey,ctrlKey:event.ctrlKey,metaKey:event.metaKey,shiftKey:event.shiftKey,target:event.currentTarget.target,download:false})
     if(!destination)return
     if(!ballDesiredRef.current){event.preventDefault();return}
-    if(!contact){ballDesiredRef.current=false;setBallDesired(false)}
-    if(!contact&&!location.hash&&history.state?.lightTableFromHome===true){event.preventDefault();history.back()}
+    if(!contact)ballDesiredRef.current=false
+    if(!contact&&!location.hash&&history.state?.lightTableFromHome===true){setBallDesired(false);event.preventDefault();history.back()}
     else onNavigate(event)
   }
   useLayoutEffect(()=>{
@@ -195,7 +200,7 @@ export function LightTable({pathname,onNavigate}) {
       dialog.querySelector('.entry-ball-slot').append(staticSteps)
       const sourceScale=Math.hypot(origin.a,origin.b),previousOverflow=document.body.style.overflow
       const edgeTime=1.85,edgeY=card.cornerScreen.y,diameter=2*(pose.radius??1)*unit
-      if(!ballSourceRef.current||ballSourceRef.current.hidden)ballSourceRef.current=sheet.querySelector('.sheet-cta:not([hidden])')||deck.querySelector('button[aria-label="Show GameOnVB"]')
+      if(!ballSourceRef.current||ballSourceRef.current.hidden)ballSourceRef.current=sheet.querySelector('.sheet-cta:not([hidden])')||deck.querySelector('.table-footer a[href="/gameonvb"]')
       function paint(age,shared){
         const p=ballEase((age-edgeTime)/1.25)
         const projection=ballEntryPresentation(sourceFrame,innerWidth,innerHeight,age,host.ballEntry?.ambientPose),frame=shared?.affine??projection.affine,layout=ballContactLayout(sourceFrame,innerWidth,innerHeight),fanFrame=shared?.fanFrame??projection.fan
@@ -253,7 +258,7 @@ export function LightTable({pathname,onNavigate}) {
     if(!ballDesired){dialog.scrollTop=0;host.dispatchEvent(new Event('ballentrychange'))}
     host.ballEntry.want=ballDesired;host.ballEntry.reduced=reduced
     // Leaving straight for Goal Loop or the contact section (or arriving from Goal Loop) snaps; the deck never shows.
-    host.ballFlow?.set(ballDesired,reduced||(!ballDesired&&(desiredRef.current||location.hash==='#contact'))||(ballDesired&&coldRef.current))
+    host.ballFlow?.set(ballDesired,reduced||document.documentElement?.dataset.projectSwitch==='true'||(!ballDesired&&(desiredRef.current||['#contact','#introduction'].includes(location.hash)))||(ballDesired&&coldRef.current))
   },[ballMounted,ballDesired,reduced,position])
   useLayoutEffect(()=>{
     if(!mounted)return
@@ -263,7 +268,7 @@ export function LightTable({pathname,onNavigate}) {
       const sheet=host.closest('.sheet')
       const previousOverflow=document.body.style.overflow,previousDeckStyle=deck.style.cssText,previousFanStyle=fan.style.cssText,footer=deck.querySelector('.table-footer'),previousFooterStyle=footer.style.cssText
       footer.style.setProperty('visibility','hidden','important')
-      if(!sourceRef.current||sourceRef.current.hidden)sourceRef.current=sheet.querySelector('.sheet-cta:not([hidden])')||deck.querySelector('button[aria-label="Show Goal Loop"]')
+      if(!sourceRef.current||sourceRef.current.hidden)sourceRef.current=sheet.querySelector('.sheet-cta:not([hidden])')||deck.querySelector('.table-footer a[href="/goal-loop"]')
       function paint(p){
         dialog.style.setProperty('--progress',String(p))
         deck.style.opacity=String(1-p*.8);fan.style.transform=`translate(-50%,-50%) scale(${1-p*.035})`
@@ -293,7 +298,7 @@ export function LightTable({pathname,onNavigate}) {
     }
     setPhase(desired?'entering':'leaving')
     if(!desired)dialog.scrollTop=0
-    flowRef.current.set(desired,reduced||(!desired&&(ballDesiredRef.current||location.hash==='#contact'))||(desired&&watchColdRef.current))
+    flowRef.current.set(desired,reduced||document.documentElement?.dataset.projectSwitch==='true'||(!desired&&(ballDesiredRef.current||['#contact','#introduction'].includes(location.hash)))||(desired&&watchColdRef.current))
   },[mounted,desired,reduced])
   useLayoutEffect(()=>{
     const pending=pendingFocusRef.current
@@ -309,14 +314,14 @@ export function LightTable({pathname,onNavigate}) {
       // Land may run synchronously under reduced motion. Hidden CTAs and inert
       // homepage content must commit before focus is resolved from the live DOM.
       if(ballMounted||mounted||ballRestoreRef.current||restoreRef.current)return
-      if(location.hash==='#contact'){
+      if(['#contact','#introduction'].includes(location.hash)){
         pendingFocusRef.current=null
         document.dispatchEvent(new Event('homecontactready'))
         return
       }
       const deck=deckRef.current,source=deck.querySelector(`[data-sheet="${pending.id}"] .sheet-cta`),bounds=source?.getBoundingClientRect()
       const visible=source&&!source.hidden&&!source.closest('[inert]')&&bounds.top>=0&&bounds.bottom<=innerHeight
-      target=visible?source:deck.querySelector(`button[aria-label="Show ${sheets.find(sheet=>sheet.id===pending.id).label}"]`)
+      target=visible?source:deck.querySelector(`.table-footer a[href="${sheets.find(sheet=>sheet.id===pending.id).href}"]`)
     }
     if(!target||target.hidden||target.closest('[inert]'))return
     pendingFocusRef.current=null;target.focus({preventScroll:true})
@@ -345,7 +350,7 @@ export function LightTable({pathname,onNavigate}) {
     return ()=>{removeEventListener('pointerup',end);removeEventListener('pointercancel',cancel);clearTimeout(timer);clearTimeout(expire);swipeRef.current=null;draggedRef.current=false}
   },[])
   return <div data-light-table-shell data-pathname={pathname}>
-    <section className="light-table" ref={deckRef} data-position={position.toFixed(3)} data-phase={ballPhase} inert={ballRestoreRef.current||restoreRef.current?true:undefined} aria-hidden={ballMounted||mounted?true:undefined}>
+    <section className="light-table" style={{height:`${100+(sheets.length-1)*85}svh`}} ref={deckRef} data-position={position.toFixed(3)} data-phase={ballPhase} inert={ballRestoreRef.current||restoreRef.current?true:undefined} aria-hidden={ballMounted||mounted?true:undefined}>
       <div className="table-sticky">
         <h1 className="table-title"><span>New tools.</span><span>Old standards.</span></h1>
         <div className="sheet-fan" aria-label="Selected work" style={{touchAction:'pan-y'}} onPointerDown={swipeStart}
@@ -357,10 +362,10 @@ export function LightTable({pathname,onNavigate}) {
                 onPointerMove={event=>{if(reduced||event.pointerType==='touch')return;const b=event.currentTarget.getBoundingClientRect();event.currentTarget.style.setProperty('--mx',String((event.clientX-b.x)/b.width-.5));event.currentTarget.style.setProperty('--my',String((event.clientY-b.y)/b.height-.5))}}
                 onPointerLeave={event=>{event.currentTarget.style.setProperty('--mx','0');event.currentTarget.style.setProperty('--my','0')}}>
                 <button className="sheet-select" type="button" aria-label={`Inspect ${sheet.label} card`} aria-pressed={active===index} onClick={()=>select(index)} onFocus={event=>{if(event.currentTarget.matches(':focus-visible')&&!ballDesiredRef.current&&Math.abs(position-index)>.6)select(index)}}/>
-                <div className="sheet-top"><span>0{index+1} / 03</span><span>{sheet.label}</span><i aria-hidden="true">+</i></div>
-                {index===0?<Watch active={position<.7&&!mounted&&!restoreRef.current&&!ballMounted} reduced={reduced}/>:index===1?<Volleyball cold={coldRef.current} active={Math.abs(position-1)<.7&&!mounted&&!restoreRef.current||ballMounted} reduced={reduced}/>:<div className="intro-art" aria-hidden="true"><span>HVT</span><i/><i/><i/></div>}
+                <div className="sheet-top"><span>0{index+1} / 02</span><span>{sheet.label}</span><i aria-hidden="true">+</i></div>
+                {index===0?<Watch active={position<.7&&!mounted&&!restoreRef.current&&!ballMounted} reduced={reduced}/>:<Volleyball cold={coldRef.current} active={Math.abs(position-1)<.7&&!mounted&&!restoreRef.current||ballMounted} reduced={reduced}/>}
                 <h2>{sheet.title}</h2>
-                <div className="sheet-bottom"><span>{index===0?'Kitchen / the pass':index===1?'Recreational volleyball':'Software / systems'}</span><a className="target-link sheet-cta" href={sheet.href} hidden={Math.abs(position-index)>.02} onClick={index<2?enter:undefined}
+                <div className="sheet-bottom"><span>{index===0?'Kitchen / the pass':'Recreational volleyball'}</span><a className="target-link sheet-cta" href={sheet.href} hidden={Math.abs(position-index)>.02} onClick={enter}
                   onPointerDown={event=>{if(event.isPrimary&&event.button===0)event.currentTarget.dataset.pressed='true'}}
                   onPointerUp={event=>{delete event.currentTarget.dataset.pressed}}
                   onPointerCancel={event=>{delete event.currentTarget.dataset.pressed}}
@@ -370,7 +375,7 @@ export function LightTable({pathname,onNavigate}) {
             </div>
           })}
         </div>
-        <div className="table-footer"><span>Scroll or swipe to deal.<br/>Reverse to collect.</span><nav aria-label="Selected sheets">{sheets.map((s,i)=><button type="button" key={s.id} aria-label={`Show ${s.label}`} aria-current={active===i?'true':undefined} onClick={()=>select(i)}>0{i+1}</button>)}</nav><span>Software.<br/>Systems.</span></div>
+        <div className="table-footer"><span>Scroll for projects</span><nav aria-label="Selected projects">{sheets.map(s=><a className="target-link" key={s.id} href={s.href} onClick={enter}>{s.label}</a>)}</nav></div>
       </div>
     </section>
     <div inert={ballMounted||mounted?true:undefined} aria-hidden={ballMounted||mounted?true:undefined}><HomePage onNavigate={onNavigate}/></div>
@@ -387,7 +392,12 @@ export function LightTable({pathname,onNavigate}) {
               <img className="cold-ball-static" src={ballPreview} alt=""/>
             </div>}
           </div>
-          <nav className="entry-header" aria-label="GameOnVB presentation"><a className="target-link" href="/" ref={backRef} onClick={ballBack}>← Back to homepage</a><span>GameOnVB / Match operations</span></nav>
+          <nav id="gameonvb-top" className="entry-header" aria-label="GameOnVB presentation"><a className="target-link" href="/" ref={backRef} onClick={ballBack}><Arrow direction="left"/><span className="link-label">Back to homepage</span></a><span>GameOnVB / Match operations</span></nav>
+          <div className="ball-entry-overview">
+            <h1 id="voleyevents-title">GameOnVB</h1>
+            <p>{VOLEYEVENTS.hero.title}</p>
+            <p className="ball-entry-role">{VOLEYEVENTS.hero.ownership}</p>
+          </div>
           <div className="ball-entry-copy">
             <div className="ball-entry-caption"><p className="ball-play-hint">{VOLEYEVENTS.hero.play}</p></div>
           </div>

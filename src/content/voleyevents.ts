@@ -96,15 +96,16 @@ const SCREENS: readonly PhoneScreen[] = [
   },
 ]
 
-/** Owner-approved GameOnVB mockup copy; the phone and ticker are illustrations. */
+/** Owner-approved GameOnVB mockup copy; the phone screens are illustrations. */
 export const VOLEYEVENTS = {
   hero: {
     eyebrow: 'GameOnVB / Match operations',
     title: 'Sign-ups, payments and check-in for regular recreational volleyball sessions.',
     lede: PROJECT_STORIES.voleyevents.preview,
+    ownership: 'I own GameOnVB end to end: product, code, releases and hosting, since the first commit in April 2026.',
+    result: 'Public pages are now static files with no server work per visit. Before: 28–62 ms CPU per page and 73 limit errors in one week.',
     play: 'Drag the ball and let go to throw it down the stairs.',
   },
-  ticker: ['Tue 19:00 Hall A', '3 spots left', 'Thu 18:30 Hall B', 'Full, waitlist open', 'Sun 10:00 Beach', '8 spots left'],
   rule: {
     eyebrow: 'The rule I set myself',
     title: 'Run a real product for free.',
@@ -113,9 +114,9 @@ export const VOLEYEVENTS = {
   },
   sections: [
     { id: 'overview', label: 'Overview' },
+    { id: 'how-it-works', label: 'How it works' },
     { id: 'free-plan', label: 'Free plan' },
     { id: 'limits', label: 'Limits' },
-    { id: 'how-it-works', label: 'How it works' },
     { id: 'plans-change', label: 'Plans change' },
   ],
   band: { title: ['Four sets', 'against the limits.'], score: 'Limits beaten', scoreSet: 'Set', total: '/ 4', swipe: 'Swipe the cards ↔', trackLabel: 'Four sets against the limits, scroll sideways' },

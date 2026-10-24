@@ -12,7 +12,6 @@ export interface Poster {
 
 export const HOME_COPY = {
   role: 'Software Developer',
-  positioning: "I adopt new tools early and hold their output to the same standard as my own, whether I'm shipping alone or with a team.",
   hintDesktop: 'Scroll to browse',
   hintTouch: 'Swipe to browse',
   cta: 'View project',
@@ -35,5 +34,5 @@ export const POSTERS: readonly Poster[] = [
   ] },
   { index: '04', id: 'playground', label: 'Playground', heading: 'Interaction, studied closely.', body: 'A real-time 3D skill game. An exercise in input, feedback and rendering on every device.', accent: '#ff4fd8', href: '/playground' },
   { index: '05', id: 'tools', label: 'Small tools', heading: 'Small tools, finished properly.', body: 'Screen Switch, a native macOS menu-bar utility that exchanges windows between displays.', accent: '#63e6ff' },
-  { index: '06', id: 'contact', label: 'Contact', heading: "Let's talk about your project.", body: 'Roles, collaborations or a difficult software problem. I usually reply within a few days.', accent: '#f2efe6' },
+  { index: '06', id: 'contact', label: 'Contact', heading: "Let's talk about roles and collaborations.", body: 'I usually reply within a few days.', accent: '#f2efe6' },
 ] as const

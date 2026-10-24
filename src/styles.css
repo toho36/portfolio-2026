@@ -17,7 +17,8 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -153,6 +154,9 @@ footer {
   order: 1;
   font-size: 13px;
   font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-underline-offset: 0.3em;
   white-space: nowrap;
 }
 
@@ -325,7 +329,7 @@ h1 {
 
 footer {
   display: grid;
-  grid-template-columns: minmax(13rem, 1fr) auto auto;
+  grid-template-columns: 1fr auto;
   gap: 1.5rem;
   align-items: center;
   min-height: 9rem;
@@ -444,7 +448,6 @@ footer p {
   background: #0b0b0bf0;
 }
 .route-home .brand { font-weight: 700; }
-.home-role { margin-right: auto; color: var(--muted); font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; text-transform: uppercase; }
 .route-home footer { display: none; }
 .route-home ::selection { color: #0b0b0b; background: #d9ff43; }
 .route-home :is(a, button, input, textarea, [tabindex]):focus-visible { outline: 2px solid var(--accent, #d9ff43); outline-offset: 3px; }
@@ -531,16 +534,16 @@ footer p {
 .magnetic-cta:disabled { opacity: .65; cursor: wait; }
 .poster-contact nav { display: flex; flex-wrap: wrap; gap: .25rem; }
 .poster-contact nav a { font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; text-transform: uppercase; }
-.route-home #main-content { view-transition-name: none; }
-:is(.route-voleyevents, .route-goal-loop, .route-playground) #main-content { view-transition-name: poster-visual; }
-::view-transition-old(poster-visual), ::view-transition-new(poster-visual) { animation-duration: .4s; animation-timing-function: cubic-bezier(.76,0,.24,1); }
-::view-transition-old(root), ::view-transition-new(root) { animation-duration: .4s; animation-timing-function: cubic-bezier(.76,0,.24,1); }
-/* Project to project: the whole page fades and drifts, nothing morphs. */
-html[data-project-switch] #main-content { view-transition-name: none; }
-html[data-project-switch]::view-transition-old(root) { animation: project-out .2s cubic-bezier(.4,0,1,1) both; }
-html[data-project-switch]::view-transition-new(root) { animation: project-in .26s cubic-bezier(0,0,.2,1) .14s both; }
-@keyframes project-out { to { opacity: 0; transform: translateY(-12px); } }
-@keyframes project-in { from { opacity: 0; transform: translateY(12px); } }
+/* Header stays in its own snapshot while page content cross-fades in place. */
+.site-shell > .site-header { view-transition-name: site-header; }
+html[data-project-switch]::view-transition { pointer-events: none; }
+html[data-project-switch]::view-transition-old(root) { animation: navigation-out 200ms ease-out both; }
+html[data-project-switch]::view-transition-new(root) { animation: navigation-in 200ms ease-out both; }
+html[data-project-switch]::view-transition-group(site-header),
+html[data-project-switch]::view-transition-old(site-header),
+html[data-project-switch]::view-transition-new(site-header) { animation: none; mix-blend-mode: normal; }
+@keyframes navigation-out { to { opacity: 0; } }
+@keyframes navigation-in { from { opacity: 0; } }
 .not-found { display: grid; align-content: center; min-height: 70svh; }
 .not-found h1 { max-width: 12ch; }
 .not-found .target-link { width: fit-content; }
@@ -551,7 +554,6 @@ html[data-project-switch]::view-transition-new(root) { animation: project-in .26
     width: var(--fan-width);
     top: calc(13rem + var(--fan-width) * .9);
   }
-  .home-role { display: none; }
   .poster-contact { margin-top: 1.5rem; }
   .poster-contact nav { gap: 0; }
   .poster-contact nav a { padding-inline: .4rem; }
@@ -560,7 +562,8 @@ html[data-project-switch]::view-transition-new(root) { animation: project-in .26
   .screen-switch[data-touched='true'][data-swapped] :is(.switch-window-a, .switch-window-b) { animation: switch-crossfade 150ms ease-out both; }
   .screen-switch[data-touched='true'][data-swapped] .switch-menu-icon { animation: none; }
   @keyframes switch-crossfade { 0% { opacity: 0; } 100% { opacity: 1; } }
-  ::view-transition-old(poster-visual), ::view-transition-new(poster-visual) { animation: none; }
+  html[data-project-switch]::view-transition-old(root) { animation: navigation-out 90ms ease-out both !important; }
+  html[data-project-switch]::view-transition-new(root) { animation: navigation-in 90ms ease-out both !important; }
 }
 
 /* The integrated landing owns the shell layout; its header stays in normal flow. */
@@ -616,8 +619,6 @@ html[data-project-switch]::view-transition-new(root) { animation: project-in .26
     margin-left: auto;
   }
 
-  .site-header .home-role { display: none; }
-
   .site-nav {
     display: grid;
     width: 100%;
@@ -636,3 +637,18 @@ html[data-project-switch]::view-transition-new(root) { animation: project-in .26
     white-space: nowrap;
   }
 }
+
+/* One actual, fixed header on every SPA route, including nonmodal presentations. */
+.site-shell > .site-header { position: fixed; z-index: 30; top: 0; left: 0; width: 100%; min-height: 80px; padding-inline: clamp(1.25rem,3vw,3rem); background: #171816; color: #e9e7df; --paper: #e9e7df; --muted: #b7afa0; --signal: #d6b652; --focus: #e6d296; --line: #454137; }
+.site-shell.route-playground > main { padding-top: var(--site-header-height, 80px); }
+.site-shell .header-contact { color: var(--muted); }
+.site-shell .header-contact:hover { color: var(--signal); }
+.link-arrow { flex: none; width: .85em; height: .85em; margin-left: .35em; vertical-align: -.05em; }
+.link-arrow path { transform-origin: 8px 8px; }
+.arrow-right path { transform: rotate(45deg); }
+.arrow-left path { transform: rotate(225deg); }
+.arrow-up path { transform: rotate(-45deg); }
+a:has(> .link-arrow), a:has(> b > .link-arrow), .arrow-link { text-decoration: none; }
+a > .link-label { text-decoration: underline; text-underline-offset: .3em; }
+.sheet-bottom b .link-arrow { width: 12px; height: 12px; margin: 0; }
+.magnetic-cta .link-arrow { margin-left: 0; }

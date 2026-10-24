@@ -6,7 +6,7 @@ import App from '../../App'
 
 const render = (path: string) => renderToStaticMarkup(createElement(App, { initialPath: path }))
 const stopText = (markup: string) =>
-  [...markup.matchAll(/data-stop="(\d)"[^>]*>([\s\S]*?)<\/div>/g)].map(([, stop, body]) => [stop, body.replace(/<[^>]+>/g, ' ').replace(/&#x27;/g, "'").replace(/\s+/g, ' ').trim()])
+  [...markup.matchAll(/data-stop="(\d)"[^>]*>([\s\S]*?)<\/div>/g)].map(([, stop, body]) => [stop, body.replace(/<svg\b[^>]*aria-hidden="true"[\s\S]*?<\/svg>|<span aria-hidden="true">→<\/span>/g, '').replace(/<[^>]+>/g, ' ').replace(/&#x27;/g, "'").replace(/\s+/g, ' ').trim()])
 
 describe('arena intro', () => {
   it('opens over a fresh homepage and keeps the page behind it inert', () => {

@@ -6,7 +6,7 @@ describe('home posters', () => {
     expect(POSTERS.map((p) => p.index)).toEqual(['00', '01', '02', '03', '04', '05', '06'])
     expect(POSTERS.map((p) => p.heading)).toEqual([
       'New tools. Old standards.', 'Less organising. More time on court.', 'Shared codebases, shared standards.',
-      'Speed with hard checks.', 'Interaction, studied closely.', 'Small tools, finished properly.', "Let's talk about your project.",
+      'Speed with hard checks.', 'Interaction, studied closely.', 'Small tools, finished properly.', "Let's talk about roles and collaborations.",
     ])
   })
   it('keeps the approved links and language', () => {

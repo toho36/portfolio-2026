@@ -17,7 +17,7 @@ export const GOAL_LOOP_KITCHEN = {
     "label": "Goal Loop · how I deliver software",
     "title": "Quality first.",
     "emphasis": "Speed follows.",
-    "body": "I run software work like a good restaurant kitchen. Every order is read, cooked, tasted and checked before it leaves the pass. The speed comes from having less to redo.",
+    "body": "I run software work like a restaurant kitchen: check the order, then the plate. Less rework makes delivery faster.",
     "role": "I set the goal, the rules and the checks. Separate AI agents plan, build, critique and review each change, and a change only passes when every check agrees."
   },
   "pass": {
@@ -31,7 +31,7 @@ export const GOAL_LOOP_KITCHEN = {
       "role": "Plan",
       "label": "Station 1 of 5 · Plan",
       "title": "Every order starts on a ticket.",
-      "body": "What to make, what must not go in, and when it is done. Written down before anyone starts.",
+      "body": "Write the order before cooking starts.",
       "software": "In software: a written plan with a goal, the files it may change and a stop condition."
     },
     {
@@ -39,7 +39,7 @@ export const GOAL_LOOP_KITCHEN = {
       "role": "Critic",
       "label": "Station 2 of 5 · Critic",
       "title": "The head chef reads it first.",
-      "body": "A second person checks the order before any cooking starts. A mistake found on paper costs a minute, not a dinner.",
+      "body": "A second person catches mistakes in the order.",
       "software": "In software: a separate reviewer checks the plan for gaps before coding starts.",
       "catch": "Allergy spotted",
       "note": "Caught before cooking: the recipe missed a nut allergy"
@@ -49,7 +49,7 @@ export const GOAL_LOOP_KITCHEN = {
       "role": "Build",
       "label": "Station 3 of 5 · Build",
       "title": "Cook exactly what was ordered.",
-      "body": "The cook follows the checked ticket. Nothing extra goes on the plate.",
+      "body": "Follow the checked ticket. Add nothing extra.",
       "software": "In software: the code follows the reviewed plan, and nothing more."
     },
     {
@@ -57,7 +57,7 @@ export const GOAL_LOOP_KITCHEN = {
       "role": "Check",
       "label": "Station 4 of 5 · Check",
       "title": "Taste before it leaves the station.",
-      "body": "The cook tastes every round. Not right yet? Fix it and taste again, with a set limit on rounds.",
+      "body": "Taste and fix, with a set limit on rounds.",
       "software": "In software: tests and checks run every round, with a fixed limit on repair rounds.",
       "catch": "Too salty · fixed",
       "note": "Caught while cooking: too salty, fixed next round"
@@ -67,14 +67,14 @@ export const GOAL_LOOP_KITCHEN = {
       "role": "Review",
       "label": "Station 5 of 5 · Review",
       "title": "Nothing leaves the pass without a yes.",
-      "body": "The head chef checks every plate. A plate that fails the check goes back to the cook. If it cannot be fixed, it is not served, and everyone knows why.",
+      "body": "Check every plate. If it cannot be fixed, it is not served, and everyone knows why.",
       "software": "In software: a fresh reviewer confirms the result, or the run stops and says why."
     }
   ],
   "comparison": {
     "label": "Same dish, two kitchens",
     "title": "A dish sent back gets cooked twice.",
-    "body": "In a classic flow, problems often show up late, when the product owner tries the finished work and sends it back. Goal Loop checks before, during and after the cooking, so most problems show up while they are still cheap to fix.",
+    "body": "A returned dish means rework. Goal Loop checks before, during and after cooking to catch problems earlier.",
     "software": "In software terms, the guest is the product owner trying the finished work. An illustration, not a measurement.",
     "classic": "Classic flow",
     "loop": "Goal Loop",

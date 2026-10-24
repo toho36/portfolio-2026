@@ -3,7 +3,7 @@ export type ContactTopic = 'Role' | 'Project' | 'Other'
 export interface ContactValues {
   name: string
   email: string
-  topic: ContactTopic
+  topic: ContactTopic | ''
   message: string
   _honey: string
 }
@@ -27,7 +27,7 @@ export function buildContactPayload(values: ContactValues) {
     email: values.email.trim(),
     message: values.message.trim(),
     topic: values.topic,
-    _subject: `Portfolio: ${values.topic} from ${name}`,
+    _subject: `Portfolio: ${values.topic || 'Message'} from ${name}`,
     _template: 'table',
     _captcha: 'false',
     _honey: values._honey,

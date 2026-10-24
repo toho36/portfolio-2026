@@ -7,7 +7,7 @@ describe('contact poster', () => {
   it('renders an inline labelled form with a hidden honeypot and contact links', () => {
     const markup = renderToStaticMarkup(createElement(HomePage, { onNavigate: () => {} }))
     const contact = markup.slice(markup.indexOf('data-poster="contact"'))
-    expect(contact).toContain('Let&#x27;s talk about your project.')
+    expect(contact).toContain('Let&#x27;s talk about roles and collaborations.')
     // The sheet header keeps the visible Contact label; the name and + are decoration.
     expect(contact).toContain('<p class="eyebrow contact-card-top"><span aria-hidden="true">Hoang Viet To</span><span>Contact</span><i aria-hidden="true">+</i></p>')
     expect(contact).toContain('I usually reply within a few days.')
@@ -15,7 +15,8 @@ describe('contact poster', () => {
     for (const field of ['Name', 'Email', 'Topic', 'Message']) expect(contact).toContain(field)
     expect(contact).toContain('type="email"')
     expect(contact).toContain('type="radio"')
-    expect(contact).toMatch(/<input(?=[^>]*type="radio")(?=[^>]*checked="")(?=[^>]*value="Project")[^>]*>/)
+    expect(contact).toContain('Topic (optional)')
+    expect(contact).not.toMatch(/<input(?=[^>]*type="radio")(?=[^>]*checked)[^>]*>/)
     expect(contact).toContain('name="_honey"')
     expect(contact).toContain('autoComplete="off"')
     expect(contact).toContain('Send message')

@@ -25,6 +25,9 @@ beforeEach(() => {
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals() })
 
 describe('shared contact controller', () => {
+  it('starts with no topic selected', () => {
+    expect(form().state.values.topic).toBe('')
+  })
   it('focuses name, then email, then message as earlier errors are fixed', async () => {
     const c = form()
     await c.submit(event())

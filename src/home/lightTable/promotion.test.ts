@@ -11,6 +11,11 @@ import { deckPosition, sheetPose } from './model.js'
 import { createDeckAssist } from './deckAssist.js'
 import { revealStep } from './watchModel.js'
 
+it('clamps the actual two-card model at its second card', () => {
+  expect(deckPosition(1700, 850)).toBe(1)
+  expect(sheetPose(1, 2)).toEqual(sheetPose(1, 1))
+})
+
 const pose = { x: .23, y: -.17, time: 9, spin: { yaw: 3, pitch: 1, yawSpeed: 2, pitchSpeed: .7 } }
 const card = { support: [.2, -.9, 0], corner: [-2, -1.05, 0] }
 // The repo's node:fs declaration exposes only UTF-8 reads.
@@ -140,7 +145,7 @@ it('preserves source-fan/watch preview primitives and exact approved module/asse
     const promoted = readFileSync(new URL(`./${name}.js`, import.meta.url), 'utf8')
     // Owner-approved motion/framing refinements and the production scroll repair
     // have executable contracts; every unchanged module stays byte-exact.
-    if (name !== 'ballFlow' && name !== 'ballScene' && name !== 'deckAssist') expect(promoted).toBe(original)
+    if (name !== 'ballFlow' && name !== 'ballScene' && name !== 'deckAssist' && name !== 'model') expect(promoted).toBe(original)
     expect(promoted).not.toMatch(/(?:from\s*|import\s*\()['"](?:three|.*sketches)/)
   }
   // The watch scene and its preview were replaced by the owner-approved cloche (clocheScene.js, cloche-preview.png).
@@ -165,13 +170,13 @@ it('production deck assistance settles a native edge crossing once and releases 
   const assist = createDeckAssist(root as unknown as HTMLElement, () => false)
   const tick = () => { now += 16; const pending = [...frames.values()]; frames.clear(); pending.forEach(fn => fn(now)) }
   try {
-    for (const y of [350, 803, 1180, 1530]) {
+    for (const y of [120, 350, 520, 803]) {
       listeners.get('wheel')!({ deltaY: 350 }); globalThis.scrollY = y
       listeners.get('scroll')!({ deltaY: 0 }); tick()
       expect(scrollY).toBe(y)
     }
     for (let i = 0; i < 320; i++) { tick(); listeners.get('scroll')!({ deltaY: 0 }) }
-    expect(scrollY).toBe(1700); expect(root.dataset.settling).toBe('false')
+    expect(scrollY).toBe(850); expect(root.dataset.settling).toBe('false')
     expect(frames.size).toBe(1) // Only the existing input paint-time sampler remains.
     assist.destroy(); expect(frames.size).toBe(0); expect(listeners.size).toBe(0)
   } finally { assist.destroy(); vi.unstubAllGlobals() }

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
@@ -17,6 +18,10 @@ describe('Wire Playground', () => {
     expect(markup).toMatch(/data-wire-fallback[^>]*hidden/)
     expect(markup).toContain('The playground needs WebGL.')
     expect(markup).toContain('Sound on')
+    expect(markup).toContain('id="wire-instructions"')
+    expect(markup).toContain('Arrow keys')
+    expect(markup).toContain('Space or Enter')
+    expect(markup).toContain('R resets')
   })
   it('retires the old game copy', () => {
     const markup = render()
@@ -48,4 +53,17 @@ describe('Playground studies', () => {
     expect(markup).toContain('href="/playground/lego-villa/index.html"')
     expect(markup).toContain('src="/playground/lego-villa-poster.jpg"')
   })
+})
+
+
+it('keeps Villa navigation consistent and preserves its animation anchors without a second portfolio', () => {
+  const html = readFileSync(new URL('../../public/playground/lego-villa/index.html', import.meta.url), 'utf8')
+  for (const [href, text] of [['/', 'Hoang Viet To'], ['/gameonvb', 'GameOnVB'], ['/goal-loop', 'Goal Loop'], ['/playground', 'Playground'], ['/#contact', 'Contact']])
+    expect(html).toContain(`href="${href}">${text}</a>`)
+  expect(html).toContain('Back to Playground')
+  expect(html).toContain('href="./navigation.css"')
+  for (const id of ['stage', 'caption', 'announcement', 'work']) expect(html).toContain(`id="${id}"`)
+  expect(html).toContain('./assets/index-DlgnqO6Y.js')
+  expect(html).toContain('./assets/frame_0001-B5fjF0wY.webp')
+  expect(html).not.toMatch(/Selected work|032|LEGO study|class="project"/)
 })

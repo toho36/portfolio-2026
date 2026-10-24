@@ -15,7 +15,7 @@ type Harness = {
 }
 
 // Controlled native position/RAF harness copied from the read-only study.
-function browser(run: (h: Harness) => void, reduced=false, initialY=0, readback=(top: number)=>top) {
+function browser(run: (h: Harness) => void, reduced=false, initialY=0, readback=(top: number)=>top, count=3) {
   const saved=new Map<string, PropertyDescriptor | undefined>(),listeners=new Map<string, (event: Input) => void>(),frames=new Map<number, FrameRequestCallback>(),timers=new Map<number, { fn: () => void; at: number }>(),options=new Map<string, AddEventListenerOptions>(),writes: number[]=[]
   let now=0,id=0
   const root={dataset:{} as Record<string, string>},doc={hidden:false,querySelector:(): unknown=>null,
@@ -26,7 +26,7 @@ function browser(run: (h: Harness) => void, reduced=false, initialY=0, readback=
     setTimeout:(fn: () => void,ms: number)=>{timers.set(++id,{fn,at:now+ms});return id},clearTimeout:(id: number)=>timers.delete(id)}
   values.window={scrollTo:({top}: { top: number })=>{writes.push(top);globalThis.scrollY=readback(top)},setTimeout:values.setTimeout}
   for(const [key,value] of Object.entries(values)){saved.set(key,Object.getOwnPropertyDescriptor(globalThis,key));Object.defineProperty(globalThis,key,{value,writable:true,configurable:true})}
-  const assist=createDeckAssist(root as unknown as HTMLElement,()=>reduced)
+  const assist=createDeckAssist(root as unknown as HTMLElement,()=>reduced,count)
   const event=(name: string,extra: Partial<Input>={})=>listeners.get(name)?.({type:name,deltaY:16,...extra})
   const step=(ms=16)=>{now+=ms;for(const [id,t] of [...timers])if(t.at<=now){timers.delete(id);t.fn()}const pending=[...frames];frames.clear();for(const [,fn] of pending)fn(now)}
   try{run({assist,event,step,root,doc,options,frames,writes})}finally{assist.destroy();for(const [key,d] of saved){if(d)Object.defineProperty(globalThis,key,d);else Reflect.deleteProperty(globalThis,key)}}
@@ -199,3 +199,13 @@ test('native rebasing uses the actual viewport step captured by the helper',()=>
   for(let i=0;i<320;i++){step();event('scroll')}
   assert.strictEqual(scrollY,844*.85*2)
 }))
+
+
+// Wider synthetic decks above retain the original assistance/interruption checks.
+// The actual production count must also clamp and release at its second card.
+test('the two-card deck has no third stop and releases native supporting-section scroll',()=>browser(({assist,event,step})=>{
+  assist.move(2); for(let i=0;i<50;i++)step()
+  assert.strictEqual(scrollY,850)
+  globalThis.scrollY=1050;event('scroll');for(let i=0;i<100;i++)step()
+  assert.strictEqual(scrollY,1050)
+},false,0,top=>top,2))

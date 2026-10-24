@@ -2,6 +2,8 @@ import { useEffect, useRef, type MouseEvent, type Ref } from 'react'
 import { GOAL_LOOP_KITCHEN } from '../content/goalLoop'
 import { mountGoalLoopMotion } from './goalLoopMotion'
 import './goalLoopKitchen.css'
+import { navigateSection } from '../navigation'
+import { Arrow } from '../components/Arrow'
 
 interface GoalLoopPageProps {
   readonly onNavigate: (event: MouseEvent<HTMLAnchorElement>) => void
@@ -16,8 +18,8 @@ export function GoalLoopPage({ onNavigate, backRef }: GoalLoopPageProps) {
 
   return (
     <article className="goal-loop-kitchen" ref={root}>
-      <nav className="k-entry-header" aria-label="Goal Loop presentation">
-        <a className="target-link" href="/" ref={backRef} onClick={onNavigate}>{`← ${GOAL_LOOP_KITCHEN.navigation.back}`}</a>
+      <nav id="goal-loop-top" className="k-entry-header" aria-label="Goal Loop presentation">
+        <a className="target-link" href="/" ref={backRef} onClick={onNavigate}><Arrow direction="left"/><span className="link-label">{GOAL_LOOP_KITCHEN.navigation.back}</span></a>
       </nav>
 
  <section className="wrap k-hero" aria-labelledby="goal-loop-title">
@@ -43,6 +45,15 @@ export function GoalLoopPage({ onNavigate, backRef }: GoalLoopPageProps) {
    <g transform="translate(110 320)"><g className="k-bell"><rect x="-30" y="-6" width="60" height="6" rx="2" fill="#6b7471" stroke="#1f2523" strokeWidth="2"/><path d="M-24-6C-24-26-12-34 0-34S24-26 24-6Z" fill="#d2a53c" stroke="#1f2523" strokeWidth="2"/><path d="M-12-26C-8-30-4-31 0-31" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" opacity=".7"/><rect x="-2.5" y="-44" width="5" height="10" fill="#1f2523"/><circle cy="-46" r="5" fill="#1f2523"/></g></g>
    <text className="k-ding" x="110" y="262" textAnchor="middle">{GOAL_LOOP_KITCHEN.scene.ding}</text>
   </svg>
+ </section>
+
+ <section className="wrap k-wait" aria-labelledby="kitchen-wait-title">
+  <p className="label">{GOAL_LOOP_KITCHEN.measurement.label}</p>
+  <h2 id="kitchen-wait-title">{GOAL_LOOP_KITCHEN.measurement.title}</h2>
+  <div className="k-row"><span className="name">{GOAL_LOOP_KITCHEN.measurement.before}</span><div className="k-tbar"><i></i></div><b>{GOAL_LOOP_KITCHEN.measurement.initial}</b></div>
+  <div className="k-row"><span className="name">{GOAL_LOOP_KITCHEN.measurement.after}</span><div className="k-tbar new"><i></i></div><b><span data-result="">{GOAL_LOOP_KITCHEN.measurement.final}</span><svg className="k-wbell" viewBox="-24 -26 48 36" aria-hidden="true"><g className="k-ink"><path d="M-16 4C-16-11-8-17 0-17S16-11 16 4Z"/><path d="M-20 4H20V8H-20ZM0-17V-21"/></g></svg></b></div>
+  <p>{GOAL_LOOP_KITCHEN.measurement.body}</p>
+  <p className="soft">{GOAL_LOOP_KITCHEN.measurement.software}<br />{GOAL_LOOP_KITCHEN.measurement.source}</p>
  </section>
 
  <section id="kitchen-pass" aria-labelledby="kitchen-pass-title" className="k-pass" data-pass="" data-stage="0">
@@ -80,19 +91,11 @@ export function GoalLoopPage({ onNavigate, backRef }: GoalLoopPageProps) {
   <p className="soft reveal">{GOAL_LOOP_KITCHEN.comparison.software}</p>
  </section>
 
- <section className="wrap k-wait reveal" aria-labelledby="kitchen-wait-title">
-  <p className="label">{GOAL_LOOP_KITCHEN.measurement.label}</p>
-  <h2 id="kitchen-wait-title">{GOAL_LOOP_KITCHEN.measurement.title}</h2>
-  <div className="k-row"><span className="name">{GOAL_LOOP_KITCHEN.measurement.before}</span><div className="k-tbar"><i></i></div><b>{GOAL_LOOP_KITCHEN.measurement.initial}</b></div>
-  <div className="k-row"><span className="name">{GOAL_LOOP_KITCHEN.measurement.after}</span><div className="k-tbar new"><i></i></div><b><span data-down="">{GOAL_LOOP_KITCHEN.measurement.initial}</span><svg className="k-wbell" viewBox="-24 -26 48 36" aria-hidden="true"><g className="k-ink"><path d="M-16 4C-16-11-8-17 0-17S16-11 16 4Z"/><path d="M-20 4H20V8H-20ZM0-17V-21"/></g></svg></b></div>
-  <p>{GOAL_LOOP_KITCHEN.measurement.body}</p>
-  <p className="soft">{GOAL_LOOP_KITCHEN.measurement.software}<br />{GOAL_LOOP_KITCHEN.measurement.source}</p>
- </section>
-
       <nav className="k-navigation wrap" aria-label="Case study navigation">
-        <a className="target-link" href="/" onClick={onNavigate}><span aria-hidden="true">←</span> <span className="link-label">{GOAL_LOOP_KITCHEN.navigation.back}</span></a>
-        <a className="target-link" href="/#contact" onClick={onNavigate}><span className="link-label">Get in touch</span> <span aria-hidden="true">→</span></a>
-        <a className="target-link" href="/gameonvb" onClick={onNavigate}><span className="link-label">{GOAL_LOOP_KITCHEN.navigation.next}</span> <span aria-hidden="true">→</span></a>
+        <a className="target-link" href="/" onClick={onNavigate}><Arrow direction="left"/> <span className="link-label">{GOAL_LOOP_KITCHEN.navigation.back}</span></a>
+        <a className="target-link" href="/#contact" onClick={onNavigate}><span className="link-label">Get in touch</span> <Arrow direction="right"/></a>
+        <a className="target-link" href="/gameonvb" onClick={onNavigate}><span className="link-label">{GOAL_LOOP_KITCHEN.navigation.next}</span> <Arrow direction="right"/></a>
+        <a className="target-link" href="#goal-loop-top" onClick={navigateSection}><span className="link-label">Return to top</span><Arrow direction="up"/></a>
       </nav>
     </article>
   )

@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type MouseEvent,
@@ -22,6 +23,9 @@ import { CONTACT } from './content/systems'
 import { LightTable } from './home/lightTable/LightTable.jsx'
 import { ArenaIntro } from './home/arena/ArenaIntro'
 import { PlaygroundPage } from './pages/Playground'
+import { Arrow } from './components/Arrow'
+import { beginNavigation, crossFadeProjects, focusHomeFragment, isHomeFragment } from './navigation'
+export { beginNavigation, crossFadeProjects } from './navigation'
 
 interface AppProps {
   readonly initialPath?: string
@@ -116,39 +120,9 @@ export function isProjectSwitch(from: string, to: string) {
   return source !== destination && projects.includes(source) && projects.includes(destination)
 }
 
-// Every navigation takes a ticket. A deferred cross-fade update applies only
-// while no newer navigation (click, Back or Forward, animated or not) started.
-let navigationGeneration = 0
-export function beginNavigation() {
-  const ticket = ++navigationGeneration
-  return () => ticket === navigationGeneration
-}
-
-// Project to project (or a project's Get in touch): LightTable snaps the old page
-// shut and opens the destination directly, so the deck animation never plays;
-// a short cross-fade covers the swap.
-let activeSwitch: object | undefined
-export function crossFadeProjects(update: () => void, doc: Document) {
-  const reduced = doc.defaultView?.matchMedia('(prefers-reduced-motion: reduce)').matches
-  if (!doc.startViewTransition || reduced || doc.visibilityState !== 'visible') { update(); return }
-  const root = doc.documentElement, id = {}
-  activeSwitch = id
-  root.dataset.projectSwitch = 'true'
-  // An interrupted switch finishes after its successor started; only the newest clears the scope.
-  const done = () => { if (activeSwitch === id) { activeSwitch = undefined; delete root.dataset.projectSwitch } }
-  // The swap is synchronous: both flows snap inside this commit. Rendering is
-  // paused during the update callback, so it must not wait for animation frames.
-  doc.startViewTransition(() => flushSync(update)).finished.then(done, done)
-}
 
 export function focusHomeContact(doc: Document) {
-  const contact = doc.getElementById('contact')
-  if (!contact || contact.closest('[inert]') || doc.querySelector('.ball-entry[open], .goal-entry[open]')) return
-  const header = doc.querySelector('.site-header')
-  contact.style.scrollMarginTop = `${Math.ceil(header?.getBoundingClientRect().height ?? 0) + 16}px`
-  contact.tabIndex = -1
-  contact.focus({ preventScroll: true })
-  contact.scrollIntoView({ behavior: 'instant', block: 'start' })
+  focusHomeFragment(doc, '#contact')
 }
 
 export default function App({ initialPath }: AppProps) {
@@ -163,10 +137,12 @@ export default function App({ initialPath }: AppProps) {
     ),
   )
   // The arena intro opens only on a fresh homepage load, never after in-app navigation.
-  const [introOpen, setIntroOpen] = useState(() => route.path === '/' && !unknownPath && (typeof window === 'undefined' || window.location.hash !== '#contact'))
+  const [introOpen, setIntroOpen] = useState(() => route.path === '/' && !unknownPath && (typeof window === 'undefined' || !isHomeFragment(window.location.hash)))
   const showIntro = introOpen && route.path === '/' && !unknownPath
   const shownPath = useRef(route.path)
-  useEffect(() => { shownPath.current = route.path }, [route])
+  const shownAnimatedEntry = useRef(typeof window !== 'undefined' && window.history?.state?.lightTableFromHome === true)
+  const pendingPageFocus = useRef<false | 'top' | 'preserve'>(false)
+  useEffect(() => { shownPath.current = route.path; shownAnimatedEntry.current = window.history.state?.lightTableFromHome === true }, [route])
   const closeIntro = useCallback((focusMain = true) => {
     // Commit first so the main landmark is no longer inert when it takes focus.
     flushSync(() => setIntroOpen(false))
@@ -175,9 +151,8 @@ export default function App({ initialPath }: AppProps) {
 
   const onNavigate = useCallback((event: MouseEvent<HTMLElement>, navigationAnchor?: HTMLAnchorElement) => {
     const anchor = navigationAnchor ?? event.currentTarget as HTMLAnchorElement
-    const contactExit = anchor.getAttribute('href') === '/#contact' && ['/gameonvb', '/goal-loop'].includes(normalizePathname(window.location.pathname))
     const routeDestination = getRouteNavigationUrl({
-      href: contactExit ? '/' : anchor.getAttribute('href') ?? '',
+      href: anchor.getAttribute('href') ?? '',
       currentUrl: window.location.href,
       button: event.button,
       defaultPrevented: event.defaultPrevented,
@@ -190,36 +165,64 @@ export default function App({ initialPath }: AppProps) {
     })
 
     if (!routeDestination) return
-    const destination = contactExit ? '/#contact' : routeDestination
-
-    if (anchor.closest('.site-header') && ['/gameonvb', '/goal-loop'].includes(new URL(destination, window.location.href).pathname)) return
+    const destination = routeDestination
 
     event.preventDefault()
     const current = beginNavigation()
     const livePair = isLightTablePair(window.location.pathname, new URL(destination, window.location.href).pathname)
+    const authored = livePair && !anchor.closest('.site-header') && !new URL(destination, window.location.href).hash && !isProjectSwitch(window.location.pathname, destination) && (normalizePathname(window.location.pathname) === '/' ? !!anchor.closest('.sheet-cta, .table-footer') : window.history.state?.lightTableFromHome === true)
     const navigate = () => {
       setUnknownPath(false)
+      setIntroOpen(false)
+      if (isHomeFragment(new URL(destination, window.location.href).hash)) document.dispatchEvent(new Event('homefragmentnavigate'))
       const sourcePath = normalizePathname(window.location.pathname)
       const nextRoute = pushRouteNavigation(destination, window.location.href, window.history)
-      if (sourcePath === '/' && (nextRoute.path === '/goal-loop' || nextRoute.path === '/gameonvb')) {
+      if (authored && sourcePath === '/' && (nextRoute.path === '/goal-loop' || nextRoute.path === '/gameonvb')) {
         window.history.replaceState({ ...window.history.state, lightTableFromHome: true }, '', window.location.href)
       }
-      setRoute(nextRoute)
-      if (!livePair) {
-        document.getElementById('main-content')?.focus({ preventScroll: true })
-        window.scrollTo({ top: 0, behavior: 'instant' })
-      }
+      pendingPageFocus.current = authored ? false : 'top'
+      setRoute({ ...nextRoute })
     }
-    if (livePair) { if (contactExit || isProjectSwitch(window.location.pathname, destination)) crossFadeProjects(() => { if (current()) navigate() }, document); else navigate(); return }
-    navigate()
+    if (authored) navigate()
+    else crossFadeProjects(() => { if (current()) navigate() }, document)
   }, [])
+
+  useLayoutEffect(() => {
+    const header = document.querySelector<HTMLElement>('.site-header')
+    const shell = header?.closest<HTMLElement>('.site-shell')
+    if (!header || !shell) return
+    const measure = () => shell.style.setProperty('--site-header-height', `${header.getBoundingClientRect().height}px`)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(header)
+    return () => observer.disconnect()
+  }, [])
+
+  useLayoutEffect(() => {
+    if (!pendingPageFocus.current) return
+    const scrollToTop = pendingPageFocus.current === 'top'
+    pendingPageFocus.current = false
+    if (route.path === '/' && isHomeFragment(window.location.hash)) {
+      focusHomeFragment(document, window.location.hash)
+    } else if (['/goal-loop', '/gameonvb'].includes(route.path)) {
+      if (window.location.hash) {
+        try {
+          const target = document.getElementById(decodeURIComponent(window.location.hash.slice(1)))
+          if (target?.closest('dialog[open]')) { target.tabIndex = -1; target.focus({ preventScroll: true }); target.scrollIntoView({ behavior: 'instant', block: 'start' }) }
+        } catch { /* Invalid fragments leave the presentation usable. */ }
+      }
+    } else {
+      document.getElementById('main-content')?.focus({ preventScroll: true })
+      if (scrollToTop) window.scrollTo({ top: 0, behavior: 'instant' })
+    }
+  }, [route])
 
   useEffect(() => {
     let frame = 0
     const contact = () => {
-      if (window.location.pathname !== '/' || window.location.hash !== '#contact') return
+      if (window.location.pathname !== '/' || !isHomeFragment(window.location.hash)) return
       if (document.getElementById('main-content')?.inert) closeIntro(false)
-      focusHomeContact(document)
+      focusHomeFragment(document, window.location.hash)
     }
     const restore = () => {
       cancelAnimationFrame(frame)
@@ -242,12 +245,15 @@ export default function App({ initialPath }: AppProps) {
   useEffect(() => {
     return subscribeToRouteChanges(window, (next) => {
       const path = normalizePathname(window.location.pathname), current = beginNavigation()
+      const authored = isLightTablePair(shownPath.current, path) && !isProjectSwitch(shownPath.current, path) && !window.location.hash && (shownAnimatedEntry.current || window.history.state?.lightTableFromHome === true)
       const update = () => {
         if (!current()) return
         setUnknownPath(path !== '/voleyevents' && !ROUTES.some((route) => route.path === path))
-        setRoute(next)
+        pendingPageFocus.current = authored ? false : 'preserve'
+        setIntroOpen(false)
+        setRoute({ ...next })
       }
-      if (isProjectSwitch(shownPath.current, path)) crossFadeProjects(update, document); else update()
+      if (authored) update(); else crossFadeProjects(update, document)
     })
   }, [])
 
@@ -291,7 +297,7 @@ export default function App({ initialPath }: AppProps) {
   }, [route.path, unknownPath])
 
   let routeContent: ReactNode
-  if (unknownPath) routeContent = <section className="not-found"><p className="poster-kicker">404 / Not found</p><h1>This page doesn't exist.</h1><a className="target-link" href="/" onClick={onNavigate}>Back home <span aria-hidden="true">↗</span></a></section>
+  if (unknownPath) routeContent = <section className="not-found"><p className="poster-kicker">404 / Not found</p><h1>This page doesn't exist.</h1><a className="target-link" href="/" onClick={onNavigate}><Arrow direction="left"/><span className="link-label">Back home</span></a></section>
   else switch (route.path) {
     case '/':
     case '/gameonvb':
@@ -313,7 +319,7 @@ export default function App({ initialPath }: AppProps) {
         Skip to content
       </a>
 
-      <header className="site-header" inert={showIntro || undefined} hidden={!unknownPath && (route.path === '/gameonvb' || route.path === '/goal-loop')}>
+      <header className="site-header" inert={showIntro || undefined}>
         <RouteLink
           className="brand"
           currentPath={unknownPath ? undefined : route.path}
@@ -323,7 +329,6 @@ export default function App({ initialPath }: AppProps) {
           <span>Hoang Viet To</span>
         </RouteLink>
         <a className="target-link header-contact" href="/#contact" onClick={onNavigate}>Contact</a>
-        {route.path === '/' && !unknownPath ? <span className="home-role">Software Developer</span> : null}
         <nav aria-label="Primary" className="site-nav">
           {ROUTES.map((item) => (
             <RouteLink
@@ -340,10 +345,7 @@ export default function App({ initialPath }: AppProps) {
 
       <main id="main-content" tabIndex={-1} inert={showIntro || undefined}>{routeContent}</main>
 
-      <footer inert={showIntro || undefined}>
-        <p>
-          Hoang Viet To <span aria-hidden="true">/</span> Software Developer
-        </p>
+      <footer inert={showIntro || route.path === '/gameonvb' || route.path === '/goal-loop' || undefined}>
         <nav aria-label="Contact and CV" className="contact-nav">
           {CONTACT.map((link) => (
             <a
@@ -356,8 +358,8 @@ export default function App({ initialPath }: AppProps) {
             </a>
           ))}
         </nav>
-        <a className="target-link text-link" href="#top">
-          Return to top <span aria-hidden="true">↑</span>
+        <a className="target-link text-link arrow-link" href="#top" onClick={onNavigate}>
+          <span className="link-label">Return to top</span><Arrow direction="up"/>
         </a>
       </footer>
 

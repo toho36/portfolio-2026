@@ -1,3 +1,5 @@
+import { navigateSection } from '../navigation'
+import { Arrow } from '../components/Arrow'
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react'
 import { Staircase } from '../components/Staircase'
 import { VOLEYEVENTS } from '../content/voleyevents'
@@ -84,16 +86,6 @@ function ScreenContent({ screen }: { readonly screen: PhoneScreen }) {
   </>
 }
 
-// In-page chapter links glide inside the dialog scroller instead of jumping.
-function smoothJump(event: MouseEvent<HTMLAnchorElement>) {
-  const hash = event.currentTarget.hash, target = hash ? document.getElementById(hash.slice(1)) : null
-  if (!target || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-  event.preventDefault()
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' })
-  history.replaceState(history.state, '', hash)
-}
-
 export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
   const [landing, setLanding] = useState<LandingIndex>(0)
   const story = useRef<HTMLDivElement>(null)
@@ -108,30 +100,45 @@ export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
       >
         <div className="staircase-intro">
           <p className="eyebrow">{VOLEYEVENTS.hero.eyebrow}</p>
-          <h1 id="voleyevents-fallback-title">Gravity, by hand.</h1>
-          <p>Catch. Pull. Let go.</p>
+          <h1 id="voleyevents-fallback-title">GameOnVB</h1>
+          <p>{VOLEYEVENTS.hero.title}</p>
+          <p>{VOLEYEVENTS.hero.ownership}</p>
         </div>
         <Staircase landing={landing} onLanding={setLanding} />
         <p className="staircase-summary">{VOLEYEVENTS.hero.title}</p>
       </section>}
 
       <div className="gv gameonvb-story" ref={story} data-score-set={VOLEYEVENTS.band.scoreSet}>
-        {/* The hero stays the stairs and the ball; the title and section links start the story below it. */}
         {/* Sticky section bar: one row, scrolls sideways on narrow phones, marks the section being read. */}
         <nav className="gv-jump" aria-label="GameOnVB sections">{VOLEYEVENTS.sections.map(section => (
-          <a className="target-link" href={`#${section.id}`} key={section.id} onClick={smoothJump}>{section.label}</a>
+          <a className="target-link" href={`#${section.id}`} key={section.id} onClick={navigateSection}>{section.label}</a>
         ))}</nav>
-        {hero && <section className="gv-intro wrap" id="overview" aria-labelledby="voleyevents-title">
+        <section className="gv-intro wrap" id="overview" aria-labelledby="gv-overview-title">
           <p className="tag">{VOLEYEVENTS.hero.eyebrow}</p>
-          <h1 id="voleyevents-title">More time on court.</h1>
-          <p>{VOLEYEVENTS.hero.title}</p>
-        </section>}
-        <div className="ticker" aria-hidden="true">
-          <img className="tick-ball" src={ballPreview} alt="" aria-hidden="true" />
-          <div>{[0, 1].map(repeat => VOLEYEVENTS.ticker.map((text, index) => (
-            <span key={`${repeat}-${index}`}>{text}<b>●</b></span>
-          )))}</div>
-        </div>
+          <h2 id="gv-overview-title">More time on court.</h2>
+          <p>{VOLEYEVENTS.hero.lede}</p>
+          <p>{VOLEYEVENTS.hero.result}</p>
+        </section>
+
+        <section className="wrap gv-how" id="how-it-works" aria-label="How it works">
+          <div className="phone-col"><div className="phone"><div className="phone-in" aria-hidden="true">
+            {VOLEYEVENTS.screens.map((screen, index) => (
+              <div className={`screen${index === 0 ? ' on' : ''}`} data-screen={index} key={screen.title}>
+                <ScreenContent screen={screen} />
+              </div>
+            ))}
+          </div></div></div>
+          <div className="gv-steps">
+            <img className="step-ball" data-step-ball src={ballPreview} alt="" aria-hidden="true" />
+            {VOLEYEVENTS.steps.map((step, index) => (
+              <div className="step" id={step.id} data-step={index} key={step.id}>
+                <span className="n" aria-hidden="true">{index + 1}</span>
+                <h2>{step.title}</h2><p>{step.body}</p>
+                <div className="step-screen" aria-hidden="true"><ScreenContent screen={VOLEYEVENTS.screens[index]} /></div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <section className="wrap gv-rule" id="free-plan" aria-labelledby="gv-rule-title">
           <div className="reveal">
@@ -172,51 +179,32 @@ export function VoleyEventsPage({ onNavigate, hero }: VoleyEventsPageProps) {
           </div>
         </section>
 
-        <section className="wrap gv-how" id="how-it-works" aria-label="How it works">
-          <div className="phone-col"><div className="phone"><div className="phone-in" aria-hidden="true">
-            {VOLEYEVENTS.screens.map((screen, index) => (
-              <div className={`screen${index === 0 ? ' on' : ''}`} data-screen={index} key={screen.title}>
-                <ScreenContent screen={screen} />
-              </div>
-            ))}
-          </div></div></div>
-          <div className="gv-steps">
-            <img className="step-ball" data-step-ball src={ballPreview} alt="" aria-hidden="true" />
-            {VOLEYEVENTS.steps.map((step, index) => (
-              <div className="step" id={step.id} data-step={index} key={step.id}>
-                <span className="n" aria-hidden="true">{index + 1}</span>
-                <h2>{step.title}</h2><p>{step.body}</p>
-                <div className="step-screen" aria-hidden="true"><ScreenContent screen={VOLEYEVENTS.screens[index]} /></div>
-              </div>
-            ))}
-          </div>
-        </section>
-
         <section className="gv-end" id="plans-change" aria-labelledby="gv-end-title"><div className="wrap reveal">
           <p className="tag">{VOLEYEVENTS.closing.eyebrow}</p>
           <h2 id="gv-end-title">{VOLEYEVENTS.closing.title[0]}<br />{VOLEYEVENTS.closing.title[1]}</h2>
           <div className="chips">{VOLEYEVENTS.closing.chips.map(chip => <span key={chip}>{chip}</span>)}</div>
           <div className="gv-cta-row">
             <img className="end-ball" src={ballPreview} alt="" aria-hidden="true" />
-            <a className="target-link gv-cta" href={VOLEYEVENTS.closing.href}>{VOLEYEVENTS.closing.cta} <span aria-hidden="true">→</span></a>
+            <a className="target-link gv-cta" href={VOLEYEVENTS.closing.href}><span className="link-label">{VOLEYEVENTS.closing.cta}</span><Arrow/></a>
           </div>
         </div></section>
       </div>
 
       <nav className="case-navigation" aria-label="Case study navigation">
         <RouteAnchor className="back-link" href="/" onNavigate={onNavigate}>
-          <span aria-hidden="true">←</span> <span className="link-label">Back to homepage</span>
+          <Arrow direction="left"/> <span className="link-label">Back to homepage</span>
         </RouteAnchor>
         <RouteAnchor className="contact-link" href="/#contact" onNavigate={onNavigate}>
-          <span className="link-label">Get in touch</span> <span aria-hidden="true">→</span>
+          <span className="link-label">Get in touch</span> <Arrow direction="right"/>
         </RouteAnchor>
         <RouteAnchor
           className="next-link"
           href="/goal-loop"
           onNavigate={onNavigate}
         >
-          <span className="link-label">Next: Goal Loop</span> <span aria-hidden="true">→</span>
+          <span className="link-label">Next: Goal Loop</span> <Arrow direction="right"/>
         </RouteAnchor>
+        <a className="target-link" href="#gameonvb-top" onClick={navigateSection}><span className="link-label">Return to top</span><Arrow direction="up"/></a>
       </nav>
     </article>
   )

@@ -47,6 +47,7 @@ export function HotWire({ onNavigate }: HotWireProps) {
             onProgress: (p) => {
               if (canceled) return
               setProgress(p)
+              if (p === 0) { setFinishMs(null); setFailed(false) }
               setBest(recordRun(storage, modeRef.current, p, null))
             },
             onFail: () => { if (!canceled) { setFailed(true); setHolding(false) } },
@@ -79,10 +80,10 @@ export function HotWire({ onNavigate }: HotWireProps) {
     soundRef.current = next; setSound(next); runtimeRef.current?.setSound(next)
     try { window.localStorage.setItem('vitek-wire:sound', next ? 'on' : 'off') } catch { /* private browsing */ }
   }
-  function restart() { setFinishMs(null); setFailed(false); setProgress(0); runtimeRef.current?.restart() }
+  function restart() { setFinishMs(null); setFailed(false); setHolding(false); setProgress(0); runtimeRef.current?.restart() }
   const hint = finishMs !== null ? 'a clean run. go again?'
-    : failed ? 'touch the wire. back to start.'
-      : holding ? (mode === 'hard' ? 'hold tight · release to reset' : 'steady hands')
+    : failed ? 'Wire touched. Back to start.'
+      : holding ? (mode === 'hard' ? 'Release or pause resets' : 'Steady hands')
         : `${coarse ? 'grab' : 'click'} the handle${mode === 'hard' ? ' · release to reset' : ''}`
 
   return (

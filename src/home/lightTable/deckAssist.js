@@ -1,16 +1,17 @@
 import { deckPosition, settleSheet, settleEase, coastPosition } from './model.js'
 
-export function createDeckAssist(root,isReduced) {
+export function createDeckAssist(root,isReduced,count=2) {
+  const last=count-1
   let frame=0,timer=0,lastY=scrollY,lastTime=performance.now(),velocity=0,direction=0,programmatic=false,pointerDown=false,touchHeld=false
   let coast=null,lastInput=-Infinity,inputDirection=0,edge=null
   let sampleFrame=0,paintTime=performance.now()
   function sample(now){paintTime=now;sampleFrame=requestAnimationFrame(sample)}
   sampleFrame=requestAnimationFrame(sample)
-  const allowed=()=>!document.hidden&&!document.querySelector('dialog[open]')&&scrollY>=0&&scrollY<=innerHeight*1.7+2
+  const allowed=()=>!document.hidden&&!document.querySelector('dialog[open]')&&scrollY>=0&&scrollY<=innerHeight*.85*last+2
   function cancel(){clearTimeout(timer);timer=0;cancelAnimationFrame(frame);frame=0;coast=null;programmatic=false;root.dataset.settling='false'}
   function move(index,assisted=false){
     cancel();if(document.hidden||document.querySelector('dialog[open]')||(assisted&&!allowed()))return
-    const target=Math.max(0,Math.min(2,index))*innerHeight*.85,from=scrollY
+    const target=Math.max(0,Math.min(last,index))*innerHeight*.85,from=scrollY
     if(Math.abs(target-from)<1)return
     if(isReduced()){window.scrollTo({top:target,behavior:'instant'});lastY=scrollY;return}
     programmatic=true;root.dataset.settling='true'
@@ -33,8 +34,8 @@ export function createDeckAssist(root,isReduced) {
       velocity=delta/Math.max(1,now-lastTime);direction=Math.sign(delta)
       const index=direction>0?Math.ceil(current/step):Math.floor(current/step)
       // Only a new native sample can pass the frozen destination; own writes update lastY.
-      if(edge!==null&&(current-edge*step)*direction>0)edge=Math.max(0,Math.min(2,index))
-      const target=(edge??Math.max(0,Math.min(2,index)))*step
+      if(edge!==null&&(current-edge*step)*direction>0)edge=Math.max(0,Math.min(last,index))
+      const target=(edge??Math.max(0,Math.min(last,index)))*step
       coast={from:current,target,velocity,start:now}
       lastY=current;lastTime=now
       root.dataset.settling='false'
@@ -51,7 +52,7 @@ export function createDeckAssist(root,isReduced) {
   }
   function quiet(){
     if(!allowed()||programmatic||pointerDown||touchHeld)return
-    if(isReduced()){clearTimeout(timer);timer=window.setTimeout(()=>{if(allowed()&&!pointerDown&&!touchHeld)move(settleSheet(deckPosition(scrollY,innerHeight*.85),direction),true)},260);return}
+    if(isReduced()){clearTimeout(timer);timer=window.setTimeout(()=>{if(allowed()&&!pointerDown&&!touchHeld)move(settleSheet(deckPosition(scrollY,innerHeight*.85,count),direction,count),true)},260);return}
     if(!frame)frame=requestAnimationFrame(follow)
   }
   function scroll(){
@@ -64,7 +65,7 @@ export function createDeckAssist(root,isReduced) {
   function input(event){
     const now=performance.now(),sign=Math.sign(event.deltaY)
     if(!sign)return
-    if(now-lastInput>260||sign!==inputDirection){const p=scrollY/(innerHeight*.85);edge=Math.max(0,Math.min(2,sign>0?Math.floor(p)+1:Math.ceil(p)-1))}
+    if(now-lastInput>260||sign!==inputDirection){const p=scrollY/(innerHeight*.85);edge=Math.max(0,Math.min(last,sign>0?Math.floor(p)+1:Math.ceil(p)-1))}
     lastInput=now;inputDirection=sign
     cancel();if(now-lastTime>80)lastTime=paintTime
   }
@@ -72,7 +73,7 @@ export function createDeckAssist(root,isReduced) {
   function up(event){
     if(event.type==='touchend'||event.type==='touchcancel')touchHeld=Boolean(event.touches?.length);else if(event.pointerType!=='touch')pointerDown=false
     if(pointerDown||touchHeld||!allowed())return
-    if(performance.now()-lastTime>80||!velocity){move(settleSheet(deckPosition(scrollY,innerHeight*.85),direction),true);return}
+    if(performance.now()-lastTime>80||!velocity){move(settleSheet(deckPosition(scrollY,innerHeight*.85,count),direction,count),true);return}
     const step=innerHeight*.85,target=(velocity>0?Math.ceil(scrollY/step):Math.floor(scrollY/step))*step
     coast={from:scrollY,target,velocity,start:performance.now()};quiet()
   }

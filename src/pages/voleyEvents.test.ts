@@ -21,25 +21,22 @@ describe('GameOnVB Match Operations case study', () => {
     )
 
     expect(hero).toContain('GameOnVB / Match operations')
-    // The title and summary open the story right below the hero; the hero itself is the stairs and the ball.
-    const intro = markup.slice(markup.indexOf('class="gv-intro wrap"'), markup.indexOf('class="ticker"'))
-    expect(intro).toContain('<h1 id="voleyevents-title">More time on court.</h1>')
-    expect(intro).toContain('Sign-ups, payments and check-in for regular recreational volleyball sessions.')
-    expect(hero).not.toContain('More time on court.')
-    expect(hero).not.toContain(
-      'A registration and operations system for recurring recreational volleyball events.',
-    )
+    expect(hero).toContain('<h1 id="voleyevents-title">GameOnVB</h1>')
+    expect(hero).toContain(VOLEYEVENTS.hero.title)
+    expect(hero).toContain('I own GameOnVB end to end: product, code, releases and hosting, since the first commit in April 2026.')
+    expect(markup).not.toContain('class="ticker"')
     expect(route?.title).toBe(
       'GameOnVB Match Operations — Hoang Viet To',
     )
   })
 
   it('presents the approved rule, four sets, phone steps and closing in order', () => {
-    const markup = render()
-    const landmarks = ['class="ticker"', 'The rule I set myself', 'Four sets',
+    const html = render()
+    const markup = html.slice(html.indexOf('class="gv gameonvb-story"'))
+    const landmarks = ['id="overview"', 'Public pages are now static files', 'class="phone-col"', 'class="gv-steps"', 'The rule I set myself', 'Four sets',
       'Set 1 · server work', 'Set 2 · the rebuild', 'Set 3 · scheduled jobs',
       'Set 4 · background work', 'The paid plan ends on 8 November 2026. GameOnVB is moving to the free plan.',
-      'class="phone-col"', 'class="gv-steps"', 'When plans change',
+      'When plans change',
       'Visit gameonvb.cz', 'aria-label="Case study navigation"']
     landmarks.forEach(landmark => expect(markup).toContain(landmark))
     landmarks.slice(1).forEach((landmark, index) => {
@@ -63,7 +60,7 @@ describe('GameOnVB Match Operations case study', () => {
 
   it('keeps all four steps readable and every story link anchored', () => {
     const markup = render()
-    const steps = markup.slice(markup.indexOf('class="gv-steps"'), markup.indexOf('class="gv-end"'))
+    const steps = markup.slice(markup.indexOf('class="gv-steps"'), markup.indexOf('class="wrap gv-rule"'))
     const labels = ['Pick a session.', 'Scan to pay.', 'Matched automatically.', 'Check in at the door.']
     expect(VOLEYEVENTS.steps.map(({ title }) => title)).toEqual(labels)
     expect([...steps.matchAll(/data-step="([0-3])"/g)].map(match => Number(match[1]))).toEqual([0, 1, 2, 3])
@@ -73,7 +70,7 @@ describe('GameOnVB Match Operations case study', () => {
       expect(steps).toContain(step.body)
     }
     expect(steps).not.toMatch(/<h2[^>]*aria-hidden|<p[^>]*aria-hidden/)
-    const hero = markup.slice(markup.indexOf('class="gv-jump"'), markup.indexOf('class="ticker"'))
+    const hero = markup.slice(markup.indexOf('class="gv-jump"'), markup.indexOf('class="wrap gv-how"'))
     for (const [, id] of hero.matchAll(/href="#([^"]+)"/g)) {
       expect(markup.match(new RegExp(`id="${id}"`, 'g'))).toHaveLength(1)
     }
@@ -108,7 +105,7 @@ describe('GameOnVB Match Operations case study', () => {
     rules.walkRules(rule => {
       if (rule.parent?.type === 'atrule' && rule.parent.name === 'keyframes') return
       // Page rules stay under .gv; only the phone-size hero text fixes reach the shared hero, under .voleyevents.
-      rule.selectors.forEach(selector => expect(selector).toMatch(/^\.gv(?:[ :.]|$)|^\.voleyevents \.(?:entry-header|ball-entry-caption|ball-story-links|case-navigation|ball-play-handle|ball-play-hint|ball-entry-copy|staircase-entry|light-table-hero)\b/))
+      rule.selectors.forEach(selector => expect(selector).toMatch(/^\.gv(?:[ :.]|$)|^\.voleyevents \.(?:entry-header|ball-entry-caption|ball-story-links|case-navigation|ball-play-handle|ball-play-hint|ball-entry-copy|ball-entry-overview|staircase-entry|light-table-hero)\b/))
     })
     const reduced: Record<string, string> = {}
     rules.walkAtRules('media', media => {
@@ -130,7 +127,7 @@ describe('GameOnVB Match Operations case study', () => {
     expect(hero).not.toMatch(/data-stair-root|Release the ball|Catch\. Pull\.|Reset /)
     // The sticky section bar opens the story below the hero; every link has exactly one target section.
     const jump = markup.slice(markup.indexOf('class="gv-jump"'), markup.indexOf('class="gv-intro wrap"'))
-    expect(VOLEYEVENTS.sections.map(section => section.label)).toEqual(['Overview', 'Free plan', 'Limits', 'How it works', 'Plans change'])
+    expect(VOLEYEVENTS.sections.map(section => section.label)).toEqual(['Overview', 'How it works', 'Free plan', 'Limits', 'Plans change'])
     for (const section of VOLEYEVENTS.sections) {
       expect(hero).not.toContain(`href="#${section.id}"`)
       expect(jump).toContain(`href="#${section.id}">${section.label}</a>`)
@@ -170,7 +167,7 @@ describe('GameOnVB Match Operations case study', () => {
       expect(markup).toContain('href="/goal-loop"')
       expect(markup).toContain('Back to homepage')
       expect(markup).toContain('Next: Goal Loop')
-      expect(markup).toMatch(/aria-label="Case study navigation">[\s\S]*?<a class="target-link contact-link" href="\/#contact"><span class="link-label">Get in touch<\/span> <span aria-hidden="true">→<\/span><\/a>/)
+      expect(markup).toMatch(/aria-label="Case study navigation">[\s\S]*?<a class="target-link contact-link" href="\/#contact"><span class="link-label">Get in touch<\/span> <svg class="link-arrow arrow-right"[\s\S]*?<\/svg><\/a>/)
       expect(markup).not.toMatch(/<canvas|data-rally-runtime/)
     }
   })
@@ -186,7 +183,7 @@ describe('GameOnVB Match Operations case study', () => {
     // The case study lives in the ball-entry dialog; the homepage section behind it has its own single ball.
     const caseStudy = markup.slice(markup.indexOf('<dialog class="ball-entry"'))
     const images = [...caseStudy.matchAll(/<(?:img|image)[^>]*(?:src|href)="([^"]+)"/g)].map(m => m[1])
-    expect(images).toHaveLength(7)
+    expect(images).toHaveLength(6)
     const homeSection = markup.slice(markup.indexOf('data-poster="gameonvb"'), markup.indexOf('data-poster="solidpixels"'))
     expect([...homeSection.matchAll(/<img[^>]*src="([^"]+)"/g)].map(m => m[1])).toEqual([expect.stringMatching(/\/assets\/ball-preview\.png$/)])
     expect(images[0]).toMatch(/^data:image\/svg\+xml,/)
@@ -337,9 +334,9 @@ it('underlines only the words of project footer links and uses one arrow style',
     const nav = html.slice(html.indexOf('aria-label="Case study navigation"'))
     const footer = nav.slice(0, nav.indexOf('</nav>'))
     expect(footer).not.toContain('↗')
-    expect(footer.match(/<a /g)).toHaveLength(3)
-    expect(footer.match(/<span class="link-label">/g)).toHaveLength(3)
-    expect(footer.match(/<span aria-hidden="true">[←→]<\/span>/g)).toHaveLength(3)
+    expect(footer.match(/<a /g)).toHaveLength(4)
+    expect(footer.match(/<span class="link-label">/g)).toHaveLength(4)
+    expect(footer.match(/<svg class="link-arrow arrow-(?:left|right|up)"/g)).toHaveLength(4)
   }
 })
 

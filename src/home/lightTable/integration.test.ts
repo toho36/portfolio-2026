@@ -50,7 +50,7 @@ it('reserves the measured shell header for native chapter scrolling', () => {
   }
 })
 
-it('keeps the hero to the stairs, the ball and the throw hint; title and chapter links start the story below', () => {
+it('keeps the ball and throw hint with immediate product copy; chapter links start the story below', () => {
   const html = render('/gameonvb')
   for (const width of [390, 1440]) {
     expect(declarations('.ball-entry-caption', width).position ?? 'static').toBe('static')
@@ -59,13 +59,13 @@ it('keeps the hero to the stairs, the ball and the throw hint; title and chapter
   expect(/class="ball-entry-copy"><div class="ball-entry-caption">[\s\S]*?<\/div><\/div>/.test(html)).toBe(true)
   expect(html).not.toContain('ball-story-links')
   expect(html.indexOf('class="gv-jump"')).toBeGreaterThan(html.indexOf('class="ball-entry-copy"'))
-  expect(html.indexOf('<h1 id="voleyevents-title">')).toBeGreaterThan(html.indexOf('class="ball-entry-copy"'))
+  expect(html.indexOf('<h1 id="voleyevents-title">')).toBeLessThan(html.indexOf('class="ball-entry-copy"'))
   for (const id of ['overview', 'free-plan', 'limits', 'how-it-works', 'plans-change']) expect(html).toContain(`href="#${id}"`)
 })
-it('renders three real-path fan sheets with native supporting content on project routes', () => {
+it('renders two real-path fan sheets with native supporting content on project routes', () => {
   const html = render('/gameonvb')
-  expect([...html.matchAll(/data-sheet="([^"]+)"/g)].map(m => m[1])).toEqual(['goal-loop', 'gameonvb', 'intro'])
-  expect(html).toContain('href="/#introduction"')
+  expect([...html.matchAll(/data-sheet="([^"]+)"/g)].map(m => m[1])).toEqual(['goal-loop', 'gameonvb'])
+  expect(html).not.toContain('data-sheet="intro"')
   expect(html).toContain('href="/gameonvb"')
   expect(html).toContain('href="/goal-loop"')
   expect(html).toContain('name="_honey"')
@@ -153,7 +153,7 @@ it('deals the next or previous card from a mouse, pen or finger drag and swallow
 it('returns from GameOnVB with the site header back at once and the case header fading in its dark theme', () => {
   const source = readFileSync(new URL('./lightTable.css', import.meta.url), 'utf8')
   const worlds = readFileSync(new URL('../../worlds.css', import.meta.url), 'utf8')
-  expect(source).toContain(".site-shell:has(.ball-entry[open]:not([data-phase='leaving']), .goal-entry[open]) > .site-header { display: none; }")
+  expect(source).not.toContain(".goal-entry[open]) > .site-header { display: none; }")
   expect(source).toContain(".ball-entry[data-phase='leaving'] .entry-header { opacity: var(--progress); }")
   expect(worlds).toMatch(/:is\(\.route-voleyevents, \.ball-entry\) \.voleyevents \{ --court-chalk: var\(--ink\); --court-ink: var\(--paper\);/)
 })

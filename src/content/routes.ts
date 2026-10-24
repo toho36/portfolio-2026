@@ -102,13 +102,13 @@ export function getRouteNavigationUrl(
   const pathname = normalizePathname(destination.pathname)
   if (
     destination.origin !== current.origin ||
-    destination.hash !== '' ||
+    (destination.hash !== '' && destination.hash !== '#top' && !(pathname === '/' && ['#contact', '#introduction'].includes(destination.hash))) ||
     !ROUTE_PATHS.has(pathname)
   ) {
     return null
   }
 
-  return `${pathname}${destination.search}`
+  return `${pathname}${destination.search}${destination.hash}`
 }
 
 export function pushRouteNavigation(
@@ -118,7 +118,7 @@ export function pushRouteNavigation(
 ): Route {
   const current = new URL(currentUrl)
   const target = new URL(destination, current)
-  const currentRelative = `${normalizePathname(current.pathname)}${current.search}`
+  const currentRelative = `${normalizePathname(current.pathname)}${current.search}${current.hash}`
 
   if (destination !== currentRelative) {
     history.pushState(null, '', destination)

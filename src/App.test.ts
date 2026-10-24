@@ -2,6 +2,7 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 import App, { applyRouteMetadata, beginNavigation, crossFadeProjects, focusHomeContact, installRevealMotion, isLightTablePair, isProjectSwitch } from './App'
+import { focusHomeFragment, isHomeFragment } from './navigation'
 import { createWatchFlow } from './home/lightTable/watchFlow.js'
 import { createDeckAssist } from './home/lightTable/deckAssist.js'
 import { BALL_DURATION, createBallFlow } from './home/lightTable/ballFlow.js'
@@ -23,6 +24,34 @@ function createClassList() {
 }
 
 describe('light-table homepage and project shells', () => {
+  it('keeps one usable primary header on every route, without repeated role or footer identity', () => {
+    for (const path of ['/', '/gameonvb', '/goal-loop', '/playground']) {
+      const html = render(path)
+      const header = html.match(/<header class="site-header"[^>]*>[\s\S]*?<\/header>/)?.[0]
+      expect(header).toBeDefined()
+      expect(header).not.toMatch(/hidden=""|home-role/)
+      expect(html.match(/class="site-header"/g)).toHaveLength(1)
+      expect(html.slice(html.indexOf('<footer'), html.indexOf('</footer>'))).not.toContain('Software Developer')
+    }
+  })
+
+  it('offers exactly two actual cards and named native project links without numbered deck buttons', () => {
+    const html = render('/gameonvb')
+    expect([...html.matchAll(/data-sheet="([^"]+)"/g)].map(m => m[1])).toEqual(['goal-loop', 'gameonvb'])
+    const controls = html.match(/class="table-footer">([\s\S]*?)<\/nav>/)?.[1] ?? ''
+    expect(controls).toContain('Scroll for projects')
+    expect(controls).toMatch(/href="\/goal-loop"[^>]*>Goal Loop<\/a>/)
+    expect(controls).toMatch(/href="\/gameonvb"[^>]*>GameOnVB<\/a>/)
+    expect(controls).not.toContain('<button')
+  })
+
+  it('bypasses the arena for a cold introduction fragment', () => {
+    try {
+      vi.stubGlobal('window', { location: new URL('https://portfolio.test/#introduction') })
+      expect(render('/')).not.toContain('arena-intro')
+    } finally { vi.unstubAllGlobals() }
+  })
+
   it('offers Contact beside the brand and retains the three project links and form CVs', () => {
     for (const path of ['/', '/gameonvb', '/goal-loop', '/playground']) {
       const html = render(path)
@@ -40,7 +69,7 @@ describe('light-table homepage and project shells', () => {
     expect([...markup.matchAll(/data-poster="([^"]+)"/g)].map((m) => m[1])).toEqual([
       'hero', 'gameonvb', 'solidpixels', 'goal-loop', 'playground', 'tools', 'contact',
     ])
-    expect([...markup.matchAll(/data-sheet="([^"]+)"/g)].map(m => m[1])).toEqual(['goal-loop', 'gameonvb', 'intro'])
+    expect([...markup.matchAll(/data-sheet="([^"]+)"/g)].map(m => m[1])).toEqual(['goal-loop', 'gameonvb'])
     expect(markup).toContain('data-light-table-shell="true"')
     expect(markup).not.toMatch(/poster-track|poster-canvas-host/)
     expect(markup).toContain('>Homepage</a>')
@@ -271,16 +300,16 @@ function provenanceNavigation(path = '/', state: Record<string, unknown> | null 
     }),
     replaceState: vi.fn((state: Record<string, unknown>, _unused: string, url: string) => { entries[index] = { url, state } }),
   }
-  const anchorForDelegation = { getAttribute: () => '/gameonvb', target: '', hasAttribute: () => false, closest: () => null }
+  const anchorForDelegation = { getAttribute: () => '/gameonvb', target: '', hasAttribute: () => false, closest: (selector: string) => selector === '.sheet-cta, .table-footer' ? {} : null }
   const context = { navigationAnchor: undefined as typeof anchorForDelegation | undefined, window: { location, history, matchMedia: () => ({ matches: false }), scrollTo() {} },
-    document: { visibilityState: 'visible', getElementById: () => null },
-    getRouteNavigationUrl, normalizePathname, pushRouteNavigation, isLightTablePair, isProjectSwitch, crossFadeProjects, beginNavigation,
-    setUnknownPath() {}, setRoute: vi.fn(),
+    document: { visibilityState: 'visible', getElementById: () => null, dispatchEvent: vi.fn() },
+    getRouteNavigationUrl, normalizePathname, pushRouteNavigation, isLightTablePair, isProjectSwitch, crossFadeProjects, beginNavigation, isHomeFragment,
+    setUnknownPath() {}, setIntroOpen() {}, pendingPageFocus: { current: false }, setRoute: vi.fn(),
   }
   const navigate = new Function('event', 'context', `with(context){${code}}`)
   return { entries, history, location, click(href: string, change = {}, delegated = false) {
     const event = { button: 0, defaultPrevented: false, altKey: false, ctrlKey: false, metaKey: false, shiftKey: false,
-      currentTarget: { getAttribute: () => href, target: '', hasAttribute: () => false, closest: () => null }, preventDefault: vi.fn(), ...change }
+      currentTarget: { getAttribute: () => href, target: '', hasAttribute: () => false, closest: (selector: string) => selector === '.sheet-cta, .table-footer' ? {} : null }, preventDefault: vi.fn(), ...change }
     if (delegated) {
       context.navigationAnchor = { ...anchorForDelegation, getAttribute: () => href }
       event.currentTarget.getAttribute = () => ''
@@ -334,21 +363,23 @@ describe('App per-entry light-table provenance', () => {
 
 
 describe('light-table route integration', () => {
-  it.each(['/gameonvb', '/goal-loop'])('hides the global navbar in %s and retains the project return link', path => {
+  it.each(['/gameonvb', '/goal-loop'])('keeps the global navbar usable in %s and retains the project return link', path => {
     const html = render(path)
-    expect(html).toMatch(/<header class="site-header" hidden=""/)
+    expect(html).toMatch(/<header class="site-header">/)
     expect(html).toContain('Back to homepage')
     for (const other of ['/', '/playground', '/not-a-route']) expect(render(other)).not.toMatch(/<header class="site-header" hidden=/)
     const css = readFileSync(new URL('./home/lightTable/lightTable.css', import.meta.url), 'utf8')
-    expect(css).toContain('.site-header[hidden]')
-    // Hidden while a project is open; the site header returns as soon as GameOnVB starts leaving.
-    expect(css).toContain(":has(.ball-entry[open]:not([data-phase='leaving']), .goal-entry[open])")
+    expect(css).not.toContain('.site-header[hidden]')
+    expect(css).not.toContain(".goal-entry[open]) > .site-header { display: none; }")
+    const table = readFileSync(new URL('./home/lightTable/LightTable.jsx', import.meta.url), 'utf8')
+    expect(table).toContain('dialog.show()')
+    expect(table).not.toContain('showModal(')
   })
-  it.each(['/gameonvb', '/goal-loop'])('leaves navbar entry to %s native instead of flying an inactive card', path => {
+  it.each(['/gameonvb', '/goal-loop'])('uses calm SPA navigation for navbar entry to %s and keeps card entry authored', path => {
     const n = provenanceNavigation()
     const event = n.click(path, { currentTarget: { getAttribute: () => path, target: '', hasAttribute: () => false, closest: (selector: string) => selector === '.site-header' ? {} : null } })
-    expect(event.preventDefault).not.toHaveBeenCalled()
-    expect(n.history.pushState).not.toHaveBeenCalled()
+    expect(event.preventDefault).toHaveBeenCalledOnce()
+    expect(n.history.pushState).toHaveBeenCalledOnce()
     expect(n.history.replaceState).not.toHaveBeenCalled()
     const card = provenanceNavigation()
     expect(card.click(path).preventDefault).toHaveBeenCalledOnce()
@@ -360,8 +391,8 @@ describe('light-table route integration', () => {
     expect(html.match(/<main[ >]/g)).toHaveLength(1)
     expect(html.match(/<footer[ >]/g)).toHaveLength(1)
     expect(html).toContain('data-light-table-shell="true"')
-    expect([...html.matchAll(/data-sheet="([^"]+)"/g)].map(m => m[1])).toEqual(['goal-loop', 'gameonvb', 'intro'])
-    expect(html).toContain('Scroll or swipe to deal.')
+    expect([...html.matchAll(/data-sheet="([^"]+)"/g)].map(m => m[1])).toEqual(['goal-loop', 'gameonvb'])
+    expect(html).toContain('Scroll for projects')
     for (const id of ['introduction', 'contact']) expect(html).toContain(`id="${id}"`)
     expect(html).not.toMatch(/landing-composition|landing-page|landing-header|landing-footer|landing-nav-hint|data-p1-status|data-work-select|<dialog[^>]* open=/)
   })
@@ -372,11 +403,11 @@ describe('light-table route integration', () => {
     expect(html).toContain(`<dialog class="${dialogClass}" open=""`)
     expect(html).not.toContain('landing-composition')
   })
-  it('leaves homepage fragments native and keeps home and projects in the same live Light Table', () => {
+  it('handles approved homepage fragments and keeps home and projects in the same live Light Table', () => {
     for (const href of ['#introduction', '#contact']) {
       const n = provenanceNavigation()
-      expect(n.click(href).preventDefault).not.toHaveBeenCalled()
-      expect(n.history.pushState).not.toHaveBeenCalled()
+      expect(n.click(href).preventDefault).toHaveBeenCalledOnce()
+      expect(n.history.pushState).toHaveBeenCalledOnce()
     }
     expect(isLightTablePair('/', '/gameonvb')).toBe(true)
     expect(isLightTablePair('/goal-loop', '/')).toBe(true)
@@ -393,16 +424,16 @@ describe('project to project switch', () => {
     const source = readFileSync(new URL('./App.tsx', import.meta.url), 'utf8')
     const start = source.indexOf('    return subscribeToRouteChanges(window, (next) => {')
     const effect = source.slice(start, source.indexOf('\n  }, [])', start))
-    const pending: (() => void)[] = [], location = { pathname: '/gameonvb' }
+    const pending: (() => void)[] = [], location = { pathname: '/gameonvb', hash: '' }
     let listener: (next: { path: string }) => void = () => {}
-    const context = { window: { location }, document: {}, ROUTES: [{ path: '/gameonvb' }, { path: '/goal-loop' }], shownPath: { current: '/gameonvb' },
+    const context = { window: { location, history: { state: null } }, document: {}, pendingPageFocus: { current: false }, shownAnimatedEntry: { current: false }, isLightTablePair, setIntroOpen() {}, ROUTES: [{ path: '/gameonvb' }, { path: '/goal-loop' }], shownPath: { current: '/gameonvb' },
       normalizePathname, isProjectSwitch, beginNavigation, setUnknownPath: vi.fn(), setRoute: vi.fn(),
       subscribeToRouteChanges: (_: unknown, fn: typeof listener) => { listener = fn; return () => {} },
       crossFadeProjects: (update: () => void) => { pending.push(update) } }
     new Function('context', `with(context){${effect}}`)(context)
     location.pathname = '/goal-loop'; listener({ path: '/goal-loop' })   // Back: deferred cross-fade
     location.pathname = '/gameonvb'; listener({ path: '/gameonvb' })     // Forward: same page, instant
-    expect(context.setRoute).toHaveBeenLastCalledWith({ path: '/gameonvb' })
+    expect(context.setRoute).not.toHaveBeenCalled()
     pending.forEach(update => update())                                  // the stale Back callback runs late
     expect(context.setRoute).toHaveBeenCalledTimes(1)
     expect(context.setRoute).toHaveBeenLastCalledWith({ path: '/gameonvb' })
@@ -438,7 +469,7 @@ describe('project to project switch', () => {
       expect(overlap.dataset.projectSwitch).toBe('true')
       finishSecond(); await Promise.resolve(); await Promise.resolve()
       expect(overlap.dataset.projectSwitch).toBeUndefined()
-      for (const still of [fake(true), fake(false, 'hidden'), fake(false, 'visible', false)]) {
+      for (const still of [fake(false, 'hidden'), fake(false, 'visible', false)]) {
         const instant = vi.fn(); crossFadeProjects(instant, still.doc)
         expect(instant).toHaveBeenCalledTimes(1); expect(still.root.dataset.projectSwitch).toBeUndefined(); expect(still.done).toHaveLength(0)
       }
@@ -509,11 +540,11 @@ describe('contact navigation', () => {
     expect(n.history.replaceState).not.toHaveBeenCalled()
   })
 
-  it('preserves native contact navigation on home/playground and all browser-owned clicks', () => {
+  it('handles contact within the SPA on home/playground and preserves all browser-owned clicks', () => {
     for (const path of ['/', '/playground']) {
       const n = provenanceNavigation(path)
-      expect(n.click('/#contact').preventDefault).not.toHaveBeenCalled()
-      expect(n.history.pushState).not.toHaveBeenCalled()
+      expect(n.click('/#contact').preventDefault).toHaveBeenCalledOnce()
+      expect(n.history.pushState).toHaveBeenCalledOnce()
     }
     for (const path of ['/gameonvb', '/goal-loop']) {
       for (const change of [{ button: 1 }, { metaKey: true }, { ctrlKey: true }, { altKey: true }, { shiftKey: true }, { defaultPrevented: true },
@@ -563,7 +594,7 @@ describe('contact navigation', () => {
     const events = { addEventListener: (key: string, fn: () => void) => listeners.set(key, fn), removeEventListener: (key: string) => listeners.delete(key) }
     const doc = { ...events, readyState: 'loading', getElementById: (key: string) => key === 'main-content' ? main : target, querySelector: () => null }
     const location = new URL('https://portfolio.test/#contact')
-    const context = { window: { ...events, location }, document: doc, focusHomeContact,
+    const context = { window: { ...events, location }, document: doc, focusHomeContact, focusHomeFragment, isHomeFragment,
       closeIntro: vi.fn(() => { inert = false }),
       requestAnimationFrame: (fn: FrameRequestCallback) => { frames.set(++id, fn); return id }, cancelAnimationFrame: (key: number) => frames.delete(key),
     }
@@ -577,9 +608,9 @@ describe('contact navigation', () => {
     listeners.get('homecontactready')!()
     expect(context.closeIntro).toHaveBeenCalledOnce(); expect(target.focus).toHaveBeenCalledTimes(2)
     location.hash = '#introduction'; listeners.get('hashchange')!()
-    expect(target.focus).toHaveBeenCalledTimes(2)
-    location.hash = '#contact'; listeners.get('hashchange')!()
     expect(target.focus).toHaveBeenCalledTimes(3)
+    location.hash = '#contact'; listeners.get('hashchange')!()
+    expect(target.focus).toHaveBeenCalledTimes(4)
     listeners.get('pageshow')!(); cleanup()
     expect(listeners.size).toBe(0); expect(frames.size).toBe(0)
   })
@@ -600,7 +631,7 @@ describe('contact navigation', () => {
     const contact = { style: {}, closest: () => homeInert ? {} : null, focus: vi.fn(), scrollIntoView: vi.fn() }
     let open = true, homeInert = true
     const doc = { getElementById: () => contact, querySelector: (selector: string) => selector === '.site-header' ? { getBoundingClientRect: () => ({ height: 128 }) } : open ? {} : null,
-      dispatchEvent: vi.fn((event: Event) => { expect(event.type).toBe('homecontactready'); expect(open || homeInert).toBe(false); focusHomeContact(doc as unknown as Document) }) }
+      dispatchEvent: vi.fn((event: Event) => { expect(['homecontactready', 'homefragmentfocus']).toContain(event.type); expect(open || homeInert).toBe(false); if (event.type === 'homecontactready') focusHomeContact(doc as unknown as Document) }) }
     const c: Record<string, any> = { location: new URL(path, 'https://portfolio.test/'), history: { state: { lightTableFromHome: true }, back: vi.fn() }, getRouteNavigationUrl,
       desiredRef: ref(!ball), ballDesiredRef: ref(ball), restoreRef: ref(ball ? null : {}), ballRestoreRef: ref(ball ? {} : null), pendingFocusRef: ref(null),
       mounted: !ball, ballMounted: ball, coldRef: ref(false), watchColdRef: ref(false), flowRef: ref(null), document: doc, Event,
@@ -636,7 +667,7 @@ describe('contact navigation', () => {
       expect(contact.focus).not.toHaveBeenCalled()
       c.ballMounted = c.mounted = false; homeInert = false
       run(focus, c)
-      expect(doc.dispatchEvent).toHaveBeenCalledOnce(); expect(contact.focus).toHaveBeenCalledOnce()
+      expect(doc.dispatchEvent.mock.calls.map(([event]) => event.type)).toEqual(['homecontactready', 'homefragmentfocus']); expect(contact.focus).toHaveBeenCalledOnce()
       expect(contact.scrollIntoView).toHaveBeenCalledOnce(); expect(c.pendingFocusRef.current).toBeNull()
       run(focus, c); expect(contact.focus).toHaveBeenCalledOnce()
     } finally { flow.destroy(); vi.unstubAllGlobals() }

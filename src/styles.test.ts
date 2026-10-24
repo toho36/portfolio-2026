@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import { parse } from 'postcss'
 
 const styles = readFileSync(new URL('./styles.css', import.meta.url), 'utf8')
 const worlds = readFileSync(new URL('./worlds.css', import.meta.url), 'utf8')
@@ -81,6 +82,19 @@ describe('accessible typography-led styles', () => {
 })
 
 describe('Wire Playground styles', () => {
+  it('gives instructions at least 4.5:1 contrast against the actual renderer background', () => {
+    const playground = parse(readFileSync(new URL('./playground/playground.css', import.meta.url), 'utf8'))
+    const runtime = readFileSync(new URL('./playground/wireRuntime.ts', import.meta.url), 'utf8')
+    let foreground = ''
+    playground.walkRules('.playground-page .wire-hint', rule => { rule.walkDecls('color', d => { foreground = d.value }) })
+    const background = runtime.match(/scene.background = new three.Color\('(#[0-9a-f]{6})'\)/)![1]
+    const luminance = (hex: string) => {
+      const rgb = hex.slice(1).match(/../g)!.map(value => parseInt(value, 16) / 255)
+        .map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4)
+      return .2126 * rgb[0] + .7152 * rgb[1] + .0722 * rgb[2]
+    }
+    expect((luminance(background) + .05) / (luminance(foreground) + .05)).toBeGreaterThanOrEqual(4.5)
+  })
   it('keeps touch gestures on the canvas and the hint visible on mobile', () => {
     const mobile = styles.slice(styles.indexOf('@media (max-width: 760px)'))
     expect(styles).toMatch(/\.wire-stage canvas\s*\{[^}]*touch-action:\s*none/)

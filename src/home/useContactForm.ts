@@ -10,7 +10,7 @@ interface ContactState {
 }
 
 function initialState(): ContactState {
-  return { values: { name: '', email: '', topic: 'Project', message: '', _honey: '' }, errors: {}, sending: false, sent: false, submitError: null }
+  return { values: { name: '', email: '', topic: '', message: '', _honey: '' }, errors: {}, sending: false, sent: false, submitError: null }
 }
 
 // The hook and render-free tests use the same controller; no React hooks are mocked.

@@ -83,7 +83,7 @@ function handoff(cold = false) {
 function coldFragment(cold = true, readyState = 'loading', hash = '#payment-matches', pathname = '/gameonvb') {
   const h = handoff(cold), listeners = new Map<string, Set<() => void>>()
   const scrollingElement = { scrollTop: 0 }
-  const target = { scrollIntoView: vi.fn(() => { scrollingElement.scrollTop = 2641 }) }
+  const target = { focus: vi.fn(), scrollIntoView: vi.fn(() => { scrollingElement.scrollTop = 2641 }) }
   Object.assign(h.context, {
     pathname, location: { pathname, hash }, coldFragmentRef: ref(cold),
     addEventListener(key: string, callback: () => void) { if (!listeners.has(key)) listeners.set(key, new Set()); listeners.get(key)!.add(callback) },

@@ -1,9 +1,9 @@
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, Number.isFinite(n) ? n : lo))
-export function deckPosition(scroll, step) { return clamp(scroll / (step > 0 ? step : 1), 0, 2) }
-export function settleSheet(position,direction){
-  const p=clamp(position,0,2),low=Math.floor(p),fraction=p-low
+export function deckPosition(scroll, step, count = 2) { return clamp(scroll / (step > 0 ? step : 1), 0, count - 1) }
+export function settleSheet(position,direction,count=2){
+  const p=clamp(position,0,count-1),low=Math.floor(p),fraction=p-low
   if(fraction<.001)return low
-  return clamp(direction>0?(fraction>.18?low+1:low):direction<0?(fraction<.82?low:low+1):Math.round(p),0,2)
+  return clamp(direction>0?(fraction>.18?low+1:low):direction<0?(fraction<.82?low:low+1):Math.round(p),0,count-1)
 }
 export function settleEase(progress){const p=clamp(progress,0,1);return p*p*p*(p*(p*6-15)+10)}
 export function coastPosition(from,target,velocity,elapsed){
@@ -24,7 +24,7 @@ export function coastPosition(from,target,velocity,elapsed){
   return target-Math.sign(distance)*(head*fast*Math.pow(Math.max(0,1-t/(3*fast)),3)+tail*slow*Math.pow(Math.max(0,1-t/(3*slow)),3))
 }
 export function sheetPose(index, position) {
-  const d = index - clamp(position, 0, 2)
+  const d = index - clamp(position, 0, 1)
   const behind = Math.max(0, d), leaving = Math.min(0, d)
   return { x: behind * .115 + leaving * 1.18, y: -behind * .078 + leaving * .10,
     rotation: -5 + behind * 11 + leaving * 16, scale: 1 - Math.min(behind, 2) * .075,
